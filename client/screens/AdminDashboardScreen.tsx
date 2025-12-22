@@ -16,6 +16,8 @@ import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 
+import { Image } from "expo-image";
+
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -119,9 +121,17 @@ function AdminUserItem({ user, theme, onPress }: AdminUserItemProps) {
     >
       <View style={styles.userInfo}>
         <View style={[styles.userAvatar, { backgroundColor: `${theme.primary}25` }]}>
-          <ThemedText type="small" style={{ color: theme.primary }}>
-            {user.username.charAt(0).toUpperCase()}
-          </ThemedText>
+          {user.avatarUrl ? (
+            <Image 
+              source={{ uri: user.avatarUrl }} 
+              style={{ width: "100%", height: "100%", borderRadius: 20 }}
+              contentFit="cover"
+            />
+          ) : (
+            <ThemedText type="small" style={{ color: theme.primary }}>
+              {user.username.charAt(0).toUpperCase()}
+            </ThemedText>
+          )}
         </View>
         <View style={{ flex: 1 }}>
           <ThemedText type="body">{user.username}</ThemedText>
@@ -496,6 +506,27 @@ export default function AdminDashboardScreen() {
                   </View>
 
                   <ThemedText type="body" style={{ marginTop: Spacing.lg }}>
+                    Quiz History
+                  </ThemedText>
+
+                  <View style={{ maxHeight: 200, width: "100%", marginTop: Spacing.sm }}>
+                    <FlatList
+                      data={(selectedUser as any).history || []}
+                      keyExtractor={(_, index) => index.toString()}
+                      renderItem={({ item }) => (
+                        <View style={[styles.historyItem, { backgroundColor: theme.backgroundSecondary }]}>
+                          <ThemedText type="small" style={{ fontWeight: "bold" }}>{item.quizTitle}</ThemedText>
+                          <ThemedText type="small">{item.score}% • {item.correctAnswers}/{item.totalQuestions}</ThemedText>
+                          <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                            {new Date(item.completedAt).toLocaleDateString()}
+                          </ThemedText>
+                        </View>
+                      )}
+                      ListEmptyComponent={<ThemedText type="small">No history found</ThemedText>}
+                    />
+                  </View>
+
+                  <ThemedText type="body" style={{ marginTop: Spacing.lg }}>
                     Change Role
                   </ThemedText>
 
@@ -798,5 +829,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.1)",
+  },
+  historyItem: {
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.xs,
+    width: "100%",
   },
 });
