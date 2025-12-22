@@ -1,70 +1,18 @@
 {
   "version": 2,
-  "buildCommand": "npx expo export --platform web",
+  "buildCommand": "npm run server:build && npx expo export --platform web",
   "outputDirectory": "dist",
   "framework": null,
   "installCommand": "npm install",
   "functions": {
-    "api/**/*.ts": {
+    "api/index.ts": {
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
-      "source": "/api/rooms/:roomCode/join",
-      "destination": "/api/rooms/[roomCode]/join"
-    },
-    {
-      "source": "/api/rooms/:roomCode/start",
-      "destination": "/api/rooms/[roomCode]/start"
-    },
-    {
-      "source": "/api/rooms/:roomCode/submit",
-      "destination": "/api/rooms/[roomCode]/submit"
-    },
-    {
-      "source": "/api/rooms/:roomCode/leave",
-      "destination": "/api/rooms/[roomCode]/leave"
-    },
-    {
-      "source": "/api/rooms/:roomCode",
-      "destination": "/api/rooms/[roomCode]"
-    },
-    {
-      "source": "/api/rooms",
-      "destination": "/api/rooms"
-    },
-    {
-      "source": "/api/quizzes/:id",
-      "destination": "/api/quizzes/[id]"
-    },
-    {
-      "source": "/api/quizzes",
-      "destination": "/api/quizzes"
-    },
-    {
-      "source": "/api/profile",
-      "destination": "/api/profile"
-    },
-    {
-      "source": "/api/health",
-      "destination": "/api/health"
-    },
-    {
-      "source": "/api/history",
-      "destination": "/api/history"
-    },
-    {
-      "source": "/api/leaderboard",
-      "destination": "/api/leaderboard"
-    },
-    {
-      "source": "/api/admin/stats",
-      "destination": "/api/admin/stats"
-    },
-    {
-      "source": "/api/ownerprofile",
-      "destination": "/api/ownerprofile"
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
     },
     {
       "source": "/(.*)",
@@ -85,7 +33,7 @@
         },
         {
           "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
         },
         {
           "key": "Access-Control-Allow-Headers",
