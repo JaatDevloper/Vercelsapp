@@ -175,37 +175,34 @@ export default function AdminDashboardScreen() {
     }
   }, [statsData]);
 
-  const [users, setUsers] = useState<AdminUser[]>([
-    {
-      id: "1",
-      username: "john_doe",
-      role: "user",
-      createdAt: "2025-12-01",
-      quizCount: 5,
-      attempts: 23,
-    },
-    {
-      id: "2",
-      username: "jane_smith",
-      role: "moderator",
-      createdAt: "2025-11-15",
-      quizCount: 12,
-      attempts: 45,
-    },
-    {
-      id: "3",
-      username: "admin_user",
-      role: "admin",
-      createdAt: "2025-10-01",
-      quizCount: 28,
-      attempts: 120,
-    },
-  ]);
-
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [usersModalVisible, setUsersModalVisible] = useState(false);
   const [analyticsModalVisible, setAnalyticsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch users when modal opens
+  useEffect(() => {
+    if (usersModalVisible) {
+      fetchUsers();
+    }
+  }, [usersModalVisible]);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await fetch(`${process.env.EXPO_PUBLIC_DOMAIN}/api/admin/users`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter((user) =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
@@ -420,15 +417,31 @@ export default function AdminDashboardScreen() {
             />
           </View>
 
-          <FlatList
-            data={filteredUsers}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <AdminUserItem user={item} theme={theme} onPress={handleUserPress} />
-            )}
-            contentContainerStyle={styles.usersList}
-            scrollEnabled={true}
-          />
+          {usersLoading ? (
+            <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText type="small" style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
+                Loading users...
+              </ThemedText>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredUsers}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <AdminUserItem user={item} theme={theme} onPress={handleUserPress} />
+              )}
+              contentContainerStyle={styles.usersList}
+              scrollEnabled={true}
+              ListEmptyComponent={
+                <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                    No users found
+                  </ThemedText>
+                </View>
+              }
+            />
+          )}
 
           {selectedUser && (
             <Modal

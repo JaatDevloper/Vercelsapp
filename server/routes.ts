@@ -1405,5 +1405,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users with their stats for admin dashboard
+  app.get("/api/admin/users", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+
+      // Fetch all users from appprofile
+      const users = await db.collection("appprofile").find({}).toArray();
+
+      // Fetch all history records to calculate stats
+      const historyRecords = await db.collection("apphistory").find({}).toArray();
+
+      // Map users and calculate their stats
+      const usersWithStats = users.map((user: any) => {
+        // Get all history records for this user
+        const userHistory = historyRecords.filter(
+          (h: any) => h.deviceId === user.deviceId || 
+                      (h.userName === user.name && h.userEmail === user.email)
+        );
+
+        // Count unique quizzes taken
+        const uniqueQuizzes = new Set(userHistory.map((h: any) => h.quizId)).size;
+
+        return {
+          id: user._id?.toString() || user.deviceId,
+          username: user.name || "Unknown User",
+          email: user.email || "",
+          avatarUrl: user.avatarUrl || "",
+          role: user.role || "user", // Default role is 'user'
+          createdAt: user.createdAt || new Date().toISOString(),
+          quizCount: uniqueQuizzes,
+          attempts: userHistory.length,
+        };
+      });
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(usersWithStats);
+    } catch (error) {
+      console.error("Error fetching users for admin:", error);
+      res.status(500).json({
+        error: "Failed to fetch users",
+        message: error instanceof Error ? error.message : "Unknown error",
+        users: [],
+      });
+    }
+  });
+
   return httpServer;
 }
