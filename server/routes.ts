@@ -660,27 +660,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ ADMIN API ENDPOINTS ============
 
-  // Get all users for admin dashboard
   app.get("/api/admin/users", async (req: Request, res: Response) => {
     try {
+      console.log("ADMIN API: Fetching users from MongoDB...");
       const client = await getMongoClient();
       const db = client.db("quizbot");
-      const profileCollection = db.collection("appprofile");
-      const historyCollection = db.collection("apphistory");
-
-      const profiles = await profileCollection.find().toArray();
-      const allHistory = await historyCollection.find().toArray();
+      
+      const profiles = await db.collection("appprofile").find({}).toArray();
+      const allHistory = await db.collection("apphistory").find({}).toArray();
+      
+      console.log(`ADMIN API: Found ${profiles.length} profiles and ${allHistory.length} history records`);
 
       const usersWithStats = profiles.map(profile => {
         const userHistory = allHistory.filter(h => 
-          h.deviceId === profile.deviceId || 
-          (profile.email && h.userEmail === profile.email.toLowerCase())
+          (profile.deviceId && h.deviceId === profile.deviceId) || 
+          (profile.email && h.userEmail && h.userEmail.toLowerCase() === profile.email.toLowerCase())
         );
 
         return {
-          id: profile._id?.toString() || profile.deviceId,
-          username: profile.name || "Unknown User",
-          email: profile.email || "",
+          id: profile._id?.toString() || profile.deviceId || Math.random().toString(36).substring(2, 11),
+          username: profile.name || profile.userName || profile.username || "Unknown User",
+          email: profile.email || profile.userEmail || "",
           avatarUrl: profile.avatarUrl || "",
           role: profile.role || "user",
           createdAt: profile.createdAt || new Date().toISOString(),
@@ -696,10 +696,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
 
+      console.log(`ADMIN API: Returning ${usersWithStats.length} users`);
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.json(usersWithStats);
     } catch (error) {
-      console.error("Error fetching admin users:", error);
+      console.error("ADMIN API: Error fetching admin users:", error);
       res.status(500).json({
         error: "Failed to fetch users",
         message: error instanceof Error ? error.message : "Unknown error",

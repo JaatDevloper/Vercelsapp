@@ -202,10 +202,16 @@ export default function AdminDashboardScreen() {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_DOMAIN}/api/admin/users`);
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN || "";
+      const fullUrl = baseUrl.startsWith("http") ? `${baseUrl}/api/admin/users` : `https://${baseUrl}/api/admin/users`;
+      console.log("Fetching users from:", fullUrl);
+      const response = await fetch(fullUrl);
       if (response.ok) {
         const data = await response.json();
+        console.log("Users fetched successfully:", data.length);
         setUsers(data);
+      } else {
+        console.error("Failed to fetch users, status:", response.status);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
