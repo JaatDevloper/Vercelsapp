@@ -18,7 +18,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
-import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
 
 interface ManagedQuiz {
   _id: string;
@@ -40,7 +40,8 @@ interface QuizCategory {
 
 export default function ManageQuizzesScreen() {
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
+  const themeObj = useTheme();
+  const theme = themeObj.theme;
   const [quizzes, setQuizzes] = useState<ManagedQuiz[]>([]);
   const [categories, setCategories] = useState<QuizCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,10 +166,8 @@ export default function ManageQuizzesScreen() {
           </ThemedText>
         </View>
         {quiz.isDeleted && (
-          <View
-            style={[styles.deletedBadge, { backgroundColor: `${Colors.red}30` }]}
-          >
-            <Feather name="trash-2" size={12} color={Colors.red} />
+          <View style={[styles.deletedBadge, { backgroundColor: "#FF000030" }]}>
+            <Feather name="trash-2" size={12} color="#FF0000" />
           </View>
         )}
       </View>
@@ -201,7 +200,7 @@ export default function ManageQuizzesScreen() {
           style={({ pressed }) => [
             styles.actionBtn,
             {
-              backgroundColor: quiz.isDeleted ? `${Colors.green}20` : `${Colors.red}20`,
+              backgroundColor: quiz.isDeleted ? "#00AA0020" : "#FF000020",
               opacity: pressed ? 0.7 : 1,
             },
           ]}
@@ -209,13 +208,13 @@ export default function ManageQuizzesScreen() {
           <Feather
             name={quiz.isDeleted ? "refresh-cw" : "trash-2"}
             size={16}
-            color={quiz.isDeleted ? Colors.green : Colors.red}
+            color={quiz.isDeleted ? "#00AA00" : "#FF0000"}
           />
           <ThemedText
             type="small"
             style={{
               marginLeft: Spacing.xs,
-              color: quiz.isDeleted ? Colors.green : Colors.red,
+              color: quiz.isDeleted ? "#00AA00" : "#FF0000",
             }}
           >
             {quiz.isDeleted ? "Restore" : "Delete"}
@@ -284,11 +283,11 @@ export default function ManageQuizzesScreen() {
         animationType="fade"
         onRequestClose={() => setSelectedQuiz(null)}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: `${Colors.black}80` }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: "#00000080" }]}>
           <View
             style={[
               styles.modalContent,
-              { backgroundColor: theme.background, paddingTop: insets.top },
+              { backgroundColor: theme.backgroundRoot, paddingTop: insets.top },
             ]}
           >
             <View style={styles.modalHeader}>
@@ -335,11 +334,11 @@ export default function ManageQuizzesScreen() {
         animationType="fade"
         onRequestClose={() => setShowCategoryModal(false)}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: `${Colors.black}80` }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: "#00000080" }]}>
           <View
             style={[
               styles.createCategoryModal,
-              { backgroundColor: theme.background },
+              { backgroundColor: theme.backgroundRoot },
             ]}
           >
             <ThemedText type="h3" style={{ marginBottom: Spacing.md }}>
@@ -517,7 +516,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: `${Colors.gray}30`,
+    borderBottomColor: `#00000030`,
   },
   categoriesList: {
     marginBottom: Spacing.md,
