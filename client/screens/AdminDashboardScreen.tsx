@@ -352,7 +352,7 @@ export default function AdminDashboardScreen() {
           <ActionButton
             icon="trash-2"
             label="Manage Quizzes"
-            onPress={() => Alert.alert("Coming Soon", "Quiz management tools")}
+            onPress={() => navigation.navigate("ManageQuizzes")}
             theme={theme}
             color="#FF6B6B"
           />
