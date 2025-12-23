@@ -94,11 +94,11 @@ export default function DiscoverScreen() {
   } = useQuery<Quiz[]>({
     queryKey: ["/api/quizzes", selectedCategory],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedCategory !== "All") {
-        params.append("category", selectedCategory);
-      }
-      const url = `/api/quizzes${params.toString() ? `?${params.toString()}` : ""}`;
+      // Use /api/quizzes for "All" quizzes from "quizzes" collection
+      // Use /api/manage/category/:categoryName for category-specific quizzes from "manage" collection
+      const url = selectedCategory === "All" 
+        ? "/api/quizzes"
+        : `/api/manage/category/${encodeURIComponent(selectedCategory)}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch quizzes");
       return response.json();
