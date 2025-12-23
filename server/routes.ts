@@ -1535,5 +1535,251 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ QUIZ MANAGEMENT API ENDPOINTS ============
+
+  // Get all quizzes with manage data (for admin/owner to manage)
+  app.get("/api/manage/quizzes", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("quizzes");
+      const manageCollection = db.collection("manage");
+
+      // Get all quizzes
+      const quizzes = await collection.find({}).toArray();
+      
+      // Get manage data for each quiz
+      const quizzesWithManageData = await Promise.all(
+        quizzes.map(async (quiz: any) => {
+          const manageData = await manageCollection.findOne({ quiz_id: quiz._id?.toString() || quiz.quiz_id });
+          return {
+            _id: quiz._id?.toString() || "",
+            quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
+            title: quiz.title || quiz.quiz_name || "Untitled Quiz",
+            category: quiz.category || "General",
+            questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
+            created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
+            creator_name: quiz.creator_name || quiz.creator || "Unknown",
+            isDeleted: manageData?.isDeleted || false,
+            managedCategory: manageData?.category || null,
+            lastUpdated: manageData?.updatedAt || quiz.created_at || new Date().toISOString(),
+          };
+        })
+      );
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(quizzesWithManageData);
+    } catch (error) {
+      console.error("Error fetching manage quizzes:", error);
+      res.status(500).json({
+        error: "Failed to fetch quizzes",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Get or create quiz categories
+  app.get("/api/manage/categories", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const categoriesCollection = db.collection("quiz_categories");
+
+      // Create index if it doesn't exist
+      await categoriesCollection.createIndex({ name: 1 }, { unique: true });
+
+      const categories = await categoriesCollection.find({}).toArray();
+
+      // If no categories exist, create default ones
+      if (categories.length === 0) {
+        const defaultCategories = [
+          { name: "Science", color: "#FF6B6B", icon: "flask" },
+          { name: "History", color: "#4ECDC4", icon: "book" },
+          { name: "Technology", color: "#95E1D3", icon: "zap" },
+          { name: "Sports", color: "#F38181", icon: "activity" },
+          { name: "Entertainment", color: "#AA96DA", icon: "film" },
+          { name: "General Knowledge", color: "#FCBAD3", icon: "star" },
+        ];
+
+        await categoriesCollection.insertMany(
+          defaultCategories.map((cat) => ({
+            ...cat,
+            createdAt: new Date().toISOString(),
+          }))
+        );
+
+        return res.json(defaultCategories);
+      }
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({
+        error: "Failed to fetch categories",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Create new category
+  app.post("/api/manage/categories", async (req: Request, res: Response) => {
+    try {
+      const { name, color, icon } = req.body;
+
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ error: "Category name is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const categoriesCollection = db.collection("quiz_categories");
+
+      const category = {
+        name: name.trim(),
+        color: color || "#95E1D3",
+        icon: icon || "tag",
+        createdAt: new Date().toISOString(),
+      };
+
+      await categoriesCollection.insertOne(category);
+
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      if ((error as any).code === 11000) {
+        return res.status(400).json({ error: "Category already exists" });
+      }
+      res.status(500).json({
+        error: "Failed to create category",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Update quiz (move to category, soft delete, etc.)
+  app.put("/api/manage/quizzes/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { category, isDeleted } = req.body;
+
+      if (!id) {
+        return res.status(400).json({ error: "Quiz ID is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const manageCollection = db.collection("manage");
+
+      // Create index on quiz_id
+      await manageCollection.createIndex({ quiz_id: 1 });
+
+      const updateData: any = {
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (category !== undefined) {
+        updateData.category = category;
+      }
+
+      if (isDeleted !== undefined) {
+        updateData.isDeleted = isDeleted;
+      }
+
+      const result = await manageCollection.findOneAndUpdate(
+        { quiz_id: id },
+        { $set: updateData },
+        { upsert: true, returnDocument: "after" }
+      );
+
+      const manageData = result && typeof result === 'object' && 'value' in result ? result.value : result;
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(manageData);
+    } catch (error) {
+      console.error("Error updating quiz manage data:", error);
+      res.status(500).json({
+        error: "Failed to update quiz",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Get quizzes by category (for home screen display)
+  app.get("/api/quizzes/category/:categoryName", async (req: Request, res: Response) => {
+    try {
+      const { categoryName } = req.params;
+
+      if (!categoryName) {
+        return res.status(400).json({ error: "Category name is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("quizzes");
+      const manageCollection = db.collection("manage");
+
+      // Find all quizzes that either have the category in original data OR in manage collection
+      const managedQuizzes = await manageCollection.find({ category: categoryName }).toArray();
+      const managedQuizIds = new Set(managedQuizzes.map((q: any) => q.quiz_id));
+
+      const quizzes = await collection.aggregate([
+        {
+          $match: {
+            $or: [
+              { category: { $regex: new RegExp(`^${categoryName}$`, "i") } },
+              { _id: { $in: Array.from(managedQuizIds) } }
+            ]
+          }
+        },
+        { $sort: { created_at: -1, timestamp: -1 } },
+        {
+          $project: {
+            _id: 1,
+            quiz_id: 1,
+            title: 1,
+            quiz_name: 1,
+            name: 1,
+            category: 1,
+            timer: 1,
+            negative_marking: 1,
+            type: 1,
+            creator_id: 1,
+            creator_name: 1,
+            creator: 1,
+            created_at: 1,
+            timestamp: 1,
+            questionCount: { $size: { $ifNull: ["$questions", []] } }
+          }
+        }
+      ]).toArray();
+
+      const formattedQuizzes = quizzes.map((quiz: any) => ({
+        _id: quiz._id?.toString() || "",
+        quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
+        title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
+        category: quiz.category || "General",
+        timer: quiz.timer || 15,
+        negative_marking: quiz.negative_marking || 0,
+        type: quiz.type || "free",
+        creator_id: quiz.creator_id || "",
+        creator_name: quiz.creator_name || quiz.creator || "Unknown",
+        created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
+        timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
+        questionCount: quiz.questionCount || 0,
+      }));
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(formattedQuizzes);
+    } catch (error) {
+      console.error("Error fetching quizzes by category:", error);
+      res.status(500).json({
+        error: "Failed to fetch quizzes",
+        message: error instanceof Error ? error.message : "Unknown error",
+        quizzes: [],
+      });
+    }
+  });
+
   return httpServer;
 }

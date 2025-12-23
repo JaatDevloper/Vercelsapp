@@ -14,11 +14,13 @@ import MultiplayerQuizScreen from "@/screens/MultiplayerQuizScreen";
 import MultiplayerResultsScreen from "@/screens/MultiplayerResultsScreen";
 import BadgesScreen from "@/screens/BadgesScreen";
 import AdminDashboardScreen from "@/screens/AdminDashboardScreen";
+import ManageQuizzesScreen from "@/screens/ManageQuizzesScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
   Main: undefined;
   AdminDashboard: undefined;
+  ManageQuizzes: undefined;
   QuizDetails: { quizId: string };
   Quiz: { quizId: string };
   CreateProfile: undefined;
@@ -177,6 +179,14 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="Badges"
         component={BadgesScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ManageQuizzes"
+        component={ManageQuizzesScreen}
         options={{
           presentation: "modal",
           headerShown: false,
