@@ -1899,14 +1899,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: categoryName,
         isDeleted: { $ne: true }  // Skip deleted quizzes
       })
-      .sort({ updatedAt: -1 })
+      .sort({ updatedAt: -1, created_at: -1 })
       .toArray();
 
-      // Format the response
+      // Format the response with all quiz data
       const formattedQuizzes = categoryQuizzes.map((quiz: any) => ({
         _id: quiz._id?.toString() || "",
-        quiz_id: quiz.quiz_id || quiz.id || "",
+        quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
+        title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
         category: quiz.category || categoryName,
+        timer: quiz.timer || 15,
+        negative_marking: quiz.negative_marking || 0,
+        type: quiz.type || "free",
+        creator_id: quiz.creator_id || "",
+        creator_name: quiz.creator_name || quiz.creator || "Unknown",
+        created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
+        timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
+        questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
         updatedAt: quiz.updatedAt || new Date().toISOString(),
         isDeleted: quiz.isDeleted || false,
       }));
