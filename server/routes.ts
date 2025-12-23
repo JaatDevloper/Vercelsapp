@@ -124,21 +124,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const client = await getMongoClient();
       const db = client.db("quizbot");
-      const collection = db.collection("quizzes");
+      // Query from 'manage' collection where quizzes are actually stored
+      const collection = db.collection("manage");
       
       const categoryFilter = req.query.category as string;
 
       // Build aggregation pipeline with optional category filter
       const pipeline: any[] = [];
       
-      // Add category filter if provided
+      // Add category filter if provided, and always exclude deleted quizzes
+      const matchStage: any = {
+        $and: [
+          { isDeleted: { $ne: true } }  // Exclude deleted quizzes
+        ]
+      };
+      
       if (categoryFilter && categoryFilter.trim() !== "All") {
-        pipeline.push({
-          $match: {
-            category: { $regex: `^${categoryFilter.trim()}$`, $options: "i" }
-          }
+        matchStage.$and.push({
+          category: { $regex: `^${categoryFilter.trim()}$`, $options: "i" }
         });
       }
+      
+      pipeline.push({ $match: matchStage });
       
       // Sort and project
       pipeline.push({ $sort: { created_at: -1, timestamp: -1 } });
@@ -1641,6 +1648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           categories = uniqueCategories.map((cat) => ({
+            _id: new ObjectId(),
             name: cat._id,
             color: categoryColors[cat._id] || "#95E1D3",
             icon: "tag",
@@ -1648,7 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }));
 
           // Insert them into quiz_categories for future use
-          await categoriesCollection.insertMany(categories).catch(() => {
+          await categoriesCollection.insertMany(categories as any).catch(() => {
             // Ignore duplicate key errors
           });
 
@@ -1669,9 +1677,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         await categoriesCollection.insertMany(
           defaultCategories.map((cat) => ({
+            _id: new ObjectId(),
             ...cat,
             createdAt: new Date().toISOString(),
-          }))
+          })) as any
         ).catch(() => {
           // Ignore duplicate key errors
         });
