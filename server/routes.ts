@@ -124,8 +124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const client = await getMongoClient();
       const db = client.db("quizbot");
-      // Query from 'manage' collection where quizzes are actually stored
-      const collection = db.collection("manage");
+      // Query from 'quizzes' collection for main quiz display
+      const collection = db.collection("quizzes");
       
       const categoryFilter = req.query.category as string;
 
