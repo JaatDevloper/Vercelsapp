@@ -1609,14 +1609,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const categoriesCollection = db.collection("quiz_categories");
+      const manageCollection = db.collection("manage");
 
       // Create index if it doesn't exist
       await categoriesCollection.createIndex({ name: 1 }, { unique: true });
 
-      const categories = await categoriesCollection.find({}).toArray();
+      // First, try to get categories from quiz_categories collection
+      let categories = await categoriesCollection.find({}).toArray();
 
-      // If no categories exist, create default ones
+      // If no categories in quiz_categories, get unique categories from manage collection
       if (categories.length === 0) {
+        const uniqueCategories = await manageCollection
+          .aggregate([
+            { $match: { category: { $exists: true, $ne: null } } },
+            { $group: { _id: "$category" } },
+            { $sort: { _id: 1 } }
+          ])
+          .toArray();
+
+        if (uniqueCategories.length > 0) {
+          // Create category objects with default colors
+          const categoryColors: Record<string, string> = {
+            "Science": "#FF6B6B",
+            "History": "#4ECDC4",
+            "Technology": "#95E1D3",
+            "Sports": "#F38181",
+            "Entertainment": "#AA96DA",
+            "General Knowledge": "#FCBAD3",
+            "Art&Culture": "#FFB3BA",
+            "Rajasthan History": "#BAE1FF",
+          };
+
+          categories = uniqueCategories.map((cat) => ({
+            name: cat._id,
+            color: categoryColors[cat._id] || "#95E1D3",
+            icon: "tag",
+            createdAt: new Date().toISOString(),
+          }));
+
+          // Insert them into quiz_categories for future use
+          await categoriesCollection.insertMany(categories).catch(() => {
+            // Ignore duplicate key errors
+          });
+
+          return res.set("Cache-Control", "no-cache, no-store, must-revalidate").json(categories);
+        }
+
+        // If still no categories, use defaults
         const defaultCategories = [
           { name: "Science", color: "#FF6B6B", icon: "flask" },
           { name: "History", color: "#4ECDC4", icon: "book" },
@@ -1624,6 +1663,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { name: "Sports", color: "#F38181", icon: "activity" },
           { name: "Entertainment", color: "#AA96DA", icon: "film" },
           { name: "General Knowledge", color: "#FCBAD3", icon: "star" },
+          { name: "Art&Culture", color: "#FFB3BA", icon: "palette" },
+          { name: "Rajasthan History", color: "#BAE1FF", icon: "book" },
         ];
 
         await categoriesCollection.insertMany(
@@ -1631,7 +1672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...cat,
             createdAt: new Date().toISOString(),
           }))
-        );
+        ).catch(() => {
+          // Ignore duplicate key errors
+        });
 
         return res.json(defaultCategories);
       }

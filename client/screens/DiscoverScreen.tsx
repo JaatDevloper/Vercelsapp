@@ -50,9 +50,33 @@ export default function DiscoverScreen() {
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
+        } else {
+          console.error("Failed to fetch categories, status:", response.status);
+          // Fallback to default categories if API fails
+          setCategories([
+            { name: "Science", color: "#FF6B6B", icon: "flask" },
+            { name: "History", color: "#4ECDC4", icon: "book" },
+            { name: "Technology", color: "#95E1D3", icon: "zap" },
+            { name: "Sports", color: "#F38181", icon: "activity" },
+            { name: "Entertainment", color: "#AA96DA", icon: "film" },
+            { name: "General Knowledge", color: "#FCBAD3", icon: "star" },
+            { name: "Art&Culture", color: "#FFB3BA", icon: "palette" },
+            { name: "Rajasthan History", color: "#BAE1FF", icon: "book" },
+          ]);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
+        // Fallback to default categories on error
+        setCategories([
+          { name: "Science", color: "#FF6B6B", icon: "flask" },
+          { name: "History", color: "#4ECDC4", icon: "book" },
+          { name: "Technology", color: "#95E1D3", icon: "zap" },
+          { name: "Sports", color: "#F38181", icon: "activity" },
+          { name: "Entertainment", color: "#AA96DA", icon: "film" },
+          { name: "General Knowledge", color: "#FCBAD3", icon: "star" },
+          { name: "Art&Culture", color: "#FFB3BA", icon: "palette" },
+          { name: "Rajasthan History", color: "#BAE1FF", icon: "book" },
+        ]);
       }
     };
     fetchCategories();
