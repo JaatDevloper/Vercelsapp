@@ -92,9 +92,11 @@ export default function ManageQuizzesScreen() {
     if (selectedFilter === "All") {
       return quizzes;
     }
-    return quizzes.filter(
-      (quiz) => quiz.managedCategory === selectedFilter || quiz.category === selectedFilter
-    );
+    return quizzes.filter((quiz) => {
+      // Use managedCategory if set, otherwise fall back to original category
+      const effectiveCategory = quiz.managedCategory || quiz.category;
+      return effectiveCategory === selectedFilter;
+    });
   };
 
   const updateQuizCategory = async (quizId: string, category: string) => {
