@@ -1736,23 +1736,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const client = await getMongoClient();
       const db = client.db("quizbot");
+      const quizzesCollection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
       // Create index on quiz_id
       await manageCollection.createIndex({ quiz_id: 1 });
 
+      // Fetch the full quiz data from quizzes collection
+      let fullQuizData: any = null;
+      
+      // Try finding by string _id first (custom format like "0zamBb_1747544159")
+      fullQuizData = await quizzesCollection.findOne({ _id: id as any });
+      
+      // Try ObjectId if string didn't work
+      if (!fullQuizData && ObjectId.isValid(id)) {
+        try {
+          fullQuizData = await quizzesCollection.findOne({ _id: new ObjectId(id) });
+        } catch (e) {
+          // Ignore ObjectId conversion errors
+        }
+      }
+      
+      // Try quiz_id field if still not found
+      if (!fullQuizData) {
+        fullQuizData = await quizzesCollection.findOne({ quiz_id: id });
+      }
+
+      if (!fullQuizData) {
+        return res.status(404).json({ error: "Quiz not found in quizzes collection" });
+      }
+
+      // Create update data with FULL quiz information
       const updateData: any = {
+        ...fullQuizData, // Copy all fields from the full quiz
+        category: category !== undefined ? category : fullQuizData.category || "General",
         updatedAt: new Date().toISOString(),
       };
 
-      if (category !== undefined) {
-        updateData.category = category;
+      // Ensure quiz_id is set properly
+      if (!updateData.quiz_id) {
+        updateData.quiz_id = id;
       }
 
       if (isDeleted !== undefined) {
         updateData.isDeleted = isDeleted;
       }
 
+      // Save the full quiz data to manage collection
       const result = await manageCollection.findOneAndUpdate(
         { quiz_id: id },
         { $set: updateData },
