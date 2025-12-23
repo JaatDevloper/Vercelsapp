@@ -62,26 +62,15 @@ export default function ManageQuizzesScreen() {
     if (selectedFilter !== "All") {
       loadCategoryQuizzes(selectedFilter);
     } else {
-      // Reload all quizzes when "All" is selected
-      loadData();
+      // Load all quizzes from quizzes collection when "All" is selected
+      loadAllQuizzes();
     }
   }, [selectedFilter]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [quizzesRes, categoriesRes] = await Promise.all([
-        fetch("/api/manage/quizzes"),
-        fetch("/api/manage/categories"),
-      ]);
-
-      if (quizzesRes.ok) {
-        const quizzesData = await quizzesRes.json();
-        setQuizzes(quizzesData);
-      } else {
-        console.error("Error fetching quizzes:", quizzesRes.status);
-        Alert.alert("Error", "Failed to fetch quizzes");
-      }
+      const categoriesRes = await fetch("/api/manage/categories");
 
       if (categoriesRes.ok) {
         const categoriesData = await categoriesRes.json();
@@ -91,8 +80,28 @@ export default function ManageQuizzesScreen() {
         Alert.alert("Error", "Failed to fetch categories");
       }
     } catch (error) {
-      console.error("Error loading manage data:", error);
+      console.error("Error loading data:", error);
       Alert.alert("Error", "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAllQuizzes = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/quizzes");
+      
+      if (response.ok) {
+        const data = await response.json();
+        setQuizzes(data);
+      } else {
+        console.error("Error fetching all quizzes:", response.status);
+        setQuizzes([]);
+      }
+    } catch (error) {
+      console.error("Error loading all quizzes:", error);
+      setQuizzes([]);
     } finally {
       setLoading(false);
     }
