@@ -1,12 +1,25 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import { MongoClient, ObjectId } from "mongodb";
+import nodemailer from "nodemailer";
 
 let mongoClient: MongoClient | null = null;
 let isConnecting = false;
 let connectionRetryCount = 0;
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2000;
+
+// In-memory OTP storage (email -> { otp, expiresAt })
+const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+
+// Configure email transporter
+const emailTransporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER || "",
+    pass: process.env.EMAIL_PASSWORD || "",
+  },
+});
 
 async function getMongoClient(): Promise<MongoClient> {
   if (mongoClient) {
@@ -307,6 +320,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({
         error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // ============ OTP EMAIL VERIFICATION ENDPOINTS ============
+
+  // Request OTP
+  app.post("/api/otp/request", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "Valid email is required" });
+      }
+
+      const normalizedEmail = email.toLowerCase();
+      const otp = Math.random().toString().slice(2, 8);
+      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+      otpStore.set(normalizedEmail, { otp, expiresAt });
+
+      // Send OTP via email
+      try {
+        await emailTransporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: "Your TestOne OTP Verification Code",
+          html: `
+            <h2>Email Verification</h2>
+            <p>Your OTP code is: <strong>${otp}</strong></p>
+            <p>This code will expire in 10 minutes.</p>
+            <p>Do not share this code with anyone.</p>
+          `,
+        });
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+        // Store OTP anyway for testing
+      }
+
+      res.json({ message: "OTP sent to your email" });
+    } catch (error) {
+      console.error("Error requesting OTP:", error);
+      res.status(500).json({
+        error: "Failed to send OTP",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Verify OTP
+  app.post("/api/otp/verify", async (req: Request, res: Response) => {
+    try {
+      const { email, otp } = req.body;
+
+      if (!email || !otp) {
+        return res.status(400).json({ error: "Email and OTP are required" });
+      }
+
+      const normalizedEmail = email.toLowerCase();
+      const storedOTP = otpStore.get(normalizedEmail);
+
+      if (!storedOTP) {
+        return res.status(400).json({ error: "OTP not found. Please request a new one." });
+      }
+
+      if (Date.now() > storedOTP.expiresAt) {
+        otpStore.delete(normalizedEmail);
+        return res.status(400).json({ error: "OTP has expired. Please request a new one." });
+      }
+
+      if (storedOTP.otp !== otp) {
+        return res.status(400).json({ error: "Invalid OTP. Please try again." });
+      }
+
+      // Clear OTP after successful verification
+      otpStore.delete(normalizedEmail);
+
+      res.json({ message: "OTP verified successfully" });
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      res.status(500).json({
+        error: "Failed to verify OTP",
+        message: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });

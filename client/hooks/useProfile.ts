@@ -113,6 +113,48 @@ async function loginProfile(data: LoginProfileData & { newDeviceId: string }): P
   return response.json();
 }
 
+async function requestOTP(email: string): Promise<{ message: string }> {
+  const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : "";
+  
+  const response = await fetch(`${baseUrl}/api/otp/request`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to send OTP");
+  }
+  
+  return response.json();
+}
+
+async function verifyOTP(email: string, otp: string): Promise<{ message: string }> {
+  const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : "";
+  
+  const response = await fetch(`${baseUrl}/api/otp/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email: email.trim().toLowerCase(), otp }),
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Invalid OTP");
+  }
+  
+  return response.json();
+}
+
 export function useProfile() {
   const queryClient = useQueryClient();
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -171,6 +213,18 @@ export function useProfile() {
 
   const profileNotFound = error?.message === "PROFILE_NOT_FOUND";
 
+  const otpRequestMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return requestOTP(email);
+    },
+  });
+
+  const otpVerifyMutation = useMutation({
+    mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
+      return verifyOTP(email, otp);
+    },
+  });
+
   const logout = () => {
     queryClient.removeQueries({ queryKey: ["profile", deviceId] });
   };
@@ -190,6 +244,10 @@ export function useProfile() {
     updatePhoto: updatePhotoMutation.mutate,
     isUpdatingPhoto: updatePhotoMutation.isPending,
     updatePhotoError: updatePhotoMutation.error,
+    requestOTP: otpRequestMutation.mutateAsync,
+    isRequestingOTP: otpRequestMutation.isPending,
+    verifyOTP: (email: string, otp: string) => otpVerifyMutation.mutateAsync({ email, otp }),
+    isVerifyingOTP: otpVerifyMutation.isPending,
     refetch,
     deviceId,
     logout,

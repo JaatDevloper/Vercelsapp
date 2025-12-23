@@ -25,18 +25,21 @@ import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { OTPVerificationScreen } from "./OTPVerificationScreen";
 
 export default function CreateProfileScreen() {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { createProfile, isCreating, createError } = useProfile();
+  const { createProfile, isCreating, createError, requestOTP, isRequestingOTP, verifyOTP, isVerifyingOTP } = useProfile();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [pendingProfileData, setPendingProfileData] = useState<any>(null);
 
   const primaryColor = isDark ? Colors.dark.primary : Colors.light.primary;
 
@@ -75,7 +78,7 @@ export default function CreateProfileScreen() {
     return emailRegex.test(email);
   };
 
-  const handleCreateProfile = () => {
+  const handleCreateProfile = async () => {
     setNameError("");
     setEmailError("");
 
@@ -93,17 +96,37 @@ export default function CreateProfileScreen() {
 
     if (hasError) return;
 
-    createProfile(
-      { name: name.trim(), email: email.trim(), avatarUrl },
-      {
+    // Request OTP
+    const profileData = { name: name.trim(), email: email.trim(), avatarUrl };
+    setPendingProfileData(profileData);
+    
+    try {
+      await requestOTP(email.trim());
+      setShowOTPModal(true);
+    } catch (error) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to send OTP");
+    }
+  };
+
+  const handleOTPVerified = async (otp: string) => {
+    if (!pendingProfileData) return;
+
+    try {
+      await verifyOTP(email.trim(), otp);
+      setShowOTPModal(false);
+      
+      // Create profile after OTP verification
+      createProfile(pendingProfileData, {
         onSuccess: () => {
           navigation.goBack();
         },
         onError: (error) => {
           Alert.alert("Error", error.message || "Failed to create profile");
         },
-      }
-    );
+      });
+    } catch (error) {
+      Alert.alert("Error", error instanceof Error ? error.message : "Invalid OTP");
+    }
   };
 
   return (
@@ -239,10 +262,10 @@ export default function CreateProfileScreen() {
           <Animated.View entering={FadeInDown.delay(400).duration(400)}>
             <Pressable
               onPress={handleCreateProfile}
-              disabled={isCreating}
+              disabled={isCreating || isRequestingOTP}
               style={({ pressed }) => [
                 styles.createButton,
-                { opacity: isCreating ? 0.6 : pressed ? 0.8 : 1 },
+                { opacity: (isCreating || isRequestingOTP) ? 0.6 : pressed ? 0.8 : 1 },
               ]}
             >
               <LinearGradient
@@ -251,7 +274,7 @@ export default function CreateProfileScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.gradientButton}
               >
-                {isCreating ? (
+                {isCreating || isRequestingOTP ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
@@ -266,6 +289,14 @@ export default function CreateProfileScreen() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <OTPVerificationScreen
+        visible={showOTPModal}
+        email={email}
+        onClose={() => setShowOTPModal(false)}
+        onVerified={handleOTPVerified}
+        isLoading={isVerifyingOTP}
+      />
     </ThemedView>
   );
 }
