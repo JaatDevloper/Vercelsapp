@@ -68,7 +68,17 @@ export default function DiscoverScreen() {
     error,
     isError 
   } = useQuery<Quiz[]>({
-    queryKey: ["/api/quizzes"],
+    queryKey: ["/api/quizzes", selectedCategory],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory !== "All") {
+        params.append("category", selectedCategory);
+      }
+      const url = `/api/quizzes${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch quizzes");
+      return response.json();
+    },
     staleTime: 1000 * 30, // 30 seconds - refresh more frequently
     refetchInterval: 1000 * 60, // Auto-refresh every 60 seconds
     refetchOnWindowFocus: true,
@@ -81,12 +91,7 @@ export default function DiscoverScreen() {
     
     let filtered = quizzes;
     
-    if (selectedCategory !== "All") {
-      filtered = filtered.filter(
-        (quiz) => quiz.category?.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
-    
+    // Only filter by search query now (category is handled by API)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -103,7 +108,7 @@ export default function DiscoverScreen() {
       const timeB = getQuizCreatedTime(b.created_at || b.timestamp);
       return timeB - timeA;
     });
-  }, [quizzes, selectedCategory, searchQuery]);
+  }, [quizzes, searchQuery]);
 
   const handleQuizPress = useCallback((quizId: string) => {
     navigation.navigate("QuizDetails", { quizId });

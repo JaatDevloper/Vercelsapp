@@ -125,30 +125,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const collection = db.collection("quizzes");
+      
+      const categoryFilter = req.query.category as string;
+
+      // Build aggregation pipeline with optional category filter
+      const pipeline: any[] = [];
+      
+      // Add category filter if provided
+      if (categoryFilter && categoryFilter.trim() !== "All") {
+        pipeline.push({
+          $match: {
+            category: { $regex: `^${categoryFilter.trim()}$`, $options: "i" }
+          }
+        });
+      }
+      
+      // Sort and project
+      pipeline.push({ $sort: { created_at: -1, timestamp: -1 } });
+      pipeline.push({
+        $project: {
+          _id: 1,
+          quiz_id: 1,
+          title: 1,
+          quiz_name: 1,
+          name: 1,
+          category: 1,
+          timer: 1,
+          negative_marking: 1,
+          type: 1,
+          creator_id: 1,
+          creator_name: 1,
+          creator: 1,
+          created_at: 1,
+          timestamp: 1,
+          questionCount: { $size: { $ifNull: ["$questions", []] } }
+        }
+      });
 
       // Use aggregation to get questionCount without loading all questions
-      const quizzes = await collection.aggregate([
-        { $sort: { created_at: -1, timestamp: -1 } },
-        {
-          $project: {
-            _id: 1,
-            quiz_id: 1,
-            title: 1,
-            quiz_name: 1,
-            name: 1,
-            category: 1,
-            timer: 1,
-            negative_marking: 1,
-            type: 1,
-            creator_id: 1,
-            creator_name: 1,
-            creator: 1,
-            created_at: 1,
-            timestamp: 1,
-            questionCount: { $size: { $ifNull: ["$questions", []] } }
-          }
-        }
-      ]).toArray();
+      const quizzes = await collection.aggregate(pipeline).toArray();
 
       // Format quiz data for response
       const formattedQuizzes = quizzes.map((quiz: any) => ({
