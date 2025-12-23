@@ -1719,16 +1719,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const collection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
-      // Find all quizzes that either have the category in original data OR in manage collection
+      // Find all quizzes that have been categorized in manage collection
       const managedQuizzes = await manageCollection.find({ category: categoryName }).toArray();
       const managedQuizIds = new Set(managedQuizzes.map((q: any) => q.quiz_id));
 
+      // Build aggregation pipeline to filter by category
+      // Match quizzes by: managed category (exact match by quiz_id) OR original category field (case-insensitive)
       const quizzes = await collection.aggregate([
+        {
+          $addFields: {
+            quiz_id_str: {
+              $cond: [
+                { $isString: "$quiz_id" },
+                "$quiz_id",
+                { $toString: "$_id" }
+              ]
+            }
+          }
+        },
         {
           $match: {
             $or: [
-              { category: { $regex: new RegExp(`^${categoryName}$`, "i") } },
-              { _id: { $in: Array.from(managedQuizIds) } }
+              { quiz_id_str: { $in: Array.from(managedQuizIds) } },
+              { category: { $regex: new RegExp(`^${categoryName}$`, "i") } }
             ]
           }
         },

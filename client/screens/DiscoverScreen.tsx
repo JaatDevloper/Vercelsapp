@@ -25,7 +25,11 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
 
-const CATEGORIES = ["All", "Science", "History", "Math", "Geography", "Literature", "Technology", "Sports", "General"];
+interface Category {
+  name: string;
+  color: string;
+  icon: string;
+}
 
 export default function DiscoverScreen() {
   const { theme, isDark } = useTheme();
@@ -35,7 +39,26 @@ export default function DiscoverScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [categories, setCategories] = useState<Category[]>([]);
   const searchInputRef = useRef<TextInput>(null);
+
+  // Fetch categories from API
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/manage/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const CATEGORIES = ["All", ...categories.map((c) => c.name)];
 
   const { 
     data: quizzes, 
