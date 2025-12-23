@@ -1705,8 +1705,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get quizzes by category (for home screen display)
-  app.get("/api/quizzes/category/:categoryName", async (req: Request, res: Response) => {
+  // Edit category
+  app.put("/api/manage/categories/:categoryName", async (req: Request, res: Response) => {
+    try {
+      const { categoryName } = req.params;
+      const { name, color, icon } = req.body;
+
+      if (!categoryName) {
+        return res.status(400).json({ error: "Category name is required" });
+      }
+
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({ error: "New category name is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const categoriesCollection = db.collection("quiz_categories");
+
+      const updateData: any = {
+        name: name.trim(),
+      };
+
+      if (color) updateData.color = color;
+      if (icon) updateData.icon = icon;
+
+      const result = await categoriesCollection.findOneAndUpdate(
+        { name: categoryName },
+        { $set: updateData },
+        { returnDocument: "after" }
+      );
+
+      if (!result || !result.value) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(result.value);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({
+        error: "Failed to update category",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Delete category
+  app.delete("/api/manage/categories/:categoryName", async (req: Request, res: Response) => {
     try {
       const { categoryName } = req.params;
 
@@ -1716,12 +1762,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const client = await getMongoClient();
       const db = client.db("quizbot");
+      const categoriesCollection = db.collection("quiz_categories");
+
+      const result = await categoriesCollection.deleteOne({ name: categoryName });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json({ success: true, message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({
+        error: "Failed to delete category",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Get quizzes by category (for home screen display)
+  app.get("/api/quizzes/category/:categoryName", async (req: Request, res: Response) => {
+    try {
+      let { categoryName } = req.params;
+
+      if (!categoryName) {
+        return res.status(400).json({ error: "Category name is required" });
+      }
+
+      // Decode URL-encoded category names (e.g., "Art%26Culture" -> "Art&Culture")
+      categoryName = decodeURIComponent(categoryName);
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
       const collection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
       // Find all quizzes that have been categorized in manage collection
       const managedQuizzes = await manageCollection.find({ category: categoryName }).toArray();
       const managedQuizIds = new Set(managedQuizzes.map((q: any) => q.quiz_id));
+
+      // Escape special regex characters in categoryName
+      const escapedCategoryName = categoryName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
       // Build aggregation pipeline to filter by category
       // Match quizzes by: managed category (exact match by quiz_id) OR original category field (case-insensitive)
@@ -1741,7 +1823,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           $match: {
             $or: [
               { quiz_id_str: { $in: Array.from(managedQuizIds) } },
-              { category: { $regex: new RegExp(`^${categoryName}$`, "i") } }
+              { category: { $regex: new RegExp(`^${escapedCategoryName}$`, "i") } }
             ]
           }
         },
