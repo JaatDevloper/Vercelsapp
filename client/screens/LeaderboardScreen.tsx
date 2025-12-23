@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import Svg, { Polygon } from "react-native-svg";
 import { useQuery } from "@tanstack/react-query";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -502,13 +503,20 @@ export default function LeaderboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profileExists, isLoading: profileLoading } = useProfile();
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const hasShownModalRef = useRef(false);
 
-  // Show modal if user doesn't have a profile
-  useEffect(() => {
-    if (!profileLoading && !profileExists) {
-      setShowProfileModal(true);
-    }
-  }, [profileExists, profileLoading]);
+  // Show modal only when this screen is focused and user doesn't have a profile
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!profileLoading && !profileExists && !hasShownModalRef.current) {
+        setShowProfileModal(true);
+        hasShownModalRef.current = true;
+      }
+      return () => {
+        // Don't show modal when leaving the screen
+      };
+    }, [profileExists, profileLoading])
+  );
 
   const { data: leaderboardData = [], isLoading, refetch } = useQuery({
     queryKey: ["leaderboard", activeFilter],
@@ -535,7 +543,7 @@ export default function LeaderboardScreen() {
               entering={FadeInDown}
               style={[
                 styles.modalContent,
-                { backgroundColor: theme.background }
+                { backgroundColor: theme.backgroundDefault }
               ]}
             >
               <View style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}>

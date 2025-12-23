@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { getStats } = useQuizHistory();
-  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto } = useProfile();
+  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout } = useProfile();
   const { ownerProfile } = useOwnerProfile();
 
   const stats = getStats();
@@ -362,6 +362,29 @@ export default function ProfileScreen() {
               icon="shield" 
               label="Owner Login" 
               onPress={() => navigation.navigate("OwnerLogin")} 
+              theme={theme}
+              showBorder={true}
+            />
+            <MenuItem 
+              icon="log-out" 
+              label="Logout" 
+              onPress={() => {
+                Alert.alert(
+                  "Logout",
+                  "Are you sure you want to logout?",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { 
+                      text: "Logout", 
+                      style: "destructive",
+                      onPress: () => {
+                        logout();
+                        refetch();
+                      }
+                    },
+                  ]
+                );
+              }} 
               theme={theme}
               showBorder={false}
             />

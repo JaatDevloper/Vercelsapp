@@ -171,6 +171,10 @@ export function useProfile() {
 
   const profileNotFound = error?.message === "PROFILE_NOT_FOUND";
 
+  const logout = () => {
+    queryClient.removeQueries({ queryKey: ["profile", deviceId] });
+  };
+
   return {
     profile,
     isLoading: isLoading || !deviceId,
@@ -188,5 +192,6 @@ export function useProfile() {
     updatePhotoError: updatePhotoMutation.error,
     refetch,
     deviceId,
+    logout,
   };
 }
