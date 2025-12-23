@@ -255,7 +255,7 @@ export default function ManageQuizzesScreen() {
 
       <View style={styles.categoryBadge}>
         <ThemedText type="small" style={{ color: theme.primary }}>
-          {quiz.category}
+          {quiz.managedCategory || quiz.category || "General"}
         </ThemedText>
       </View>
 

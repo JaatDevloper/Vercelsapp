@@ -1571,21 +1571,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Build quiz response, prioritizing manage collection data
       const quizzesWithManageData = allQuizzes.map((quiz: any) => {
-        const quizId = quiz._id?.toString() || quiz.quiz_id;
-        const manageData = manageDataMap.get(quizId);
+        const quizStringId = quiz._id?.toString() || "";
+        const quizIdField = quiz.quiz_id || "";
+        
+        // Try both the string _id and quiz_id field to find manage data
+        let manageData = manageDataMap.get(quizStringId);
+        if (!manageData) {
+          manageData = manageDataMap.get(quizIdField);
+        }
         
         // Use manage data if available (it has the admin-managed category), otherwise use quiz data
-        const quizToUse = manageData || quiz;
-        const effectiveCategory = quizToUse.category || "General";
+        const effectiveCategory = manageData?.category || quiz.category || "General";
         
         return {
-          _id: quiz._id?.toString() || "",
-          quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
-          title: quizToUse.title || quizToUse.quiz_name || quiz.title || quiz.quiz_name || "Untitled Quiz",
+          _id: quizStringId,
+          quiz_id: quizIdField || quizStringId || "",
+          title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
           category: effectiveCategory,
-          questionCount: Array.isArray(quizToUse.questions) ? quizToUse.questions.length : (Array.isArray(quiz.questions) ? quiz.questions.length : 0),
-          created_at: quizToUse.created_at || quizToUse.timestamp || quiz.created_at || quiz.timestamp || new Date().toISOString(),
-          creator_name: quizToUse.creator_name || quizToUse.creator || quiz.creator_name || quiz.creator || "Unknown",
+          questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
+          created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
+          creator_name: quiz.creator_name || quiz.creator || "Unknown",
           isDeleted: manageData?.isDeleted || false,
           managedCategory: manageData?.category || null,
           lastUpdated: manageData?.updatedAt || quiz.created_at || new Date().toISOString(),
