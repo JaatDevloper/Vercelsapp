@@ -57,6 +57,16 @@ export default function ManageQuizzesScreen() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    // Fetch category-specific quizzes when selectedFilter changes
+    if (selectedFilter !== "All") {
+      loadCategoryQuizzes(selectedFilter);
+    } else {
+      // Reload all quizzes when "All" is selected
+      loadData();
+    }
+  }, [selectedFilter]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -88,14 +98,29 @@ export default function ManageQuizzesScreen() {
     }
   };
 
-  const getFilteredQuizzes = () => {
-    if (selectedFilter === "All") {
-      return quizzes;
+  const loadCategoryQuizzes = async (categoryName: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/manage/category/${encodeURIComponent(categoryName)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setQuizzes(data);
+      } else {
+        console.error("Error fetching category quizzes:", response.status);
+        setQuizzes([]);
+      }
+    } catch (error) {
+      console.error("Error loading category quizzes:", error);
+      setQuizzes([]);
+    } finally {
+      setLoading(false);
     }
-    return quizzes.filter((quiz) => {
-      // Use the current category field which already has the effective category
-      return quiz.category === selectedFilter;
-    });
+  };
+
+  const getFilteredQuizzes = () => {
+    // Just return all quizzes since we already filtered them via the API
+    return quizzes;
   };
 
   const updateQuizCategory = async (quizId: string, category: string) => {
