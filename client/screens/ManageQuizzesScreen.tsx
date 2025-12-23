@@ -49,6 +49,7 @@ export default function ManageQuizzesScreen() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#95E1D3");
+  const [selectedFilter, setSelectedFilter] = useState<string>("All");
 
   useEffect(() => {
     loadData();
@@ -65,17 +66,33 @@ export default function ManageQuizzesScreen() {
       if (quizzesRes.ok) {
         const quizzesData = await quizzesRes.json();
         setQuizzes(quizzesData);
+      } else {
+        console.error("Error fetching quizzes:", quizzesRes.status);
+        Alert.alert("Error", "Failed to fetch quizzes");
       }
 
       if (categoriesRes.ok) {
         const categoriesData = await categoriesRes.json();
         setCategories(categoriesData);
+      } else {
+        console.error("Error fetching categories:", categoriesRes.status);
+        Alert.alert("Error", "Failed to fetch categories");
       }
     } catch (error) {
       console.error("Error loading manage data:", error);
+      Alert.alert("Error", "Failed to load data");
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFilteredQuizzes = () => {
+    if (selectedFilter === "All") {
+      return quizzes;
+    }
+    return quizzes.filter(
+      (quiz) => quiz.managedCategory === selectedFilter || quiz.category === selectedFilter
+    );
   };
 
   const updateQuizCategory = async (quizId: string, category: string) => {
@@ -234,6 +251,8 @@ export default function ManageQuizzesScreen() {
     );
   }
 
+  const filteredQuizzes = getFilteredQuizzes();
+
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -259,19 +278,82 @@ export default function ManageQuizzesScreen() {
         </Pressable>
       </View>
 
-      {quizzes.length === 0 ? (
+      {/* Category Filter Chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterContainer}
+      >
+        <Pressable
+          onPress={() => setSelectedFilter("All")}
+          style={({ pressed }) => [
+            styles.filterChip,
+            {
+              backgroundColor:
+                selectedFilter === "All" ? theme.primary : theme.backgroundSecondary,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <ThemedText
+            type="small"
+            style={{
+              color: selectedFilter === "All" ? "white" : theme.text,
+              fontWeight: selectedFilter === "All" ? "600" : "400",
+            }}
+          >
+            All
+          </ThemedText>
+        </Pressable>
+
+        {categories.map((cat) => (
+          <Pressable
+            key={cat.name}
+            onPress={() => setSelectedFilter(cat.name)}
+            style={({ pressed }) => [
+              styles.filterChip,
+              {
+                backgroundColor:
+                  selectedFilter === cat.name ? cat.color : theme.backgroundSecondary,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <ThemedText
+              type="small"
+              style={{
+                color: selectedFilter === cat.name ? "white" : theme.text,
+                fontWeight: selectedFilter === cat.name ? "600" : "400",
+              }}
+            >
+              {cat.name}
+            </ThemedText>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {filteredQuizzes.length === 0 ? (
         <View style={styles.emptyState}>
           <Feather name="inbox" size={48} color={theme.textSecondary} />
           <ThemedText type="h3" style={{ marginTop: Spacing.md }}>
-            No quizzes yet
+            {quizzes.length === 0 ? "No quizzes yet" : "No quizzes found"}
           </ThemedText>
+          {quizzes.length > 0 && (
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary, marginTop: Spacing.sm }}
+            >
+              Try adjusting your search or category filter
+            </ThemedText>
+          )}
         </View>
       ) : (
         <FlatList
-          data={quizzes}
+          data={filteredQuizzes}
           keyExtractor={(item) => item._id}
           renderItem={renderQuizCard}
-          scrollEnabled={false}
+          scrollEnabled={true}
           contentContainerStyle={styles.listContent}
         />
       )}
@@ -436,6 +518,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.lg,
     marginTop: Spacing.md,
+  },
+  filterScroll: {
+    marginBottom: Spacing.md,
+  },
+  filterContainer: {
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+  },
+  filterChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
   createCategoryBtn: {
     borderRadius: BorderRadius.full,
