@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   Dimensions,
   ActivityIndicator,
   Image,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -19,6 +20,10 @@ import { useQuery } from "@tanstack/react-query";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
+import { useProfile } from "@/hooks/useProfile";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { getApiUrl } from "@/lib/query-client";
 
@@ -494,6 +499,16 @@ export default function LeaderboardScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("allTime");
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { profileExists, isLoading: profileLoading } = useProfile();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Show modal if user doesn't have a profile
+  useEffect(() => {
+    if (!profileLoading && !profileExists) {
+      setShowProfileModal(true);
+    }
+  }, [profileExists, profileLoading]);
 
   const { data: leaderboardData = [], isLoading, refetch } = useQuery({
     queryKey: ["leaderboard", activeFilter],
@@ -504,6 +519,98 @@ export default function LeaderboardScreen() {
   const topThree = leaderboardData.filter(u => u.rank <= 3);
   const others = leaderboardData.filter(u => u.rank > 3);
   const primaryColor = isDark ? Colors.dark.primary : Colors.light.primary;
+
+  // Show modal overlay if no profile
+  if (!profileLoading && !profileExists && showProfileModal) {
+    return (
+      <ThemedView style={styles.container}>
+        <Modal
+          visible={showProfileModal}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={() => setShowProfileModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <Animated.View 
+              entering={FadeInDown}
+              style={[
+                styles.modalContent,
+                { backgroundColor: theme.background }
+              ]}
+            >
+              <View style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}>
+                <Feather name="lock" size={32} color={primaryColor} />
+                <ThemedText type="h2" style={{ marginTop: Spacing.md, textAlign: "center" }}>
+                  See Your Rank
+                </ThemedText>
+                <ThemedText 
+                  type="body" 
+                  style={{ 
+                    marginTop: Spacing.md, 
+                    textAlign: "center",
+                    color: theme.textSecondary
+                  }}
+                >
+                  Create your profile to see your rank and compete on the leaderboard!
+                </ThemedText>
+              </View>
+
+              <ScrollView 
+                style={styles.modalPreview}
+                contentContainerStyle={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.lg }}
+              >
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
+                  LEADERBOARD PREVIEW
+                </ThemedText>
+                {leaderboardData.slice(0, 5).map((user) => (
+                  <View 
+                    key={user.id}
+                    style={[
+                      styles.previewCard,
+                      { backgroundColor: theme.backgroundSecondary }
+                    ]}
+                  >
+                    <View style={styles.previewRank}>
+                      <ThemedText style={{ color: primaryColor, fontWeight: "700" }}>
+                        #{user.rank}
+                      </ThemedText>
+                    </View>
+                    <View style={styles.previewInfo}>
+                      <ThemedText type="small" style={{ fontWeight: "600" }}>
+                        {user.name}
+                      </ThemedText>
+                      <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                        {user.points} pts
+                      </ThemedText>
+                    </View>
+                    <Feather name="arrow-right" size={16} color={theme.textSecondary} />
+                  </View>
+                ))}
+              </ScrollView>
+
+              <View style={styles.modalActions}>
+                <Pressable
+                  onPress={() => {
+                    setShowProfileModal(false);
+                    navigation.navigate("Profile");
+                  }}
+                  style={[
+                    styles.createButton,
+                    { backgroundColor: primaryColor }
+                  ]}
+                >
+                  <Feather name="user-plus" size={18} color="white" />
+                  <ThemedText style={{ color: "white", fontWeight: "600", marginLeft: Spacing.sm }}>
+                    Create Profile
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </Animated.View>
+          </View>
+        </Modal>
+      </ThemedView>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -640,6 +747,60 @@ export default function LeaderboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    maxHeight: "85%",
+    overflow: "hidden",
+  },
+  modalHeader: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
+    alignItems: "center",
+  },
+  modalPreview: {
+    maxHeight: 300,
+  },
+  previewCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.md,
+  },
+  previewRank: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: "rgba(99, 102, 241, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  previewInfo: {
+    flex: 1,
+  },
+  modalActions: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
+    paddingBottom: Spacing.xl + 20,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.1)",
+  },
+  createButton: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerGradient: {
     paddingHorizontal: Spacing.lg,
