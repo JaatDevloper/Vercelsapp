@@ -126,24 +126,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const db = client.db("quizbot");
       // Query from 'quizzes' collection for main quiz display
       const collection = db.collection("quizzes");
+      const manageCollection = db.collection("manage");
       
       const categoryFilter = req.query.category as string;
 
-      // Build aggregation pipeline with optional category filter
+      // If category filter is provided and not "All", fetch from manage collection
+      if (categoryFilter && categoryFilter.trim() !== "All") {
+        // Get quizzes from manage collection with the category
+        const managedQuizzes = await manageCollection.find({ 
+          category: categoryFilter.trim(),
+          isDeleted: { $ne: true }
+        }).toArray();
+        
+        const managedQuizIds = new Set(managedQuizzes.map((q: any) => q.quiz_id));
+        
+        // Get full quiz data from quizzes collection for these IDs
+        const quizzes = await collection.aggregate([
+          {
+            $addFields: {
+              quiz_id_str: {
+                $cond: [
+                  { $isString: "$quiz_id" },
+                  "$quiz_id",
+                  { $toString: "$_id" }
+                ]
+              }
+            }
+          },
+          {
+            $match: {
+              quiz_id_str: { $in: Array.from(managedQuizIds) }
+            }
+          },
+          { $sort: { created_at: -1, timestamp: -1 } },
+          {
+            $project: {
+              _id: 1,
+              quiz_id: 1,
+              title: 1,
+              quiz_name: 1,
+              name: 1,
+              category: 1,
+              timer: 1,
+              negative_marking: 1,
+              type: 1,
+              creator_id: 1,
+              creator_name: 1,
+              creator: 1,
+              created_at: 1,
+              timestamp: 1,
+              questionCount: { $size: { $ifNull: ["$questions", []] } }
+            }
+          }
+        ]).toArray();
+
+        // Format quiz data for response
+        const formattedQuizzes = quizzes.map((quiz: any) => ({
+          _id: quiz._id?.toString() || "",
+          quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
+          title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
+          category: categoryFilter.trim(),
+          timer: quiz.timer || 15,
+          negative_marking: quiz.negative_marking || 0,
+          type: quiz.type || "free",
+          creator_id: quiz.creator_id || "",
+          creator_name: quiz.creator_name || quiz.creator || "Unknown",
+          created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
+          timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
+          questionCount: quiz.questionCount || 0,
+        }));
+
+        // Set cache headers for better performance
+        res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+        return res.json(formattedQuizzes);
+      }
+
+      // For "All" or no category filter, fetch from quizzes collection
       const pipeline: any[] = [];
       
-      // Add category filter if provided, and always exclude deleted quizzes
       const matchStage: any = {
         $and: [
           { isDeleted: { $ne: true } }  // Exclude deleted quizzes
         ]
       };
-      
-      if (categoryFilter && categoryFilter.trim() !== "All") {
-        matchStage.$and.push({
-          category: { $regex: `^${categoryFilter.trim()}$`, $options: "i" }
-        });
-      }
       
       pipeline.push({ $match: matchStage });
       
