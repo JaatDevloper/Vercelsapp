@@ -1848,8 +1848,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get quizzes by category (for home screen display)
-  app.get("/api/quizzes/category/:categoryName", async (req: Request, res: Response) => {
+  // Get quizzes by category from "manage" collection (for home screen display)
+  app.get("/api/manage/category/:categoryName", async (req: Request, res: Response) => {
     try {
       let { categoryName } = req.params;
 
@@ -1862,73 +1862,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const client = await getMongoClient();
       const db = client.db("quizbot");
-      const collection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
-      // Find all quizzes in the manage collection for this category (exclude deleted quizzes)
-      const managedQuizzes = await manageCollection.find({ 
+      // Fetch quizzes directly from "manage" collection for this category (exclude deleted)
+      const categoryQuizzes = await manageCollection.find({
         category: categoryName,
         isDeleted: { $ne: true }  // Skip deleted quizzes
-      }).toArray();
-      const managedQuizIds = new Set(managedQuizzes.map((q: any) => q.quiz_id));
+      })
+      .sort({ updatedAt: -1 })
+      .toArray();
 
-      // Escape special regex characters in categoryName
-      const escapedCategoryName = categoryName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-      // Build aggregation pipeline to filter by category
-      // ONLY match quizzes that are explicitly in the "manage" collection for this category
-      const quizzes = await collection.aggregate([
-        {
-          $addFields: {
-            quiz_id_str: {
-              $cond: [
-                { $isString: "$quiz_id" },
-                "$quiz_id",
-                { $toString: "$_id" }
-              ]
-            }
-          }
-        },
-        {
-          $match: {
-            quiz_id_str: { $in: Array.from(managedQuizIds) }
-          }
-        },
-        { $sort: { created_at: -1, timestamp: -1 } },
-        {
-          $project: {
-            _id: 1,
-            quiz_id: 1,
-            title: 1,
-            quiz_name: 1,
-            name: 1,
-            category: 1,
-            timer: 1,
-            negative_marking: 1,
-            type: 1,
-            creator_id: 1,
-            creator_name: 1,
-            creator: 1,
-            created_at: 1,
-            timestamp: 1,
-            questionCount: { $size: { $ifNull: ["$questions", []] } }
-          }
-        }
-      ]).toArray();
-
-      const formattedQuizzes = quizzes.map((quiz: any) => ({
+      // Format the response
+      const formattedQuizzes = categoryQuizzes.map((quiz: any) => ({
         _id: quiz._id?.toString() || "",
-        quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
-        title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
-        category: quiz.category || "General",
-        timer: quiz.timer || 15,
-        negative_marking: quiz.negative_marking || 0,
-        type: quiz.type || "free",
-        creator_id: quiz.creator_id || "",
-        creator_name: quiz.creator_name || quiz.creator || "Unknown",
-        created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
-        timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
-        questionCount: quiz.questionCount || 0,
+        quiz_id: quiz.quiz_id || quiz.id || "",
+        category: quiz.category || categoryName,
+        updatedAt: quiz.updatedAt || new Date().toISOString(),
+        isDeleted: quiz.isDeleted || false,
       }));
 
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
