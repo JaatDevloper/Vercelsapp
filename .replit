@@ -50,3 +50,8 @@ args = "npm run all:dev"
 waitForPort = 8081
 ensurePreviewReachable = "/status"
 
+[userenv]
+
+[userenv.shared]
+MONGODB_URL = "mongodb+srv://quizbotdatabase:ZU8xDot3J2p6Kc6a@cluster0.dsmjt9q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
