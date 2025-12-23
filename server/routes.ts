@@ -1873,7 +1873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const escapedCategoryName = categoryName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
       // Build aggregation pipeline to filter by category
-      // Match quizzes by: managed category (exact match by quiz_id) OR original category field (case-insensitive)
+      // ONLY match quizzes that are explicitly in the "manage" collection for this category
       const quizzes = await collection.aggregate([
         {
           $addFields: {
@@ -1888,10 +1888,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         {
           $match: {
-            $or: [
-              { quiz_id_str: { $in: Array.from(managedQuizIds) } },
-              { category: { $regex: new RegExp(`^${escapedCategoryName}$`, "i") } }
-            ]
+            quiz_id_str: { $in: Array.from(managedQuizIds) }
           }
         },
         { $sort: { created_at: -1, timestamp: -1 } },
