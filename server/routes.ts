@@ -1865,8 +1865,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const collection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
-      // Find all quizzes that have been categorized in manage collection
-      const managedQuizzes = await manageCollection.find({ category: categoryName }).toArray();
+      // Find all quizzes in the manage collection for this category (exclude deleted quizzes)
+      const managedQuizzes = await manageCollection.find({ 
+        category: categoryName,
+        isDeleted: { $ne: true }  // Skip deleted quizzes
+      }).toArray();
       const managedQuizIds = new Set(managedQuizzes.map((q: any) => q.quiz_id));
 
       // Escape special regex characters in categoryName
