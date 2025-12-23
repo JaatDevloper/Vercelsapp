@@ -93,9 +93,8 @@ export default function ManageQuizzesScreen() {
       return quizzes;
     }
     return quizzes.filter((quiz) => {
-      // Use managedCategory if set, otherwise fall back to original category
-      const effectiveCategory = quiz.managedCategory || quiz.category;
-      return effectiveCategory === selectedFilter;
+      // Use the current category field which already has the effective category
+      return quiz.category === selectedFilter;
     });
   };
 
@@ -256,7 +255,7 @@ export default function ManageQuizzesScreen() {
 
       <View style={styles.categoryBadge}>
         <ThemedText type="small" style={{ color: theme.primary }}>
-          {quiz.managedCategory || quiz.category}
+          {quiz.category}
         </ThemedText>
       </View>
 

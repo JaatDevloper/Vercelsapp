@@ -1554,35 +1554,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const client = await getMongoClient();
       const db = client.db("quizbot");
-      const collection = db.collection("quizzes");
+      const quizzesCollection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
       // Create index for faster lookups
       await manageCollection.createIndex({ quiz_id: 1 });
 
-      // Get all quizzes
-      const quizzes = await collection.find({}).toArray();
-      
-      // Get manage data for all quizzes in one query for better performance
+      // Get all manage data (includes full quiz info with categories)
       const allManageData = await manageCollection.find({}).toArray();
       const manageDataMap = new Map(
         allManageData.map((md: any) => [md.quiz_id, md])
       );
 
-      // Build quiz response with manage data
-      const quizzesWithManageData = quizzes.map((quiz: any) => {
+      // Get all quizzes
+      const allQuizzes = await quizzesCollection.find({}).toArray();
+      
+      // Build quiz response, prioritizing manage collection data
+      const quizzesWithManageData = allQuizzes.map((quiz: any) => {
         const quizId = quiz._id?.toString() || quiz.quiz_id;
         const manageData = manageDataMap.get(quizId);
-        const effectiveCategory = manageData?.category || quiz.category || "General";
+        
+        // Use manage data if available (it has the admin-managed category), otherwise use quiz data
+        const quizToUse = manageData || quiz;
+        const effectiveCategory = quizToUse.category || "General";
         
         return {
           _id: quiz._id?.toString() || "",
           quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
-          title: quiz.title || quiz.quiz_name || "Untitled Quiz",
-          category: quiz.category || "General",
-          questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
-          created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
-          creator_name: quiz.creator_name || quiz.creator || "Unknown",
+          title: quizToUse.title || quizToUse.quiz_name || quiz.title || quiz.quiz_name || "Untitled Quiz",
+          category: effectiveCategory,
+          questionCount: Array.isArray(quizToUse.questions) ? quizToUse.questions.length : (Array.isArray(quiz.questions) ? quiz.questions.length : 0),
+          created_at: quizToUse.created_at || quizToUse.timestamp || quiz.created_at || quiz.timestamp || new Date().toISOString(),
+          creator_name: quizToUse.creator_name || quizToUse.creator || quiz.creator_name || quiz.creator || "Unknown",
           isDeleted: manageData?.isDeleted || false,
           managedCategory: manageData?.category || null,
           lastUpdated: manageData?.updatedAt || quiz.created_at || new Date().toISOString(),
