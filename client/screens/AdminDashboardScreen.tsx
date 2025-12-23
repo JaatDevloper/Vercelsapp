@@ -48,6 +48,21 @@ interface AdminUser {
   attempts: number;
 }
 
+interface Analytics {
+  userEngagement: {
+    dailyActiveUsers: number;
+    weeklyActiveUsers: number;
+  };
+  quizStatistics: {
+    completionRate: number;
+    mostPopularCategory: string;
+  };
+  performance: {
+    serverResponseTime: number;
+    uptime: number;
+  };
+}
+
 interface QuickStatProps {
   icon: keyof typeof Feather.glyphMap;
   label: string;
@@ -189,6 +204,8 @@ export default function AdminDashboardScreen() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersModalVisible, setUsersModalVisible] = useState(false);
   const [analyticsModalVisible, setAnalyticsModalVisible] = useState(false);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -232,8 +249,24 @@ export default function AdminDashboardScreen() {
     setUsersModalVisible(true);
   };
 
+  const fetchAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const response = await fetch("/api/analytics");
+      if (response.ok) {
+        const data = await response.json();
+        setAnalytics(data);
+      }
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
   const handleViewAnalytics = () => {
     setAnalyticsModalVisible(true);
+    fetchAnalytics();
   };
 
   const handleUserPress = (user: AdminUser) => {
@@ -600,18 +633,24 @@ export default function AdminDashboardScreen() {
               ]}
             >
               <ThemedText type="h2">User Engagement</ThemedText>
-              <View style={styles.analyticsMetric}>
-                <ThemedText type="body">Daily Active Users</ThemedText>
-                <ThemedText type="h1" style={{ color: theme.primary }}>
-                  847
-                </ThemedText>
-              </View>
-              <View style={styles.analyticsMetric}>
-                <ThemedText type="body">Weekly Active Users</ThemedText>
-                <ThemedText type="h1" style={{ color: theme.primary }}>
-                  1,203
-                </ThemedText>
-              </View>
+              {analyticsLoading ? (
+                <ActivityIndicator size="small" color={theme.primary} />
+              ) : (
+                <>
+                  <View style={styles.analyticsMetric}>
+                    <ThemedText type="body">Daily Active Users</ThemedText>
+                    <ThemedText type="h1" style={{ color: theme.primary }}>
+                      {analytics?.userEngagement.dailyActiveUsers || 0}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.analyticsMetric}>
+                    <ThemedText type="body">Weekly Active Users</ThemedText>
+                    <ThemedText type="h1" style={{ color: theme.primary }}>
+                      {analytics?.userEngagement.weeklyActiveUsers || 0}
+                    </ThemedText>
+                  </View>
+                </>
+              )}
             </View>
 
             <View
@@ -621,18 +660,24 @@ export default function AdminDashboardScreen() {
               ]}
             >
               <ThemedText type="h2">Quiz Statistics</ThemedText>
-              <View style={styles.analyticsMetric}>
-                <ThemedText type="body">Average Completion Rate</ThemedText>
-                <ThemedText type="h1" style={{ color: "#6BCB77" }}>
-                  78.5%
-                </ThemedText>
-              </View>
-              <View style={styles.analyticsMetric}>
-                <ThemedText type="body">Most Popular Category</ThemedText>
-                <ThemedText type="h1" style={{ color: "#4ECDC4" }}>
-                  Science
-                </ThemedText>
-              </View>
+              {analyticsLoading ? (
+                <ActivityIndicator size="small" color={theme.primary} />
+              ) : (
+                <>
+                  <View style={styles.analyticsMetric}>
+                    <ThemedText type="body">Average Completion Rate</ThemedText>
+                    <ThemedText type="h1" style={{ color: "#6BCB77" }}>
+                      {analytics?.quizStatistics.completionRate || 0}%
+                    </ThemedText>
+                  </View>
+                  <View style={styles.analyticsMetric}>
+                    <ThemedText type="body">Most Popular Category</ThemedText>
+                    <ThemedText type="h1" style={{ color: "#4ECDC4" }}>
+                      {analytics?.quizStatistics.mostPopularCategory || "General"}
+                    </ThemedText>
+                  </View>
+                </>
+              )}
             </View>
 
             <View
@@ -642,18 +687,24 @@ export default function AdminDashboardScreen() {
               ]}
             >
               <ThemedText type="h2">Performance</ThemedText>
-              <View style={styles.analyticsMetric}>
-                <ThemedText type="body">Server Response Time</ThemedText>
-                <ThemedText type="h1" style={{ color: theme.primary }}>
-                  124ms
-                </ThemedText>
-              </View>
-              <View style={styles.analyticsMetric}>
-                <ThemedText type="body">Uptime</ThemedText>
-                <ThemedText type="h1" style={{ color: "#6BCB77" }}>
-                  99.9%
-                </ThemedText>
-              </View>
+              {analyticsLoading ? (
+                <ActivityIndicator size="small" color={theme.primary} />
+              ) : (
+                <>
+                  <View style={styles.analyticsMetric}>
+                    <ThemedText type="body">Server Response Time</ThemedText>
+                    <ThemedText type="h1" style={{ color: theme.primary }}>
+                      {analytics?.performance.serverResponseTime || 0}ms
+                    </ThemedText>
+                  </View>
+                  <View style={styles.analyticsMetric}>
+                    <ThemedText type="body">Uptime</ThemedText>
+                    <ThemedText type="h1" style={{ color: "#6BCB77" }}>
+                      {analytics?.performance.uptime || 0}%
+                    </ThemedText>
+                  </View>
+                </>
+              )}
             </View>
           </ScrollView>
         </ThemedView>
