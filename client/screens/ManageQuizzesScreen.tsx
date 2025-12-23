@@ -47,6 +47,8 @@ export default function ManageQuizzesScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedQuiz, setSelectedQuiz] = useState<ManagedQuiz | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<QuizCategory | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#95E1D3");
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
@@ -157,6 +159,67 @@ export default function ManageQuizzesScreen() {
     } catch (error) {
       Alert.alert("Error", "Failed to create category");
     }
+  };
+
+  const updateCategory = async () => {
+    if (!editingCategory || !newCategoryName.trim()) {
+      Alert.alert("Error", "Category name is required");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/manage/categories/${encodeURIComponent(editingCategory.name)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCategoryName.trim(),
+          color: newCategoryColor,
+          icon: "tag",
+        }),
+      });
+
+      if (response.ok) {
+        loadData();
+        setNewCategoryName("");
+        setNewCategoryColor("#95E1D3");
+        setEditingCategory(null);
+        setShowEditCategoryModal(false);
+        Alert.alert("Success", "Category updated");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to update category");
+    }
+  };
+
+  const deleteCategory = async (categoryName: string) => {
+    Alert.alert("Delete Category", `Are you sure you want to delete "${categoryName}"?`, [
+      { text: "Cancel", onPress: () => {}, style: "cancel" },
+      {
+        text: "Delete",
+        onPress: async () => {
+          try {
+            const response = await fetch(`/api/manage/categories/${encodeURIComponent(categoryName)}`, {
+              method: "DELETE",
+            });
+
+            if (response.ok) {
+              loadData();
+              Alert.alert("Success", "Category deleted");
+            }
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete category");
+          }
+        },
+        style: "destructive",
+      },
+    ]);
+  };
+
+  const openEditCategoryModal = (category: QuizCategory) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setNewCategoryColor(category.color);
+    setShowEditCategoryModal(true);
   };
 
   const renderQuizCard = ({ item: quiz }: { item: ManagedQuiz }) => (
@@ -311,6 +374,7 @@ export default function ManageQuizzesScreen() {
           <Pressable
             key={cat.name}
             onPress={() => setSelectedFilter(cat.name)}
+            onLongPress={() => openEditCategoryModal(cat)}
             style={({ pressed }) => [
               styles.filterChip,
               {
@@ -491,6 +555,118 @@ export default function ManageQuizzesScreen() {
               >
                 <ThemedText type="body" style={{ color: "white" }}>
                   Create
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Category Modal */}
+      <Modal
+        visible={showEditCategoryModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setShowEditCategoryModal(false);
+          setEditingCategory(null);
+        }}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: "#00000080" }]}>
+          <View
+            style={[
+              styles.createCategoryModal,
+              { backgroundColor: theme.backgroundRoot },
+            ]}
+          >
+            <ThemedText type="h3" style={{ marginBottom: Spacing.md }}>
+              Edit Category
+            </ThemedText>
+
+            <ThemedText type="small" style={{ marginBottom: Spacing.xs }}>
+              Category Name
+            </ThemedText>
+            <TextInput
+              placeholder="e.g., Science"
+              placeholderTextColor={theme.textSecondary}
+              style={[
+                styles.input,
+                {
+                  color: theme.text,
+                  borderColor: theme.primary,
+                  backgroundColor: theme.backgroundSecondary,
+                },
+              ]}
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+            />
+
+            <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs }}>
+              Color
+            </ThemedText>
+            <View style={styles.colorPicker}>
+              {[
+                "#FF6B6B",
+                "#4ECDC4",
+                "#95E1D3",
+                "#F38181",
+                "#AA96DA",
+                "#FCBAD3",
+              ].map((color) => (
+                <Pressable
+                  key={color}
+                  onPress={() => setNewCategoryColor(color)}
+                  style={[
+                    styles.colorOption,
+                    {
+                      backgroundColor: color,
+                      borderColor: newCategoryColor === color ? theme.text : "transparent",
+                      borderWidth: newCategoryColor === color ? 2 : 0,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                onPress={() => {
+                  setShowEditCategoryModal(false);
+                  setEditingCategory(null);
+                  setNewCategoryName("");
+                  setNewCategoryColor("#95E1D3");
+                }}
+                style={[
+                  styles.modalButton,
+                  { backgroundColor: theme.backgroundSecondary },
+                ]}
+              >
+                <ThemedText type="body" style={{ color: theme.text }}>
+                  Cancel
+                </ThemedText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  if (editingCategory) {
+                    deleteCategory(editingCategory.name);
+                    setShowEditCategoryModal(false);
+                    setEditingCategory(null);
+                  }
+                }}
+                style={[styles.modalButton, { backgroundColor: "#FF6B6B" }]}
+              >
+                <ThemedText type="body" style={{ color: "white" }}>
+                  Delete
+                </ThemedText>
+              </Pressable>
+
+              <Pressable
+                onPress={updateCategory}
+                style={[styles.modalButton, { backgroundColor: theme.primary }]}
+              >
+                <ThemedText type="body" style={{ color: "white" }}>
+                  Update
                 </ThemedText>
               </Pressable>
             </View>
