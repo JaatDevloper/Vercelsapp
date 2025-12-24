@@ -277,8 +277,14 @@ export function useProfile() {
         console.log(`Login successful: cleared logout_${deviceId} flag from localStorage`);
       }
       
-      // Set profile data in cache for immediate UI update
+      // CRITICAL: Clear any cached error state from previous failed queries
       queryClient.setQueryData(["profile", deviceId], existingProfile);
+      
+      // Invalidate the query cache so any cached errors are cleared
+      await queryClient.invalidateQueries({ 
+        queryKey: ["profile", deviceId],
+        refetchType: "all"
+      });
       
       // CRITICAL: Reset isLoggedOut state to re-enable query execution
       // This must happen AFTER clearing the flag so it takes effect
