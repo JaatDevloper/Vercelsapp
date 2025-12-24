@@ -124,6 +124,8 @@ export default function ProfileScreen() {
       // Add a small delay to ensure state updates
       await new Promise(resolve => setTimeout(resolve, 500));
       setLogoutModalVisible(false);
+      // Navigate to home screen after logout to completely prevent auto-login
+      navigation.navigate("Discover");
     } catch (error) {
       console.error("Logout error:", error);
       setIsLoggingOut(false);

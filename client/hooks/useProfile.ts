@@ -256,22 +256,26 @@ export function useProfile() {
     }
     
     try {
-      // Call logout endpoint
+      // Call logout endpoint to clear session on server
       await logoutProfile(deviceId);
     } catch (error) {
       console.error("Logout API error:", error);
       // Continue even if API fails
     }
     
-    // Manually set profile to not found state WITHOUT refetching
-    // This prevents auto-login when refetching would find the profile again
-    queryClient.setQueryData(
-      ["profile", deviceId],
-      undefined
-    );
+    // CRITICAL: Disable query retry and refetch to prevent auto-login
+    // This ensures the profile stays logged out
+    queryClient.cancelQueries({ queryKey: ["profile"] });
     
-    // Also remove all queries to clear cache completely
+    // Clear all profile data from cache
+    queryClient.setQueryData(["profile", deviceId], undefined);
     queryClient.removeQueries({ queryKey: ["profile"] });
+    
+    // Ensure the query client doesn't retry or refetch for profile queries
+    queryClient.setQueryDefaults(["profile"], {
+      retry: false,
+      retryDelay: undefined,
+    });
   };
 
   return {
