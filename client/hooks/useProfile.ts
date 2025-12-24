@@ -194,6 +194,10 @@ export function useProfile() {
     queryFn: () => fetchProfile(deviceId!),
     enabled: !!deviceId,
     retry: false,
+    staleTime: 30 * 60 * 1000, // 30 minutes - prevent auto-refetch after login
+    gcTime: 60 * 60 * 1000, // 60 minutes cache retention
+    refetchOnWindowFocus: false, // CRITICAL: Disable auto-refetch when window regains focus
+    refetchOnReconnect: false, // Disable auto-refetch on network reconnect
   });
 
   const createProfileMutation = useMutation({
