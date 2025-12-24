@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "@/lib/deviceId";
+
+// Use localStorage for web, AsyncStorage for React Native
+const storage = typeof window !== 'undefined' ? localStorage : null;
 
 export interface Profile {
   _id: string;
@@ -184,6 +186,7 @@ export function useProfile() {
   const queryClient = useQueryClient();
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [isLoggedOut, setIsLoggedOut] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Initialize from persistent storage and device ID
   useEffect(() => {
@@ -194,13 +197,20 @@ export function useProfile() {
         setDeviceId(id);
         
         // Check if user was logged out (persistent flag)
-        const loggedOutFlag = await AsyncStorage.getItem(`logout_${id}`);
-        if (loggedOutFlag === "true") {
-          setIsLoggedOut(true);
+        // Use localStorage on web for better compatibility
+        if (storage) {
+          const loggedOutFlag = storage.getItem(`logout_${id}`);
+          if (loggedOutFlag === "true") {
+            console.log("User is logged out from localStorage, preventing auto-login");
+            setIsLoggedOut(true);
+          }
         }
       } catch (error) {
         console.error("Error initializing profile:", error);
         setDeviceId(null);
+      } finally {
+        // CRITICAL: Mark initialization as complete before enabling query
+        setIsInitializing(false);
       }
     };
     
@@ -215,7 +225,8 @@ export function useProfile() {
   } = useQuery<Profile>({
     queryKey: ["profile", deviceId],
     queryFn: () => fetchProfile(deviceId!),
-    enabled: !!deviceId && !isLoggedOut,
+    // CRITICAL: Only enable after initialization AND device ID exists AND user not logged out
+    enabled: !!deviceId && !isLoggedOut && !isInitializing,
     retry: false,
     staleTime: 30 * 60 * 1000, // 30 minutes - prevent auto-refetch after login
     gcTime: 60 * 60 * 1000, // 60 minutes cache retention
@@ -233,9 +244,9 @@ export function useProfile() {
     onSuccess: async (newProfile) => {
       // Clear logged out flag when user creates a new profile
       setIsLoggedOut(false);
-      // Remove the logout flag from AsyncStorage
-      if (deviceId) {
-        await AsyncStorage.removeItem(`logout_${deviceId}`);
+      // Remove the logout flag from localStorage
+      if (deviceId && storage) {
+        storage.removeItem(`logout_${deviceId}`);
       }
       queryClient.setQueryData(["profile", deviceId], newProfile);
     },
@@ -251,9 +262,9 @@ export function useProfile() {
     onSuccess: async (existingProfile) => {
       // Clear logged out flag when user logs back in
       setIsLoggedOut(false);
-      // Remove the logout flag from AsyncStorage
-      if (deviceId) {
-        await AsyncStorage.removeItem(`logout_${deviceId}`);
+      // Remove the logout flag from localStorage
+      if (deviceId && storage) {
+        storage.removeItem(`logout_${deviceId}`);
       }
       queryClient.setQueryData(["profile", deviceId], existingProfile);
     },
@@ -301,9 +312,12 @@ export function useProfile() {
     // CRITICAL: Set logged out flag to prevent query from re-enabling
     setIsLoggedOut(true);
     
-    // CRITICAL: Persist logout flag to AsyncStorage so it survives app restart
+    // CRITICAL: Persist logout flag to localStorage so it survives page refresh
     try {
-      await AsyncStorage.setItem(`logout_${deviceId}`, "true");
+      if (storage) {
+        storage.setItem(`logout_${deviceId}`, "true");
+        console.log("Logout flag saved to localStorage");
+      }
     } catch (error) {
       console.error("Failed to persist logout flag:", error);
     }
