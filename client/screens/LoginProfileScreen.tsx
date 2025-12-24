@@ -95,7 +95,10 @@ export default function LoginProfileScreen() {
       },
       {
         onSuccess: () => {
-          navigation.goBack();
+          // Give the profile hook time to update with the new profile data
+          setTimeout(() => {
+            navigation.goBack();
+          }, 100);
         },
         onError: (error) => {
           if (error.message === "PROFILE_NOT_FOUND") {
