@@ -203,6 +203,9 @@ export function useProfile() {
           if (loggedOutFlag === "true") {
             console.log("User is logged out from localStorage, preventing auto-login");
             setIsLoggedOut(true);
+          } else {
+            // Ensure isLoggedOut is false if no flag exists
+            setIsLoggedOut(false);
           }
         }
       } catch (error) {
@@ -266,17 +269,21 @@ export function useProfile() {
       return loginProfile({ ...data, newDeviceId: deviceId });
     },
     onSuccess: async (existingProfile) => {
+      console.log("Login mutation succeeded, clearing logout state");
+      
       // Remove the logout flag from localStorage FIRST
       if (deviceId && storage) {
         storage.removeItem(`logout_${deviceId}`);
-        console.log("Login successful: logout flag cleared");
+        console.log(`Login successful: cleared logout_${deviceId} flag from localStorage`);
       }
       
       // Set profile data in cache for immediate UI update
       queryClient.setQueryData(["profile", deviceId], existingProfile);
       
-      // CRITICAL: Reset isLoggedOut state to enable query execution
+      // CRITICAL: Reset isLoggedOut state to re-enable query execution
+      // This must happen AFTER clearing the flag so it takes effect
       setIsLoggedOut(false);
+      console.log("isLoggedOut set to false, query should now be enabled");
     },
   });
 
