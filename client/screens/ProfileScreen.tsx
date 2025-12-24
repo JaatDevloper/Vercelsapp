@@ -121,6 +121,8 @@ export default function ProfileScreen() {
     setIsLoggingOut(true);
     try {
       await logout();
+      // Add a small delay to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 500));
       setLogoutModalVisible(false);
     } catch (error) {
       console.error("Logout error:", error);

@@ -646,7 +646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout endpoint - delete profile
+  // Logout endpoint - clear session but keep profile for re-login
   app.post("/api/profile/logout", async (req: Request, res: Response) => {
     try {
       const { deviceId } = req.body;
@@ -655,17 +655,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Device ID is required" });
       }
 
-      const client = await getMongoClient();
-      const db = client.db("quizbot");
-      const profileCollection = db.collection("appprofile");
-
-      // Delete the profile
-      const result = await profileCollection.deleteOne({ deviceId });
-
-      if (result.deletedCount === 0) {
-        return res.status(404).json({ error: "Profile not found" });
-      }
-
+      // Just return success - profile stays in database for re-login
+      // This is a client-side session clear, not a database delete
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.json({ message: "Logged out successfully" });
     } catch (error) {
