@@ -95,10 +95,11 @@ export default function LoginProfileScreen() {
       },
       {
         onSuccess: () => {
-          // Give the profile hook time to update with the new profile data
+          // Mutation's onSuccess already awaits refetch, so data is loaded
+          // Small delay to ensure React renders the updated state
           setTimeout(() => {
             navigation.goBack();
-          }, 100);
+          }, 50);
         },
         onError: (error) => {
           if (error.message === "PROFILE_NOT_FOUND") {
