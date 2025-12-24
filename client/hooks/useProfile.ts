@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDeviceId } from "@/lib/deviceId";
 
 export interface Profile {
@@ -184,8 +185,26 @@ export function useProfile() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [isLoggedOut, setIsLoggedOut] = useState(false);
 
+  // Initialize from persistent storage and device ID
   useEffect(() => {
-    getDeviceId().then(setDeviceId);
+    const initializeProfile = async () => {
+      try {
+        // Get device ID
+        const id = await getDeviceId();
+        setDeviceId(id);
+        
+        // Check if user was logged out (persistent flag)
+        const loggedOutFlag = await AsyncStorage.getItem(`logout_${id}`);
+        if (loggedOutFlag === "true") {
+          setIsLoggedOut(true);
+        }
+      } catch (error) {
+        console.error("Error initializing profile:", error);
+        setDeviceId(null);
+      }
+    };
+    
+    initializeProfile();
   }, []);
 
   const {
@@ -211,9 +230,13 @@ export function useProfile() {
       }
       return createProfile({ ...data, deviceId });
     },
-    onSuccess: (newProfile) => {
+    onSuccess: async (newProfile) => {
       // Clear logged out flag when user creates a new profile
       setIsLoggedOut(false);
+      // Remove the logout flag from AsyncStorage
+      if (deviceId) {
+        await AsyncStorage.removeItem(`logout_${deviceId}`);
+      }
       queryClient.setQueryData(["profile", deviceId], newProfile);
     },
   });
@@ -225,9 +248,13 @@ export function useProfile() {
       }
       return loginProfile({ ...data, newDeviceId: deviceId });
     },
-    onSuccess: (existingProfile) => {
+    onSuccess: async (existingProfile) => {
       // Clear logged out flag when user logs back in
       setIsLoggedOut(false);
+      // Remove the logout flag from AsyncStorage
+      if (deviceId) {
+        await AsyncStorage.removeItem(`logout_${deviceId}`);
+      }
       queryClient.setQueryData(["profile", deviceId], existingProfile);
     },
   });
@@ -273,6 +300,13 @@ export function useProfile() {
     
     // CRITICAL: Set logged out flag to prevent query from re-enabling
     setIsLoggedOut(true);
+    
+    // CRITICAL: Persist logout flag to AsyncStorage so it survives app restart
+    try {
+      await AsyncStorage.setItem(`logout_${deviceId}`, "true");
+    } catch (error) {
+      console.error("Failed to persist logout flag:", error);
+    }
     
     // Cancel any in-flight queries
     queryClient.cancelQueries({ queryKey: ["profile"] });
