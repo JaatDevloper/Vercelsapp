@@ -65,8 +65,9 @@ async function createProfile(data: CreateProfileData & { deviceId: string }): Pr
 }
 
 export interface LoginProfileData {
-  name: string;
+  name?: string;
   email: string;
+  password: string;
 }
 
 async function updateProfilePhoto(data: { deviceId: string; avatarUrl: string }): Promise<Profile> {
@@ -97,7 +98,8 @@ async function loginProfile(data: LoginProfileData & { newDeviceId: string }): P
   
   const params = new URLSearchParams();
   if (data.name) params.append("name", data.name);
-  if (data.email) params.append("email", data.email);
+  params.append("email", data.email);
+  params.append("password", data.password);
   params.append("newDeviceId", data.newDeviceId);
   
   const response = await fetch(`${baseUrl}/api/profile?${params.toString()}`);

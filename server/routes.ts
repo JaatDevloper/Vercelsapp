@@ -416,27 +416,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deviceId = req.query.deviceId as string;
       const loginName = req.query.name as string;
       const loginEmail = req.query.email as string;
+      const loginPassword = req.query.password as string;
       const newDeviceId = req.query.newDeviceId as string;
 
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const collection = db.collection("appprofile");
 
-      // Handle login with name/email
-      if (loginName || loginEmail) {
-        if (!loginName || !loginEmail) {
-          return res.status(400).json({ error: "Both name and email are required for login" });
+      // Handle login with email/password
+      if (loginEmail || loginPassword) {
+        if (!loginEmail) {
+          return res.status(400).json({ error: "Email is required for login" });
         }
 
-        const query = {
-          name: { $regex: new RegExp(`^${loginName.trim()}$`, "i") },
+        if (!loginPassword) {
+          return res.status(400).json({ error: "Password is required for login" });
+        }
+
+        const query: any = {
           email: loginEmail.trim().toLowerCase(),
         };
+
+        // If name is provided, include it in the query
+        if (loginName) {
+          query.name = { $regex: new RegExp(`^${loginName.trim()}$`, "i") };
+        }
 
         const profile = await collection.findOne(query);
 
         if (!profile) {
-          return res.status(404).json({ error: "Profile not found. Please check your name and email match exactly what you used when creating your profile." });
+          return res.status(404).json({ error: "Invalid email or password. Please check your details and try again." });
+        }
+
+        // Verify password
+        const isPasswordValid = profile.passwordHash ? await bcrypt.compare(loginPassword, profile.passwordHash) : false;
+        
+        if (!isPasswordValid) {
+          return res.status(404).json({ error: "Invalid email or password. Please check your details and try again." });
         }
 
         // Migrate quiz history when logging in from a new device

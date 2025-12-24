@@ -57,6 +57,8 @@ export default function LoginProfileScreen() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [inputError, setInputError] = useState("");
 
   const primaryColor = isDark ? Colors.dark.primary : Colors.light.primary;
@@ -70,11 +72,6 @@ export default function LoginProfileScreen() {
   const handleLogin = () => {
     setInputError("");
 
-    if (!name.trim()) {
-      setInputError("Please enter your name");
-      return;
-    }
-
     if (!email.trim()) {
       setInputError("Please enter your email");
       return;
@@ -85,10 +82,16 @@ export default function LoginProfileScreen() {
       return;
     }
 
+    if (!password) {
+      setInputError("Please enter your password");
+      return;
+    }
+
     loginProfile(
       { 
-        name: name.trim(), 
-        email: email.trim() 
+        name: name.trim() || undefined,
+        email: email.trim(),
+        password
       },
       {
         onSuccess: () => {
@@ -97,8 +100,8 @@ export default function LoginProfileScreen() {
         onError: (error) => {
           if (error.message === "PROFILE_NOT_FOUND") {
             Alert.alert(
-              "Profile Not Found",
-              "No profile found with the provided name or email. Please check your details and try again, or create a new profile."
+              "Login Failed",
+              "Invalid email or password. Please check your details and try again."
             );
           } else {
             Alert.alert("Error", error.message || "Failed to login");
@@ -126,14 +129,14 @@ export default function LoginProfileScreen() {
           >
             <Feather name="arrow-left" size={24} color="#FFFFFF" />
           </Pressable>
-          <ThemedText type="h3" style={styles.headerTitle}>Login to Profile</ThemedText>
+          <ThemedText type="h3" style={styles.headerTitle}>Login</ThemedText>
           <OwnerLoginButton
             onPress={() => navigation.navigate("OwnerLogin")}
             theme={theme}
           />
         </View>
         <ThemedText type="small" style={styles.headerSubtitle}>
-          Recover your existing profile using your name or email
+          Login with your email and password
         </ThemedText>
       </LinearGradient>
 
@@ -155,18 +158,18 @@ export default function LoginProfileScreen() {
             </View>
 
             <ThemedText type="body" style={[styles.description, { color: theme.textSecondary }]}>
-              Enter both your name and email exactly as you used when creating your profile to recover it on this device.
+              Enter your email and password to login to your profile.
             </ThemedText>
 
             <View style={styles.inputContainer}>
               <ThemedText type="small" style={[styles.inputLabel, { color: theme.textSecondary }]}>
-                Name
+                Name (Optional)
               </ThemedText>
               <View style={[styles.inputWrapper, { backgroundColor: theme.backgroundSecondary }]}>
                 <Feather name="user" size={20} color={theme.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: theme.text }]}
-                  placeholder="Enter your profile name"
+                  placeholder="Enter your profile name (optional)"
                   placeholderTextColor={theme.textSecondary}
                   value={name}
                   onChangeText={setName}
@@ -174,14 +177,6 @@ export default function LoginProfileScreen() {
                   returnKeyType="next"
                 />
               </View>
-            </View>
-
-            <View style={styles.andContainer}>
-              <View style={[styles.andLine, { backgroundColor: theme.border }]} />
-              <ThemedText type="small" style={{ color: theme.textSecondary, marginHorizontal: Spacing.md }}>
-                AND
-              </ThemedText>
-              <View style={[styles.andLine, { backgroundColor: theme.border }]} />
             </View>
 
             <View style={styles.inputContainer}>
@@ -199,9 +194,36 @@ export default function LoginProfileScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  returnKeyType="next"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <ThemedText type="small" style={[styles.inputLabel, { color: theme.textSecondary }]}>
+                Password
+              </ThemedText>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.backgroundSecondary }]}>
+                <Feather name="lock" size={20} color={theme.textSecondary} />
+                <TextInput
+                  style={[styles.input, { color: theme.text }]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={theme.textSecondary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   returnKeyType="done"
                   onSubmitEditing={handleLogin}
                 />
+                <Pressable onPress={() => setShowPassword(!showPassword)}>
+                  <Feather 
+                    name={showPassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color={theme.textSecondary} 
+                  />
+                </Pressable>
               </View>
             </View>
 
