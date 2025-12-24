@@ -182,6 +182,7 @@ async function logoutProfile(deviceId: string): Promise<{ message: string }> {
 export function useProfile() {
   const queryClient = useQueryClient();
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [isLoggedOut, setIsLoggedOut] = useState(false);
 
   useEffect(() => {
     getDeviceId().then(setDeviceId);
@@ -195,7 +196,7 @@ export function useProfile() {
   } = useQuery<Profile>({
     queryKey: ["profile", deviceId],
     queryFn: () => fetchProfile(deviceId!),
-    enabled: !!deviceId,
+    enabled: !!deviceId && !isLoggedOut,
     retry: false,
     staleTime: 30 * 60 * 1000, // 30 minutes - prevent auto-refetch after login
     gcTime: 60 * 60 * 1000, // 60 minutes cache retention
@@ -211,6 +212,8 @@ export function useProfile() {
       return createProfile({ ...data, deviceId });
     },
     onSuccess: (newProfile) => {
+      // Clear logged out flag when user creates a new profile
+      setIsLoggedOut(false);
       queryClient.setQueryData(["profile", deviceId], newProfile);
     },
   });
@@ -223,6 +226,8 @@ export function useProfile() {
       return loginProfile({ ...data, newDeviceId: deviceId });
     },
     onSuccess: (existingProfile) => {
+      // Clear logged out flag when user logs back in
+      setIsLoggedOut(false);
       queryClient.setQueryData(["profile", deviceId], existingProfile);
     },
   });
@@ -266,8 +271,10 @@ export function useProfile() {
       // Continue even if API fails
     }
     
-    // CRITICAL: Disable query retry and refetch to prevent auto-login
-    // This ensures the profile stays logged out
+    // CRITICAL: Set logged out flag to prevent query from re-enabling
+    setIsLoggedOut(true);
+    
+    // Cancel any in-flight queries
     queryClient.cancelQueries({ queryKey: ["profile"] });
     
     // Clear all profile data from cache
@@ -284,9 +291,9 @@ export function useProfile() {
   return {
     profile,
     isLoading: isLoading || !deviceId,
-    error: profileNotFound ? null : error,
-    profileExists: !!profile && !profileNotFound,
-    profileNotFound,
+    error: profileNotFound || isLoggedOut ? null : error,
+    profileExists: !!profile && !profileNotFound && !isLoggedOut,
+    profileNotFound: profileNotFound || isLoggedOut,
     createProfile: createProfileMutation.mutate,
     isCreating: createProfileMutation.isPending,
     createError: createProfileMutation.error,
