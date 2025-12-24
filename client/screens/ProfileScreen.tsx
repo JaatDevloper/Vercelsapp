@@ -32,6 +32,7 @@ import VerificationBadgesModal, {
   VERIFICATION_BADGES,
   type VerificationBadge 
 } from "@/components/VerificationBadgesModal";
+import LogoutConfirmationModal from "@/components/LogoutConfirmationModal";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -100,6 +101,8 @@ export default function ProfileScreen() {
   const stats = getStats();
   const [aboutModalVisible, setAboutModalVisible] = useState(false);
   const [badgesModalVisible, setBadgesModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<VerificationBadge>(VERIFICATION_BADGES[0]);
 
   const handleAbout = () => {
@@ -112,6 +115,17 @@ export default function ProfileScreen() {
 
   const handleSelectBadge = (badge: VerificationBadge) => {
     setSelectedBadge(badge);
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      setLogoutModalVisible(false);
+    } catch (error) {
+      console.error("Logout error:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   const aboutFeatures = [
@@ -368,22 +382,7 @@ export default function ProfileScreen() {
             <MenuItem 
               icon="log-out" 
               label="Logout" 
-              onPress={() => {
-                Alert.alert(
-                  "Logout",
-                  "Are you sure you want to logout?",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { 
-                      text: "Logout", 
-                      style: "destructive",
-                      onPress: async () => {
-                        await logout();
-                      }
-                    },
-                  ]
-                );
-              }} 
+              onPress={() => setLogoutModalVisible(true)} 
               theme={theme}
               showBorder={false}
             />
@@ -404,6 +403,18 @@ export default function ProfileScreen() {
           </Animated.View>
         </View>
       </ScrollView>
+
+      <LogoutConfirmationModal
+        visible={logoutModalVisible}
+        isLoading={isLoggingOut}
+        isDark={isDark}
+        onConfirm={handleLogout}
+        onCancel={() => {
+          setLogoutModalVisible(false);
+          setIsLoggingOut(false);
+        }}
+        theme={theme}
+      />
 
       <Modal
         visible={aboutModalVisible}
