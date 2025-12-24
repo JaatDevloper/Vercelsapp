@@ -379,7 +379,10 @@ export default function ProfileScreen() {
                       style: "destructive",
                       onPress: () => {
                         logout();
-                        refetch();
+                        navigation.reset({
+                          index: 0,
+                          routes: [{ name: "Main" }],
+                        });
                       }
                     },
                   ]

@@ -226,7 +226,7 @@ export function useProfile() {
   });
 
   const logout = () => {
-    queryClient.removeQueries({ queryKey: ["profile", deviceId] });
+    queryClient.clear();
   };
 
   return {
