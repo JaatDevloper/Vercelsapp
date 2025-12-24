@@ -247,8 +247,14 @@ export function useProfile() {
       // Remove the logout flag from localStorage
       if (deviceId && storage) {
         storage.removeItem(`logout_${deviceId}`);
+        console.log("Profile creation successful: logout flag cleared");
       }
+      // Set profile data in cache for immediate UI update
       queryClient.setQueryData(["profile", deviceId], newProfile);
+      // Force refetch to ensure query is enabled and running
+      setTimeout(() => {
+        refetch();
+      }, 0);
     },
   });
 
@@ -265,8 +271,14 @@ export function useProfile() {
       // Remove the logout flag from localStorage
       if (deviceId && storage) {
         storage.removeItem(`logout_${deviceId}`);
+        console.log("Login successful: logout flag cleared");
       }
+      // Set profile data in cache for immediate UI update
       queryClient.setQueryData(["profile", deviceId], existingProfile);
+      // Force refetch to ensure query is enabled and running
+      setTimeout(() => {
+        refetch();
+      }, 0);
     },
   });
 
