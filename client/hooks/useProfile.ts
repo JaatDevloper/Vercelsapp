@@ -266,19 +266,17 @@ export function useProfile() {
       return loginProfile({ ...data, newDeviceId: deviceId });
     },
     onSuccess: async (existingProfile) => {
-      // Clear logged out flag when user logs back in
-      setIsLoggedOut(false);
-      // Remove the logout flag from localStorage
+      // Remove the logout flag from localStorage FIRST
       if (deviceId && storage) {
         storage.removeItem(`logout_${deviceId}`);
         console.log("Login successful: logout flag cleared");
       }
+      
       // Set profile data in cache for immediate UI update
       queryClient.setQueryData(["profile", deviceId], existingProfile);
-      // Force refetch to ensure query is enabled and running
-      setTimeout(() => {
-        refetch();
-      }, 0);
+      
+      // CRITICAL: Reset isLoggedOut state to enable query execution
+      setIsLoggedOut(false);
     },
   });
 
@@ -335,17 +333,10 @@ export function useProfile() {
     }
     
     // Cancel any in-flight queries
-    queryClient.cancelQueries({ queryKey: ["profile"] });
+    queryClient.cancelQueries({ queryKey: ["profile", deviceId] });
     
-    // Clear all profile data from cache
+    // Clear only this profile's data from cache
     queryClient.setQueryData(["profile", deviceId], undefined);
-    queryClient.removeQueries({ queryKey: ["profile"] });
-    
-    // Ensure the query client doesn't retry or refetch for profile queries
-    queryClient.setQueryDefaults(["profile"], {
-      retry: false,
-      retryDelay: undefined,
-    });
   };
 
   return {
