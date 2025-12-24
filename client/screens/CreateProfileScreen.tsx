@@ -35,13 +35,23 @@ export default function CreateProfileScreen() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [pendingProfileData, setPendingProfileData] = useState<any>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const primaryColor = isDark ? Colors.dark.primary : Colors.light.primary;
+
+  const validatePassword = (pwd: string) => {
+    if (!pwd) return false;
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return strongRegex.test(pwd);
+  };
 
   const pickImage = async () => {
     try {
@@ -81,6 +91,7 @@ export default function CreateProfileScreen() {
   const handleCreateProfile = async () => {
     setNameError("");
     setEmailError("");
+    setPasswordError("");
 
     let hasError = false;
 
@@ -89,15 +100,26 @@ export default function CreateProfileScreen() {
       hasError = true;
     }
 
-    if (email && !validateEmail(email)) {
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      hasError = true;
+    } else if (!validateEmail(email)) {
       setEmailError("Please enter a valid email");
+      hasError = true;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      hasError = true;
+    } else if (!validatePassword(password)) {
+      setPasswordError("Password must have 8+ chars, uppercase, lowercase, number & special char");
       hasError = true;
     }
 
     if (hasError) return;
 
     // Request OTP
-    const profileData = { name: name.trim(), email: email.trim(), avatarUrl };
+    const profileData = { name: name.trim(), email: email.trim(), password, avatarUrl };
     setPendingProfileData(profileData);
     
     try {
@@ -221,7 +243,7 @@ export default function CreateProfileScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText type="body" style={styles.inputLabel}>Email Address</ThemedText>
+              <ThemedText type="body" style={styles.inputLabel}>Email Address *</ThemedText>
               <View style={[
                 styles.inputContainer,
                 { 
@@ -232,7 +254,7 @@ export default function CreateProfileScreen() {
                 <Feather name="mail" size={20} color={theme.textSecondary} />
                 <TextInput
                   style={[styles.textInput, { color: theme.text }]}
-                  placeholder="Enter your email (optional)"
+                  placeholder="Enter your email"
                   placeholderTextColor={theme.textSecondary}
                   value={email}
                   onChangeText={(text) => {
@@ -246,6 +268,42 @@ export default function CreateProfileScreen() {
               </View>
               {emailError ? (
                 <ThemedText type="small" style={styles.errorText}>{emailError}</ThemedText>
+              ) : null}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="body" style={styles.inputLabel}>Strong Password *</ThemedText>
+              <View style={[
+                styles.inputContainer,
+                { 
+                  backgroundColor: theme.backgroundSecondary,
+                  borderColor: passwordError ? Colors.light.error : theme.border,
+                },
+              ]}>
+                <Feather name="lock" size={20} color={theme.textSecondary} />
+                <TextInput
+                  style={[styles.textInput, { color: theme.text }]}
+                  placeholder="Min 8 chars: A-Z, a-z, 0-9, special char"
+                  placeholderTextColor={theme.textSecondary}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (passwordError) setPasswordError("");
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoComplete="password"
+                />
+                <Pressable onPress={() => setShowPassword(!showPassword)}>
+                  <Feather 
+                    name={showPassword ? "eye-off" : "eye"} 
+                    size={20} 
+                    color={theme.textSecondary} 
+                  />
+                </Pressable>
+              </View>
+              {passwordError ? (
+                <ThemedText type="small" style={styles.errorText}>{passwordError}</ThemedText>
               ) : null}
             </View>
           </Animated.View>

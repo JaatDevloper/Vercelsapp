@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "node:http";
 import { MongoClient, ObjectId } from "mongodb";
 import nodemailer from "nodemailer";
+import bcrypt from "bcrypt";
 
 let mongoClient: MongoClient | null = null;
 let isConnecting = false;
@@ -509,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or update profile
   app.post("/api/profile", async (req: Request, res: Response) => {
     try {
-      const { deviceId, name, email, avatarUrl, income, expense, currency } = req.body;
+      const { deviceId, name, email, password, avatarUrl, income, expense, currency } = req.body;
 
       if (!deviceId) {
         return res.status(400).json({ error: "Device ID is required" });
@@ -517,6 +518,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!name || name.trim().length === 0) {
         return res.status(400).json({ error: "Name is required" });
+      }
+
+      if (!email || email.trim().length === 0) {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      if (!password || password.length < 8) {
+        return res.status(400).json({ error: "Password is required and must be at least 8 characters" });
       }
 
       const client = await getMongoClient();
@@ -527,10 +536,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await collection.createIndex({ deviceId: 1 }, { unique: true });
 
       const now = new Date().toISOString();
+      
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const profileData = {
         deviceId,
         name: name.trim(),
         email: email?.trim().toLowerCase() || "",
+        passwordHash: hashedPassword,
         avatarUrl: avatarUrl || "",
         income: typeof income === "number" ? income : 0,
         expense: typeof expense === "number" ? expense : 0,

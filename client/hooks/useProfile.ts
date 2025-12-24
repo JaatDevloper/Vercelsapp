@@ -18,6 +18,7 @@ export interface Profile {
 export interface CreateProfileData {
   name: string;
   email: string;
+  password: string;
   avatarUrl?: string;
   income?: number;
   expense?: number;
