@@ -155,6 +155,27 @@ async function verifyOTP(email: string, otp: string): Promise<{ message: string 
   return response.json();
 }
 
+async function logoutProfile(deviceId: string): Promise<{ message: string }> {
+  const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : "";
+  
+  const response = await fetch(`${baseUrl}/api/profile/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ deviceId }),
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to logout");
+  }
+  
+  return response.json();
+}
+
 export function useProfile() {
   const queryClient = useQueryClient();
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -226,10 +247,28 @@ export function useProfile() {
   });
 
   const logout = async () => {
+    if (!deviceId) {
+      throw new Error("Device ID not available");
+    }
+    
+    try {
+      // Call logout endpoint to delete profile from server
+      await logoutProfile(deviceId);
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue even if API fails
+    }
+    
     // Clear the profile query cache
     queryClient.removeQueries({ queryKey: ["profile", deviceId] });
+    
     // Refetch to trigger a 404 which sets profileNotFound to true
-    setTimeout(() => refetch(), 0);
+    return new Promise<void>((resolve) => {
+      setTimeout(async () => {
+        await refetch();
+        resolve();
+      }, 100);
+    });
   };
 
   return {

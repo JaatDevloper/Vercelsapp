@@ -646,6 +646,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout endpoint - delete profile
+  app.post("/api/profile/logout", async (req: Request, res: Response) => {
+    try {
+      const { deviceId } = req.body;
+
+      if (!deviceId) {
+        return res.status(400).json({ error: "Device ID is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const profileCollection = db.collection("appprofile");
+
+      // Delete the profile
+      const result = await profileCollection.deleteOne({ deviceId });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      res.status(500).json({
+        error: "Failed to logout",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // ============ QUIZ HISTORY API ENDPOINTS ============
 
   // Get quiz history by device ID (also matches by userName/userEmail for logged-in users)
