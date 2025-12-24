@@ -225,8 +225,11 @@ export function useProfile() {
     },
   });
 
-  const logout = () => {
-    queryClient.clear();
+  const logout = async () => {
+    // Clear the profile query cache
+    queryClient.removeQueries({ queryKey: ["profile", deviceId] });
+    // Refetch to trigger a 404 which sets profileNotFound to true
+    setTimeout(() => refetch(), 0);
   };
 
   return {

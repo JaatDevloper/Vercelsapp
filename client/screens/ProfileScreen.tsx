@@ -377,12 +377,8 @@ export default function ProfileScreen() {
                     { 
                       text: "Logout", 
                       style: "destructive",
-                      onPress: () => {
-                        logout();
-                        navigation.reset({
-                          index: 0,
-                          routes: [{ name: "Main" }],
-                        });
+                      onPress: async () => {
+                        await logout();
                       }
                     },
                   ]
