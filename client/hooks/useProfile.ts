@@ -252,23 +252,22 @@ export function useProfile() {
     }
     
     try {
-      // Call logout endpoint to delete profile from server
+      // Call logout endpoint
       await logoutProfile(deviceId);
     } catch (error) {
       console.error("Logout API error:", error);
       // Continue even if API fails
     }
     
-    // Clear the profile query cache
-    queryClient.removeQueries({ queryKey: ["profile", deviceId] });
+    // Manually set profile to not found state WITHOUT refetching
+    // This prevents auto-login when refetching would find the profile again
+    queryClient.setQueryData(
+      ["profile", deviceId],
+      undefined
+    );
     
-    // Refetch to trigger a 404 which sets profileNotFound to true
-    return new Promise<void>((resolve) => {
-      setTimeout(async () => {
-        await refetch();
-        resolve();
-      }, 100);
-    });
+    // Also remove all queries to clear cache completely
+    queryClient.removeQueries({ queryKey: ["profile"] });
   };
 
   return {
