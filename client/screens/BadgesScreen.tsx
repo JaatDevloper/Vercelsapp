@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -16,7 +16,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { useProfile } from "@/hooks/useProfile";
+import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -494,10 +495,28 @@ export default function BadgesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { getStats } = useQuizHistory();
+  const { profile, updateFrame } = useProfile();
   const stats = getStats();
 
-  const [selectedFrame, setSelectedFrame] = useState<ProfileFrame>(PROFILE_FRAMES[0]);
+  const [selectedFrame, setSelectedFrame] = useState<ProfileFrame>(
+    profile?.selectedFrameId 
+      ? PROFILE_FRAMES.find(f => f.id === profile.selectedFrameId) || PROFILE_FRAMES[0]
+      : PROFILE_FRAMES[0]
+  );
+  
+  useEffect(() => {
+    if (profile?.selectedFrameId) {
+      const frame = PROFILE_FRAMES.find(f => f.id === profile.selectedFrameId);
+      if (frame) setSelectedFrame(frame);
+    }
+  }, [profile?.selectedFrameId]);
+
   const [activeTab, setActiveTab] = useState<"badges" | "frames">("badges");
+
+  const handleSelectFrame = (frame: ProfileFrame) => {
+    setSelectedFrame(frame);
+    updateFrame(frame.id);
+  };
 
   const achievementBadges = getAchievementBadges(stats);
   const unlockedCount = achievementBadges.filter((b) => b.isUnlocked).length;
@@ -634,7 +653,7 @@ export default function BadgesScreen() {
                 key={frame.id}
                 frame={frame}
                 isSelected={selectedFrame.id === frame.id}
-                onSelect={setSelectedFrame}
+                onSelect={handleSelectFrame}
                 theme={theme}
                 index={index}
               />

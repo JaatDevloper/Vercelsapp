@@ -730,6 +730,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update profile frame
+  app.put("/api/profile/frame", async (req: Request, res: Response) => {
+    try {
+      const { deviceId, frameId } = req.body;
+
+      if (!deviceId) {
+        return res.status(400).json({ error: "Device ID is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("appprofile");
+
+      const now = new Date().toISOString();
+
+      const result = await collection.findOneAndUpdate(
+        { deviceId },
+        { $set: { selectedFrameId: frameId, updatedAt: now } },
+        { returnDocument: "after" }
+      );
+
+      const profile = result && typeof result === 'object' && 'value' in result ? result.value : result;
+
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json({
+        _id: profile._id?.toString() || "",
+        deviceId: profile.deviceId,
+        name: profile.name || "",
+        email: profile.email || "",
+        avatarUrl: profile.avatarUrl || "",
+        selectedBadgeId: profile.selectedBadgeId || "",
+        selectedFrameId: profile.selectedFrameId || "",
+        income: profile.income || 0,
+        expense: profile.expense || 0,
+        currency: profile.currency || "$",
+        createdAt: profile.createdAt || now,
+        updatedAt: profile.updatedAt || now,
+      });
+    } catch (error) {
+      console.error("Error updating profile frame:", error);
+      res.status(500).json({
+        error: "Failed to update profile frame",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   // Logout endpoint - clear session but keep profile for re-login
   app.post("/api/profile/logout", async (req: Request, res: Response) => {
     try {

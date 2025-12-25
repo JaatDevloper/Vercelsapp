@@ -11,6 +11,7 @@ export interface Profile {
   email: string;
   avatarUrl: string;
   selectedBadgeId: string;
+  selectedFrameId: string;
   income: number;
   expense: number;
   currency: string;
@@ -126,6 +127,24 @@ async function updateProfileBadge(data: {
   return res.json();
 }
 
+async function updateProfileFrame(data: {
+  deviceId: string;
+  frameId: string;
+}): Promise<Profile> {
+  const res = await fetch(`${baseUrl}/api/profile/frame`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const e = await res.json();
+    throw new Error(e.error || "UPDATE_FRAME_FAILED");
+  }
+
+  return res.json();
+}
+
 async function logoutProfile(deviceId: string) {
   await fetch(`${baseUrl}/api/profile/logout`, {
     method: "POST",
@@ -205,6 +224,14 @@ export function useProfile() {
     },
   });
 
+  const updateFrameMutation = useMutation({
+    mutationFn: (frameId: string) =>
+      updateProfileFrame({ deviceId: deviceId!, frameId }),
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(["profile", deviceId], updatedProfile);
+    },
+  });
+
   /* ===================== LOGOUT (FINAL FIX) ===================== */
 
   const logout = async () => {
@@ -247,6 +274,9 @@ export function useProfile() {
 
     updateBadge: updateBadgeMutation.mutate,
     isUpdatingBadge: updateBadgeMutation.isPending,
+
+    updateFrame: updateFrameMutation.mutate,
+    isUpdatingFrame: updateFrameMutation.isPending,
 
     deviceId,
     logout,

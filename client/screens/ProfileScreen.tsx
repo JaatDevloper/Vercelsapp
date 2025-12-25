@@ -95,7 +95,7 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { getStats } = useQuizHistory();
-  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge } = useProfile();
+  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge, updateFrame } = useProfile();
   const { ownerProfile } = useOwnerProfile();
 
   const stats = getStats();
@@ -301,6 +301,20 @@ export default function ProfileScreen() {
             <View style={styles.avatarContainer}>
               <Pressable onPress={pickImage} disabled={isUpdatingPhoto}>
                 <View style={[styles.avatar, { backgroundColor: primaryColor }]}>
+                  {/* Avatar Border/Frame */}
+                  {profile?.selectedFrameId && profile.selectedFrameId !== "frame_basic" && (
+                    <View style={StyleSheet.absoluteFill}>
+                      <LinearGradient
+                        colors={profile.selectedFrameId === "frame_gold" ? ["#FFD700", "#FFA500"] : 
+                               profile.selectedFrameId === "frame_silver" ? ["#C0C0C0", "#A8A8A8"] :
+                               profile.selectedFrameId === "frame_bronze" ? ["#CD7F32", "#B8860B"] :
+                               profile.selectedFrameId === "frame_diamond" ? ["#B9F2FF", "#00CED1"] :
+                               profile.selectedFrameId === "frame_legendary" ? ["#8B5CF6", "#EC4899"] :
+                               ["#3498db", "#2980b9"]}
+                        style={styles.avatarFrame}
+                      />
+                    </View>
+                  )}
                   {isUpdatingPhoto ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : profile.avatarUrl && profile.avatarUrl.startsWith("data:image") ? (
@@ -678,6 +692,13 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: "#FFFFFF",
     overflow: "hidden",
+  },
+  avatarFrame: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 3,
+    borderRadius: 50,
+    zIndex: 1,
+    backgroundColor: "transparent",
   },
   avatarImage: {
     width: 82,
