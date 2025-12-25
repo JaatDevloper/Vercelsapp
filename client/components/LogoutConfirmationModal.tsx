@@ -5,10 +5,11 @@ import {
   Pressable,
   ActivityIndicator,
   Dimensions,
+  ScrollView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
-import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { Spacing, BorderRadius } from "@/constants/theme";
@@ -45,142 +46,193 @@ export default function LogoutConfirmationModal({
           backgroundColor: "rgba(0, 0, 0, 0.5)",
           justifyContent: "center",
           alignItems: "center",
+          padding: Spacing.lg,
         }}
         onPress={onCancel}
       >
         <Animated.View
-          entering={SlideInDown.springify()}
+          entering={ZoomIn.springify()}
           style={{
-            width: SCREEN_WIDTH * 0.85,
-            maxWidth: 320,
-            borderRadius: BorderRadius.lg,
+            width: "100%",
+            maxWidth: 380,
+            backgroundColor: theme.backgroundDefault,
+            borderRadius: BorderRadius.xl,
             overflow: "hidden",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.15,
+            shadowRadius: 24,
+            elevation: 10,
           }}
-          onPress={(e) => e?.stopPropagation?.()}
         >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <LinearGradient
-              colors={
-                isDark
-                  ? ["#EF4444", "#DC2626"]
-                  : ["#EF4444", "#F87171"]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                paddingVertical: Spacing.xl,
-                paddingHorizontal: Spacing.lg,
-                alignItems: "center",
-              }}
-            >
-              <View
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: Spacing.lg,
-                }}
-              >
-                <Feather name="log-out" size={32} color="#FFFFFF" />
-              </View>
-              <ThemedText
-                type="h3"
-                style={{
-                  color: "#FFFFFF",
-                  textAlign: "center",
-                  marginBottom: Spacing.sm,
-                }}
-              >
-                Logout
-              </ThemedText>
-              <ThemedText
-                type="body"
-                style={{
-                  color: "rgba(255, 255, 255, 0.9)",
-                  textAlign: "center",
-                  fontSize: 14,
-                }}
-              >
-                Are you sure you want to logout?
-              </ThemedText>
-            </LinearGradient>
-
+          <Pressable onPress={(e: any) => e.stopPropagation()}>
+            {/* Header with Close Button */}
             <View
               style={{
-                backgroundColor: theme.backgroundDefault,
-                paddingVertical: Spacing.lg,
+                flexDirection: "row",
+                justifyContent: "flex-end",
                 paddingHorizontal: Spacing.lg,
-                gap: Spacing.sm,
+                paddingTop: Spacing.lg,
+                paddingBottom: Spacing.md,
               }}
             >
               <Pressable
-                onPress={onConfirm}
-                disabled={isLoading}
-                style={({ pressed }) => ({
-                  backgroundColor: "#EF4444",
-                  paddingVertical: Spacing.md,
-                  borderRadius: BorderRadius.md,
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  opacity: pressed || isLoading ? 0.8 : 1,
-                })}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Feather name="check" size={18} color="#FFFFFF" />
-                    <ThemedText
-                      type="body"
-                      style={{
-                        color: "#FFFFFF",
-                        fontWeight: "700",
-                        marginLeft: Spacing.sm,
-                      }}
-                    >
-                      Yes, Logout
-                    </ThemedText>
-                  </>
-                )}
-              </Pressable>
-
-              <Pressable
                 onPress={onCancel}
-                disabled={isLoading}
                 style={({ pressed }) => ({
-                  backgroundColor: isDark
-                    ? theme.backgroundSecondary
-                    : "#F3F4F6",
-                  paddingVertical: Spacing.md,
-                  borderRadius: BorderRadius.md,
-                  flexDirection: "row",
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
                   justifyContent: "center",
                   alignItems: "center",
-                  opacity: pressed || isLoading ? 0.7 : 1,
-                  borderWidth: 1,
-                  borderColor: isDark ? theme.border : "#E5E7EB",
+                  backgroundColor: pressed ? "rgba(0, 0, 0, 0.05)" : "transparent",
                 })}
               >
                 <Feather
                   name="x"
-                  size={18}
+                  size={20}
                   color={theme.textSecondary}
                 />
+              </Pressable>
+            </View>
+
+            {/* Content */}
+            <View
+              style={{
+                paddingHorizontal: Spacing.xl,
+                paddingBottom: Spacing.xl,
+                alignItems: "center",
+              }}
+            >
+              {/* Icon Illustration */}
+              <View
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 60,
+                  backgroundColor: isDark
+                    ? "rgba(20, 184, 166, 0.1)"
+                    : "rgba(20, 184, 166, 0.08)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: Spacing.xl,
+                }}
+              >
+                <Feather
+                  name="log-out"
+                  size={48}
+                  color="#14B8A6"
+                />
+              </View>
+
+              {/* Title */}
+              <ThemedText
+                type="h2"
+                style={{
+                  color: theme.textPrimary,
+                  textAlign: "center",
+                  marginBottom: Spacing.md,
+                  fontSize: 22,
+                  fontWeight: "700",
+                }}
+              >
+                Are you logging out?
+              </ThemedText>
+
+              {/* Description */}
+              <ThemedText
+                type="body"
+                style={{
+                  color: theme.textSecondary,
+                  textAlign: "center",
+                  fontSize: 15,
+                  lineHeight: 22,
+                  marginBottom: Spacing.lg,
+                }}
+              >
+                You can always log back in at any time. If you just want to switch accounts, you can{" "}
                 <ThemedText
                   type="body"
                   style={{
-                    color: theme.textSecondary,
+                    color: "#14B8A6",
                     fontWeight: "600",
-                    marginLeft: Spacing.sm,
+                    textDecorationLine: "underline",
                   }}
                 >
-                  Cancel
+                  add another account
                 </ThemedText>
-              </Pressable>
+                .
+              </ThemedText>
+
+              {/* Buttons */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: Spacing.md,
+                  width: "100%",
+                }}
+              >
+                {/* Cancel Button */}
+                <Pressable
+                  onPress={onCancel}
+                  disabled={isLoading}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    paddingVertical: Spacing.md,
+                    borderRadius: BorderRadius.full,
+                    borderWidth: 2,
+                    borderColor: isDark
+                      ? theme.border
+                      : "#E5E7EB",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: isDark
+                      ? "transparent"
+                      : "#FFFFFF",
+                    opacity: pressed || isLoading ? 0.7 : 1,
+                  })}
+                >
+                  <ThemedText
+                    type="body"
+                    style={{
+                      color: theme.textPrimary,
+                      fontWeight: "600",
+                      fontSize: 15,
+                    }}
+                  >
+                    Cancel
+                  </ThemedText>
+                </Pressable>
+
+                {/* Logout Button */}
+                <Pressable
+                  onPress={onConfirm}
+                  disabled={isLoading}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    paddingVertical: Spacing.md,
+                    borderRadius: BorderRadius.full,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#000000",
+                    opacity: pressed || isLoading ? 0.85 : 1,
+                  })}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <ThemedText
+                      type="body"
+                      style={{
+                        color: "#FFFFFF",
+                        fontWeight: "600",
+                        fontSize: 15,
+                      }}
+                    >
+                      Log out
+                    </ThemedText>
+                  )}
+                </Pressable>
+              </View>
             </View>
           </Pressable>
         </Animated.View>
