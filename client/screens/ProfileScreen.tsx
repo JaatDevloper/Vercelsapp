@@ -95,7 +95,7 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { getStats } = useQuizHistory();
-  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout } = useProfile();
+  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge } = useProfile();
   const { ownerProfile } = useOwnerProfile();
 
   const stats = getStats();
@@ -103,7 +103,21 @@ export default function ProfileScreen() {
   const [badgesModalVisible, setBadgesModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [selectedBadge, setSelectedBadge] = useState<VerificationBadge>(VERIFICATION_BADGES[0]);
+  
+  // Initialize from profile if available
+  const [selectedBadge, setSelectedBadge] = useState<VerificationBadge>(
+    profile?.selectedBadgeId 
+      ? VERIFICATION_BADGES.find(b => b.id === profile.selectedBadgeId) || VERIFICATION_BADGES[0]
+      : VERIFICATION_BADGES[0]
+  );
+
+  // Sync state when profile loads
+  React.useEffect(() => {
+    if (profile?.selectedBadgeId) {
+      const badge = VERIFICATION_BADGES.find(b => b.id === profile.selectedBadgeId);
+      if (badge) setSelectedBadge(badge);
+    }
+  }, [profile?.selectedBadgeId]);
 
   const handleAbout = () => {
     setAboutModalVisible(true);
@@ -115,6 +129,7 @@ export default function ProfileScreen() {
 
   const handleSelectBadge = (badge: VerificationBadge) => {
     setSelectedBadge(badge);
+    updateBadge(badge.id);
   };
 
   const handleLogout = async () => {

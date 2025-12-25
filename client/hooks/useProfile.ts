@@ -10,6 +10,7 @@ export interface Profile {
   name: string;
   email: string;
   avatarUrl: string;
+  selectedBadgeId: string;
   income: number;
   expense: number;
   currency: string;
@@ -107,6 +108,24 @@ async function updateProfilePhoto(data: {
   return res.json();
 }
 
+async function updateProfileBadge(data: {
+  deviceId: string;
+  badgeId: string;
+}): Promise<Profile> {
+  const res = await fetch(`${baseUrl}/api/profile/badge`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const e = await res.json();
+    throw new Error(e.error || "UPDATE_BADGE_FAILED");
+  }
+
+  return res.json();
+}
+
 async function logoutProfile(deviceId: string) {
   await fetch(`${baseUrl}/api/profile/logout`, {
     method: "POST",
@@ -178,6 +197,14 @@ export function useProfile() {
     },
   });
 
+  const updateBadgeMutation = useMutation({
+    mutationFn: (badgeId: string) =>
+      updateProfileBadge({ deviceId: deviceId!, badgeId }),
+    onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(["profile", deviceId], updatedProfile);
+    },
+  });
+
   /* ===================== LOGOUT (FINAL FIX) ===================== */
 
   const logout = async () => {
@@ -217,6 +244,9 @@ export function useProfile() {
     updatePhoto: updatePhotoMutation.mutate,
     isUpdatingPhoto: updatePhotoMutation.isPending,
     updatePhotoError: updatePhotoMutation.error,
+
+    updateBadge: updateBadgeMutation.mutate,
+    isUpdatingBadge: updateBadgeMutation.isPending,
 
     deviceId,
     logout,

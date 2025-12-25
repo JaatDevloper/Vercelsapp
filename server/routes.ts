@@ -482,6 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: profile.name || "",
           email: profile.email || "",
           avatarUrl: profile.avatarUrl || "",
+          selectedBadgeId: profile.selectedBadgeId || "",
           income: profile.income || 0,
           expense: profile.expense || 0,
           currency: profile.currency || "$",
@@ -508,6 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: profile.name || "",
         email: profile.email || "",
         avatarUrl: profile.avatarUrl || "",
+        selectedBadgeId: profile.selectedBadgeId || "",
         income: profile.income || 0,
         expense: profile.expense || 0,
         currency: profile.currency || "$",
@@ -595,6 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: profile?.name || "",
         email: profile?.email || "",
         avatarUrl: profile?.avatarUrl || "",
+        selectedBadgeId: profile?.selectedBadgeId || "",
         income: profile?.income || 0,
         expense: profile?.expense || 0,
         currency: profile?.currency || "$",
@@ -661,6 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: profile.name || "",
         email: profile.email || "",
         avatarUrl: profile.avatarUrl || "",
+        selectedBadgeId: profile.selectedBadgeId || "",
         income: profile.income || 0,
         expense: profile.expense || 0,
         currency: profile.currency || "$",
@@ -671,6 +675,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating profile photo:", error);
       res.status(500).json({
         error: "Failed to update profile photo",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Update profile badge
+  app.put("/api/profile/badge", async (req: Request, res: Response) => {
+    try {
+      const { deviceId, badgeId } = req.body;
+
+      if (!deviceId) {
+        return res.status(400).json({ error: "Device ID is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("appprofile");
+
+      const now = new Date().toISOString();
+
+      const result = await collection.findOneAndUpdate(
+        { deviceId },
+        { $set: { selectedBadgeId: badgeId, updatedAt: now } },
+        { returnDocument: "after" }
+      );
+
+      const profile = result && typeof result === 'object' && 'value' in result ? result.value : result;
+
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json({
+        _id: profile._id?.toString() || "",
+        deviceId: profile.deviceId,
+        name: profile.name || "",
+        email: profile.email || "",
+        avatarUrl: profile.avatarUrl || "",
+        selectedBadgeId: profile.selectedBadgeId || "",
+        income: profile.income || 0,
+        expense: profile.expense || 0,
+        currency: profile.currency || "$",
+        createdAt: profile.createdAt || now,
+        updatedAt: profile.updatedAt || now,
+      });
+    } catch (error) {
+      console.error("Error updating profile badge:", error);
+      res.status(500).json({
+        error: "Failed to update profile badge",
         message: error instanceof Error ? error.message : "Unknown error",
       });
     }
