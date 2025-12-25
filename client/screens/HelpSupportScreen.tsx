@@ -11,9 +11,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { 
-  FadeInDown, 
   FadeIn,
+  FadeInDown,
   ZoomIn,
   withSpring,
   useAnimatedStyle,
@@ -28,70 +29,53 @@ import { Spacing, BorderRadius } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-interface FAQItem {
+interface Article {
   id: string;
-  question: string;
-  answer: string;
-  category: "general" | "quizzes" | "account";
+  title: string;
+  description: string;
   icon: keyof typeof Feather.glyphMap;
 }
 
-const FAQ_DATA: FAQItem[] = [
+interface Discussion {
+  id: string;
+  title: string;
+  date: string;
+  category: string;
+  avatar: string;
+  color: string;
+}
+
+const TOP_ARTICLES: Article[] = [
   {
     id: "1",
-    category: "general",
-    question: "What is TestOne?",
-    answer: "TestOne is your ultimate quiz companion designed to help you prepare for exams and assessments with multiple quiz modes, multiplayer competitions, and leaderboards.",
-    icon: "zap",
+    title: "How do I cancel my auction bids for a place to stay?",
+    description: "You can cancel a reservation any time before or during your trip.",
+    icon: "x-circle",
   },
   {
     id: "2",
-    category: "quizzes",
-    question: "How do I take a quiz?",
-    answer: "Browse quizzes in Discover, tap one to view details, and click 'Start Quiz' to begin answering questions within the time limit.",
-    icon: "book-open",
+    title: "How to get started with your account?",
+    description: "You can cancel a reservation any time before or during your trip.",
+    icon: "arrow-right",
+  },
+];
+
+const DISCUSSIONS: Discussion[] = [
+  {
+    id: "1",
+    title: "How do I cancel my reservation?",
+    date: "31 Oct 2020",
+    category: "Payments",
+    avatar: "D",
+    color: "#4F46E5",
   },
   {
-    id: "3",
-    category: "quizzes",
-    question: "Can I create my own quiz?",
-    answer: "Log in as admin, navigate to 'Manage Quizzes', click 'Create New Quiz', add questions, set difficulty levels, and publish.",
-    icon: "edit-3",
-  },
-  {
-    id: "4",
-    category: "quizzes",
-    question: "What is Multiplayer mode?",
-    answer: "Compete with friends in real-time. Create a room, share the code, and challenge others to take the same quiz simultaneously.",
-    icon: "users",
-  },
-  {
-    id: "5",
-    category: "quizzes",
-    question: "How do I join a multiplayer room?",
-    answer: "Go to Discover, tap 'Join Room', enter the room code shared by your friend, and wait for the host to start the quiz.",
-    icon: "log-in",
-  },
-  {
-    id: "6",
-    category: "account",
-    question: "How do I change my profile picture?",
-    answer: "Go to Profile, tap your avatar, select a new image from your device, crop it, and upload.",
-    icon: "camera",
-  },
-  {
-    id: "7",
-    category: "account",
-    question: "What are badges and frames?",
-    answer: "Badges are achievements for milestones. Frames are decorative profile borders that unlock as you progress.",
-    icon: "award",
-  },
-  {
-    id: "8",
-    category: "general",
-    question: "How do I track my progress?",
-    answer: "Check Profile or History to view quiz statistics, scores, and trends. The Leaderboard shows your ranking.",
-    icon: "bar-chart-2",
+    id: "2",
+    title: "How do I change my reservation?",
+    date: "31 Oct 2020",
+    category: "Changes",
+    avatar: "C",
+    color: "#EC4899",
   },
 ];
 
@@ -105,23 +89,6 @@ export default function HelpSupportScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-
-  const categories = [
-    { id: "all", label: "All", icon: "grid" as const },
-    { id: "general", label: "General", icon: "info" as const },
-    { id: "quizzes", label: "Quizzes", icon: "book" as const },
-    { id: "account", label: "Account", icon: "user" as const },
-  ];
-
-  const filteredFAQ = FAQ_DATA.filter((item) => {
-    const matchesSearch =
-      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
 
   const handleEmailPress = async () => {
     const mailtoUrl = `mailto:${CONTACT_INFO.email}?subject=${encodeURIComponent(
@@ -137,164 +104,187 @@ export default function HelpSupportScreen() {
   return (
     <ThemedView style={styles.container}>
       {/* Header */}
-      <Animated.View entering={FadeIn.duration(400)} style={[styles.header, { paddingTop: insets.top }]}>
+      <Animated.View 
+        entering={FadeIn.duration(400)} 
+        style={[styles.header, { paddingTop: insets.top }]}
+      >
         <View style={styles.headerTop}>
-          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+          <Pressable 
+            onPress={() => navigation.goBack()} 
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
             <Feather name="chevron-left" size={28} color={theme.text} />
           </Pressable>
-          <ThemedText type="h3" style={{ fontWeight: "700" }}>
-            Help & Support
-          </ThemedText>
-          <View style={{ width: 28 }} />
+          <Pressable>
+            <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+              <ThemedText style={{ color: "#FFFFFF", fontWeight: "700" }}>G</ThemedText>
+            </View>
+          </Pressable>
         </View>
-
-        {/* Search Bar */}
-        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={[styles.searchWrapper, { backgroundColor: theme.backgroundDefault }]}>
-          <Feather name="search" size={18} color={theme.textSecondary} />
-          <TextInput
-            placeholder="Search help..."
-            placeholderTextColor={theme.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={[styles.searchInput, { color: theme.text }]}
-          />
-        </Animated.View>
       </Animated.View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Category Tabs */}
-        <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.categoriesContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
-            {categories.map((cat) => (
-              <Pressable
-                key={cat.id}
-                onPress={() => setSelectedCategory(cat.id)}
-                style={({ pressed }) => [
-                  styles.categoryTab,
-                  {
-                    backgroundColor: selectedCategory === cat.id ? theme.primary : theme.backgroundSecondary,
-                    opacity: pressed ? 0.8 : 1,
-                  },
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Section with Gradient and Illustration */}
+        <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+          <LinearGradient
+            colors={["#F0E7FF", "#D4C5FF", "#A8B5FF"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroSection}
+          >
+            {/* Illustration - Creative SVG-like design with icons */}
+            <Animated.View 
+              entering={ZoomIn.delay(200).duration(600)}
+              style={styles.illustrationContainer}
+            >
+              {/* Question mark circle */}
+              <View style={[styles.illustrationCircle, { backgroundColor: "#FF6B6B" }]}>
+                <ThemedText style={styles.illustrationText}>?</ThemedText>
+              </View>
+              {/* Speech bubble 1 */}
+              <View style={[styles.speechBubble1, { backgroundColor: "#FFD93D" }]} />
+              {/* Speech bubble 2 */}
+              <View style={[styles.speechBubble2, { backgroundColor: "#FFA07A" }]} />
+            </Animated.View>
+
+            {/* Hero Text */}
+            <View style={styles.heroText}>
+              <ThemedText 
+                style={[styles.heroTitle, { color: "#1A1A1A" }]}
+              >
+                How can we help you today?
+              </ThemedText>
+              <ThemedText 
+                style={[
+                  styles.heroSubtitle,
+                  { color: "#666666" },
                 ]}
               >
-                <Feather name={cat.icon} size={16} color={selectedCategory === cat.id ? "#FFFFFF" : theme.text} />
-                <ThemedText
-                  type="small"
-                  style={{
-                    color: selectedCategory === cat.id ? "#FFFFFF" : theme.text,
-                    marginLeft: 6,
-                    fontWeight: "600",
-                  }}
+                Enter your details to proceed further add more detail about your bio.
+              </ThemedText>
+            </View>
+
+            {/* Search Bar in Hero */}
+            <Animated.View 
+              entering={FadeInDown.delay(300).duration(500)}
+              style={styles.heroSearchContainer}
+            >
+              <Feather name="search" size={18} color="#999999" />
+              <TextInput
+                placeholder="Type to search"
+                placeholderTextColor="#999999"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                style={[styles.heroSearchInput, { color: "#1A1A1A" }]}
+              />
+            </Animated.View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Top Articles Section */}
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Top Articles</ThemedText>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.articlesScroll}
+          >
+            {TOP_ARTICLES.map((article, index) => (
+              <Animated.View
+                key={article.id}
+                entering={FadeInDown.delay(450 + index * 50).duration(500)}
+              >
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.articleCard,
+                    { opacity: pressed ? 0.8 : 1 },
+                  ]}
                 >
-                  {cat.label}
-                </ThemedText>
-              </Pressable>
+                  <ThemedText style={styles.articleTitle}>
+                    {article.title}
+                  </ThemedText>
+                  <ThemedText style={styles.articleDescription}>
+                    {article.description}
+                  </ThemedText>
+                </Pressable>
+              </Animated.View>
             ))}
           </ScrollView>
         </Animated.View>
 
-        {/* FAQ List */}
-        <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.faqContainer}>
-          {filteredFAQ.length > 0 ? (
-            filteredFAQ.map((item, index) => (
-              <FAQAccordion
-                key={item.id}
-                item={item}
-                isExpanded={expandedId === item.id}
-                onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                index={index}
-                theme={theme}
-              />
-            ))
-          ) : (
-            <Animated.View entering={FadeIn.duration(300)} style={styles.emptyState}>
-              <Feather name="search" size={48} color={theme.textSecondary} />
-              <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: 12 }}>
-                No results found
-              </ThemedText>
+        {/* Latest Discussions Section */}
+        <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Latest discussions</ThemedText>
+          {DISCUSSIONS.map((discussion, index) => (
+            <Animated.View
+              key={discussion.id}
+              entering={FadeInDown.delay(550 + index * 50).duration(500)}
+            >
+              <Pressable
+                onPress={handleEmailPress}
+                style={({ pressed }) => [
+                  styles.discussionItem,
+                  { 
+                    backgroundColor: theme.backgroundDefault,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                <View style={[styles.discussionAvatar, { backgroundColor: discussion.color }]}>
+                  <ThemedText style={styles.discussionAvatarText}>
+                    {discussion.avatar}
+                  </ThemedText>
+                </View>
+                <View style={styles.discussionContent}>
+                  <ThemedText style={styles.discussionTitle}>
+                    {discussion.title}
+                  </ThemedText>
+                  <View style={styles.discussionMeta}>
+                    <ThemedText style={styles.discussionDate}>
+                      {discussion.date}
+                    </ThemedText>
+                    <View style={styles.metaSeparator} />
+                    <ThemedText style={styles.discussionCategory}>
+                      {discussion.category}
+                    </ThemedText>
+                  </View>
+                </View>
+              </Pressable>
             </Animated.View>
-          )}
+          ))}
         </Animated.View>
 
-        {/* Contact Section */}
-        <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.contactSection}>
-          <Pressable
+        {/* Bottom Navigation Icons */}
+        <Animated.View 
+          entering={FadeInDown.delay(600).duration(500)}
+          style={styles.bottomNav}
+        >
+          <Pressable style={styles.navIcon}>
+            <Feather name="home" size={24} color={theme.textSecondary} />
+          </Pressable>
+          <Pressable style={styles.navIcon}>
+            <Feather name="file-text" size={24} color={theme.textSecondary} />
+          </Pressable>
+          <Pressable 
             onPress={handleEmailPress}
-            style={({ pressed }) => [
-              styles.contactButton,
-              {
-                backgroundColor: theme.primary,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
+            style={styles.navIcon}
           >
-            <Animated.View entering={ZoomIn.delay(350).duration(400)}>
-              <Feather name="send" size={24} color="#FFFFFF" />
-            </Animated.View>
-            <View style={{ flex: 1, marginLeft: 16 }}>
-              <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "700" }}>
-                Still need help?
-              </ThemedText>
-              <ThemedText type="small" style={{ color: "#FFFFFF", opacity: 0.9, marginTop: 2 }}>
-                Contact our support team
-              </ThemedText>
+            <View style={[styles.primaryButton, { backgroundColor: theme.primary }]}>
+              <Feather name="send" size={20} color="#FFFFFF" />
             </View>
-            <Feather name="arrow-right" size={20} color="#FFFFFF" />
+          </Pressable>
+          <Pressable style={styles.navIcon}>
+            <Feather name="play" size={24} color={theme.textSecondary} />
+          </Pressable>
+          <Pressable style={styles.navIcon}>
+            <Feather name="menu" size={24} color={theme.textSecondary} />
           </Pressable>
         </Animated.View>
       </ScrollView>
     </ThemedView>
-  );
-}
-
-interface FAQAccordionProps {
-  item: FAQItem;
-  isExpanded: boolean;
-  onToggle: () => void;
-  index: number;
-  theme: any;
-}
-
-function FAQAccordion({ item, isExpanded, onToggle, index, theme }: FAQAccordionProps) {
-  const rotateZ = useSharedValue(0);
-
-  React.useEffect(() => {
-    rotateZ.value = withTiming(isExpanded ? 1 : 0, { duration: 300 });
-  }, [isExpanded, rotateZ]);
-
-  const iconAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${rotateZ.value * 180}deg` }],
-    };
-  });
-
-  return (
-    <Animated.View
-      entering={FadeInDown.delay(250 + index * 50).duration(400)}
-      style={[styles.faqItem, { backgroundColor: theme.backgroundDefault }]}
-    >
-      <Pressable onPress={onToggle} style={styles.faqHeader}>
-        <View style={styles.faqTitleContainer}>
-          <View style={[styles.faqIcon, { backgroundColor: `${theme.primary}15` }]}>
-            <Feather name={item.icon} size={18} color={theme.primary} />
-          </View>
-          <ThemedText type="body" style={{ fontWeight: "600", flex: 1 }}>
-            {item.question}
-          </ThemedText>
-        </View>
-        <Animated.View style={iconAnimatedStyle}>
-          <Feather name="chevron-down" size={20} color={theme.primary} />
-        </Animated.View>
-      </Pressable>
-
-      {isExpanded && (
-        <Animated.View entering={FadeInDown.duration(300)} style={styles.faqAnswer}>
-          <ThemedText type="body" style={{ color: theme.textSecondary, lineHeight: 24 }}>
-            {item.answer}
-          </ThemedText>
-        </Animated.View>
-      )}
-    </Animated.View>
   );
 }
 
@@ -304,90 +294,198 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 12,
   },
   headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  heroSection: {
+    marginHorizontal: 16,
+    borderRadius: 24,
+    padding: 24,
+    paddingTop: 40,
+    alignItems: "center",
+    marginBottom: 32,
+    overflow: "hidden",
+  },
+  illustrationContainer: {
+    width: 140,
+    height: 140,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    position: "relative",
+  },
+  illustrationCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 3,
+  },
+  illustrationText: {
+    fontSize: 48,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  speechBubble1: {
+    position: "absolute",
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    bottom: 20,
+    left: 20,
+    zIndex: 1,
+  },
+  speechBubble2: {
+    position: "absolute",
+    width: 55,
+    height: 55,
+    borderRadius: 27.5,
+    top: 10,
+    right: 15,
+    zIndex: 2,
+  },
+  heroText: {
+    alignItems: "center",
     marginBottom: 20,
   },
-  searchWrapper: {
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    lineHeight: 32,
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  heroSearchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     height: 48,
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
+    width: "100%",
   },
-  searchInput: {
+  heroSearchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 14,
     fontWeight: "500",
   },
-  scrollContent: {
+  section: {
     paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  categoriesContainer: {
     marginBottom: 28,
   },
-  categoriesScroll: {
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 14,
+  },
+  articlesScroll: {
     paddingRight: 16,
   },
-  categoryTab: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  faqContainer: {
-    marginBottom: 20,
-  },
-  faqItem: {
-    borderRadius: 14,
+  articleCard: {
+    width: SCREEN_WIDTH - 72,
+    backgroundColor: "#F8F9FF",
+    borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
-    overflow: "hidden",
+    marginRight: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#4F46E5",
   },
-  faqHeader: {
+  articleTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  articleDescription: {
+    fontSize: 12,
+    color: "#888888",
+    lineHeight: 18,
+  },
+  discussionItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 10,
+    borderRadius: 12,
   },
-  faqTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  faqIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+  discussionAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
-  faqAnswer: {
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0, 0, 0, 0.05)",
+  discussionAvatarText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 16,
   },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 48,
+  discussionContent: {
+    flex: 1,
   },
-  contactSection: {
-    marginTop: 8,
+  discussionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 6,
   },
-  contactButton: {
+  discussionMeta: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 18,
-    borderRadius: 14,
-    overflow: "hidden",
+  },
+  discussionDate: {
+    fontSize: 12,
+    color: "#999999",
+  },
+  metaSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#CCCCCC",
+    marginHorizontal: 8,
+  },
+  discussionCategory: {
+    fontSize: 12,
+    color: "#999999",
+  },
+  bottomNav: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 16,
+    gap: 24,
+  },
+  navIcon: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  primaryButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
