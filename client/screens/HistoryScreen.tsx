@@ -9,11 +9,22 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown, FadeInUp, FadeIn } from "react-native-reanimated";
+import Animated, { 
+  FadeInDown, 
+  FadeInUp, 
+  FadeIn, 
+  FadeOut,
+  useAnimatedStyle, 
+  withRepeat, 
+  withSequence, 
+  withTiming,
+  useSharedValue,
+  withSpring
+} from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -25,6 +36,30 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+function FloatingIcon({ name, size, color, delay = 0 }: { name: any, size: number, color: string, delay?: number }) {
+  const translateY = useSharedValue(0);
+
+  React.useEffect(() => {
+    translateY.value = withRepeat(
+      withSequence(
+        withTiming(-10, { duration: 2000 + delay }),
+        withTiming(0, { duration: 2000 + delay })
+      ),
+      -10
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <MaterialCommunityIcons name={name} size={size} color={color} />
+    </Animated.View>
+  );
+}
 
 export default function HistoryScreen() {
   const { theme, isDark } = useTheme();
@@ -114,30 +149,55 @@ export default function HistoryScreen() {
         ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
       />
 
-      {/* Login Required Modal */}
+      {/* Premium Minimalist Login Required Modal */}
       <Modal
         visible={showLoginPrompt}
         transparent={true}
-        animationType="fade"
+        animationType="none"
       >
-        <View style={styles.modalOverlay}>
+        <Animated.View 
+          entering={FadeIn}
+          exiting={FadeOut}
+          style={styles.modalOverlay}
+        >
           <Animated.View 
-            entering={FadeInUp.springify()}
+            entering={FadeInDown.springify().damping(15)}
             style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}
           >
-            <LinearGradient
-              colors={isDark ? ["#1a1a2e", "#16213e"] : ["#2C3E50", "#3498db"]}
-              style={styles.modalHeader}
-            >
-              <View style={styles.iconCircle}>
-                <Feather name="lock" size={32} color="#FFFFFF" />
+            {/* Illustration Area */}
+            <View style={styles.illustrationContainer}>
+              <View style={styles.illustrationBackground}>
+                <View style={[styles.circle, { backgroundColor: `${primaryColor}10`, width: 140, height: 140 }]} />
+                <View style={[styles.circle, { backgroundColor: `${primaryColor}05`, width: 180, height: 180 }]} />
               </View>
-            </LinearGradient>
+              
+              <View style={styles.iconGroup}>
+                <View style={styles.mainIconContainer}>
+                  <LinearGradient
+                    colors={[primaryColor, `${primaryColor}CC`]}
+                    style={styles.mainIconGradient}
+                  >
+                    <Feather name="user" size={40} color="#FFFFFF" />
+                  </LinearGradient>
+                  <Animated.View entering={FadeIn.delay(400)} style={styles.lockBadge}>
+                    <Feather name="lock" size={14} color="#FFFFFF" />
+                  </Animated.View>
+                </View>
+                
+                {/* Floating Elements */}
+                <View style={[styles.floatingIcon, { top: -20, right: -40 }]}>
+                  <FloatingIcon name="history" size={24} color={`${primaryColor}80`} delay={200} />
+                </View>
+                <View style={[styles.floatingIcon, { bottom: 0, left: -50 }]}>
+                  <FloatingIcon name="trophy-outline" size={28} color={`${primaryColor}60`} delay={500} />
+                </View>
+              </View>
+            </View>
 
             <View style={styles.modalBody}>
-              <ThemedText type="h3" style={styles.modalTitle}>Login Required</ThemedText>
-              <ThemedText type="body" style={styles.modalDesc}>
-                If you want to track your quiz history and climb the leaderboard, please log in to your profile first.
+              <ThemedText type="h3" style={styles.modalTitle}>Join the Community</ThemedText>
+              <ThemedText type="body" style={[styles.modalDesc, { color: theme.textSecondary }]}>
+                Create a profile to unlock personalized history tracking and compete on the global leaderboard.
               </ThemedText>
 
               <Pressable
@@ -147,10 +207,10 @@ export default function HistoryScreen() {
                 }}
                 style={({ pressed }) => [
                   styles.loginButton,
-                  { backgroundColor: primaryColor, opacity: pressed ? 0.8 : 1 }
+                  { backgroundColor: primaryColor, opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
                 ]}
               >
-                <ThemedText style={styles.buttonText}>Login Now</ThemedText>
+                <ThemedText style={styles.buttonText}>Get Started</ThemedText>
               </Pressable>
 
               <Pressable
@@ -160,11 +220,11 @@ export default function HistoryScreen() {
                   { opacity: pressed ? 0.6 : 1 }
                 ]}
               >
-                <ThemedText style={[styles.laterText, { color: theme.textSecondary }]}>Maybe Later</ThemedText>
+                <ThemedText style={[styles.laterText, { color: theme.textSecondary }]}>Maybe later</ThemedText>
               </Pressable>
             </View>
           </Animated.View>
-        </View>
+        </Animated.View>
       </Modal>
     </ThemedView>
   );
@@ -210,62 +270,109 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    backdropFilter: "blur(10px)",
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
   },
   modalContent: {
     width: "100%",
-    borderRadius: BorderRadius.xl,
-    overflow: "hidden",
-    maxWidth: 400,
-  },
-  modalHeader: {
-    height: 120,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
     borderRadius: 32,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    overflow: "hidden",
+    maxWidth: 360,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  illustrationContainer: {
+    height: 200,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    marginTop: Spacing.xl,
+  },
+  illustrationBackground: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  circle: {
+    borderRadius: 100,
+    position: "absolute",
+  },
+  iconGroup: {
+    position: "relative",
+  },
+  mainIconContainer: {
+    width: 80,
+    height: 80,
+    position: "relative",
+  },
+  mainIconGradient: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    transform: [{ rotate: "-10deg" }],
+  },
+  lockBadge: {
+    position: "absolute",
+    bottom: -4,
+    right: -4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#10B981",
+    borderWidth: 3,
     borderColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  floatingIcon: {
+    position: "absolute",
   },
   modalBody: {
     padding: Spacing.xl,
+    paddingTop: 0,
     alignItems: "center",
   },
   modalTitle: {
     marginBottom: Spacing.sm,
     textAlign: "center",
+    fontWeight: "800",
+    letterSpacing: -0.5,
   },
   modalDesc: {
     textAlign: "center",
-    color: "#666",
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing["2xl"],
     lineHeight: 22,
+    paddingHorizontal: Spacing.sm,
   },
   loginButton: {
     width: "100%",
     paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
+    borderRadius: 20,
     alignItems: "center",
     marginBottom: Spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonText: {
     color: "#FFFFFF",
     fontWeight: "700",
-    fontSize: 16,
+    fontSize: 17,
   },
   laterButton: {
     paddingVertical: Spacing.sm,
   },
   laterText: {
     fontWeight: "600",
+    fontSize: 15,
   },
 });
