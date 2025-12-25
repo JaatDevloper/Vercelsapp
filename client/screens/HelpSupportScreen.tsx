@@ -300,16 +300,17 @@ export default function HelpSupportScreen() {
               key={discussion.id}
               entering={FadeInDown.delay(550 + index * 50).duration(500)}
             >
-              <Pressable
-                onPress={() => handleDiscussionPress(discussion)}
-                style={({ pressed }) => [
-                  styles.discussionItem,
-                  { 
-                    backgroundColor: theme.backgroundDefault,
-                    opacity: pressed ? 0.8 : 1,
-                  },
-                ]}
-              >
+                <Pressable
+                  onPress={() => handleDiscussionPress(discussion)}
+                  style={({ pressed }) => [
+                    styles.discussionItem,
+                    { 
+                      backgroundColor: isDark ? theme.backgroundDefault : "#FFFFFF",
+                      borderColor: isDark ? "transparent" : "#E5E7EB",
+                      opacity: pressed ? 0.9 : 1,
+                    },
+                  ]}
+                >
                 <View style={[styles.discussionAvatar, { backgroundColor: discussion.color }]}>
                   <ThemedText style={styles.discussionAvatarText}>
                     {discussion.avatar}
@@ -364,13 +365,12 @@ export default function HelpSupportScreen() {
         <Pressable 
           style={styles.modalOverlay} 
           onPress={closeModal}
-          activeOpacity={1}
         >
           <Animated.View 
             style={[styles.modalContainer, animatedModalStyle]}
             onStartShouldSetResponder={() => true}
           >
-            <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+            <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
               {/* Modal Header */}
               <View style={styles.modalHeader}>
                 <View style={[styles.modalAvatar, { backgroundColor: selectedDiscussion.color }]}>
@@ -534,18 +534,24 @@ const styles = StyleSheet.create({
   },
   articleCard: {
     width: SCREEN_WIDTH - 72,
-    backgroundColor: "#F8F9FF",
-    borderRadius: 12,
-    padding: 16,
-    marginRight: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: "#4F46E5",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   articleTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     marginBottom: 8,
-    lineHeight: 20,
+    lineHeight: 22,
+    color: "#111827",
   },
   articleDescription: {
     fontSize: 12,
@@ -556,8 +562,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 14,
-    marginBottom: 10,
-    borderRadius: 12,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   discussionAvatar: {
     width: 44,
@@ -576,9 +590,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   discussionTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     marginBottom: 6,
+    color: "#1A1A1A",
   },
   discussionMeta: {
     flexDirection: "row",
