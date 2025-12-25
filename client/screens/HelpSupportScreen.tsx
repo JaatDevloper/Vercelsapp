@@ -305,8 +305,8 @@ export default function HelpSupportScreen() {
                   style={({ pressed }) => [
                     styles.discussionItem,
                     { 
-                      backgroundColor: isDark ? theme.backgroundDefault : "#FFFFFF",
-                      borderColor: isDark ? "transparent" : "#E5E7EB",
+                      backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
+                      borderColor: isDark ? "#374151" : "#F3F4F6",
                       opacity: pressed ? 0.9 : 1,
                     },
                   ]}
@@ -561,17 +561,17 @@ const styles = StyleSheet.create({
   discussionItem: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    paddingVertical: 18,
+    marginBottom: 16,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: "#F3F4F6",
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 4,
   },
   discussionAvatar: {
     width: 44,
