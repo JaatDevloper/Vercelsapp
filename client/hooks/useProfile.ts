@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getDeviceId } from "@/lib/deviceId";
+
+/* ===================== TYPES ===================== */
 
 export interface Profile {
   _id: string;
@@ -31,16 +33,15 @@ export interface LoginProfileData {
   password: string;
 }
 
-/* ===================== API HELPERS ===================== */
+/* ===================== API ===================== */
 
-const getBaseUrl = () =>
-  process.env.EXPO_PUBLIC_DOMAIN
-    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
-    : "";
+const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
+  ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+  : "";
 
 async function fetchProfile(deviceId: string): Promise<Profile> {
   const res = await fetch(
-    `${getBaseUrl()}/api/profile?deviceId=${encodeURIComponent(deviceId)}`
+    `${baseUrl}/api/profile?deviceId=${encodeURIComponent(deviceId)}`
   );
 
   if (res.status === 404) throw new Error("PROFILE_NOT_FOUND");
@@ -52,7 +53,7 @@ async function fetchProfile(deviceId: string): Promise<Profile> {
 async function createProfile(
   data: CreateProfileData & { deviceId: string }
 ): Promise<Profile> {
-  const res = await fetch(`${getBaseUrl()}/api/profile`, {
+  const res = await fetch(`${baseUrl}/api/profile`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -77,7 +78,7 @@ async function loginProfile(
 
   if (data.name) params.append("name", data.name);
 
-  const res = await fetch(`${getBaseUrl()}/api/profile?${params}`);
+  const res = await fetch(`${baseUrl}/api/profile?${params}`);
 
   if (res.status === 404) throw new Error("PROFILE_NOT_FOUND");
   if (!res.ok) {
@@ -92,7 +93,7 @@ async function updateProfilePhoto(data: {
   deviceId: string;
   avatarUrl: string;
 }): Promise<Profile> {
-  const res = await fetch(`${getBaseUrl()}/api/profile/photo`, {
+  const res = await fetch(`${baseUrl}/api/profile/photo`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -107,56 +108,31 @@ async function updateProfilePhoto(data: {
 }
 
 async function logoutProfile(deviceId: string) {
-  await fetch(`${getBaseUrl()}/api/profile/logout`, {
+  await fetch(`${baseUrl}/api/profile/logout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ deviceId }),
   });
 }
 
-async function requestOTP(email: string): Promise<{ message: string }> {
-  const res = await fetch(`${getBaseUrl()}/api/otp/request`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email: email.trim().toLowerCase() }),
-  });
-
-  if (!res.ok) {
-    const e = await res.json();
-    throw new Error(e.error || "SEND_OTP_FAILED");
-  }
-
-  return res.json();
-}
-
-async function verifyOTP(email: string, otp: string): Promise<{ message: string }> {
-  const res = await fetch(`${getBaseUrl()}/api/otp/verify`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email: email.trim().toLowerCase(), otp }),
-  });
-
-  if (!res.ok) {
-    const e = await res.json();
-    throw new Error(e.error || "VERIFY_OTP_FAILED");
-  }
-
-  return res.json();
-}
-
 /* ===================== HOOK ===================== */
 
 export function useProfile() {
   const queryClient = useQueryClient();
+
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
-  /* -------- Init Device ID -------- */
+  // 🔐 SINGLE AUTH GATE (THIS FIXES EVERYTHING)
+  const [authEnabled, setAuthEnabled] = useState(false);
+
+  /* -------- Init -------- */
   useEffect(() => {
-    getDeviceId().then(setDeviceId).catch(() => setDeviceId(null));
+    getDeviceId()
+      .then((id) => {
+        setDeviceId(id);
+        setAuthEnabled(true); // allow auto-login on fresh app start
+      })
+      .catch(() => setDeviceId(null));
   }, []);
 
   /* -------- Profile Query -------- */
@@ -167,19 +143,20 @@ export function useProfile() {
   } = useQuery<Profile>({
     queryKey: ["profile", deviceId],
     queryFn: () => fetchProfile(deviceId!),
-    enabled: !!deviceId,
+    enabled: !!deviceId && authEnabled,
     retry: false,
     staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });
 
-  /* -------- Mutations -------- */
+  /* ===================== MUTATIONS ===================== */
 
   const createProfileMutation = useMutation({
     mutationFn: (data: CreateProfileData) =>
       createProfile({ ...data, deviceId: deviceId! }),
     onSuccess: (newProfile) => {
+      setAuthEnabled(true);
       queryClient.setQueryData(["profile", deviceId], newProfile);
     },
   });
@@ -188,10 +165,8 @@ export function useProfile() {
     mutationFn: (data: LoginProfileData) =>
       loginProfile({ ...data, newDeviceId: deviceId! }),
     onSuccess: (existingProfile) => {
-      // Set profile data immediately
+      setAuthEnabled(true);
       queryClient.setQueryData(["profile", deviceId], existingProfile);
-      // Invalidate to trigger a fresh fetch and confirm login
-      queryClient.invalidateQueries({ queryKey: ["profile", deviceId] });
     },
   });
 
@@ -203,32 +178,23 @@ export function useProfile() {
     },
   });
 
+  /* ===================== LOGOUT (FINAL FIX) ===================== */
+
   const logout = async () => {
     if (!deviceId) return;
+
+    // 🔒 STOP AUTO FETCH FIRST
+    setAuthEnabled(false);
 
     try {
       await logoutProfile(deviceId);
     } catch {}
 
-    // Clear profile data and remove query
+    // 🧹 CLEAR PROFILE COMPLETELY
     queryClient.removeQueries({ queryKey: ["profile", deviceId] });
   };
 
-  /* -------- OTP Mutations -------- */
-
-  const otpRequestMutation = useMutation({
-    mutationFn: async (email: string) => {
-      return requestOTP(email);
-    },
-  });
-
-  const otpVerifyMutation = useMutation({
-    mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
-      return verifyOTP(email, otp);
-    },
-  });
-
-  /* -------- Derived State -------- */
+  /* ===================== DERIVED STATE ===================== */
 
   const profileNotFound =
     error instanceof Error && error.message === "PROFILE_NOT_FOUND";
@@ -251,11 +217,6 @@ export function useProfile() {
     updatePhoto: updatePhotoMutation.mutate,
     isUpdatingPhoto: updatePhotoMutation.isPending,
     updatePhotoError: updatePhotoMutation.error,
-
-    requestOTP: otpRequestMutation.mutateAsync,
-    isRequestingOTP: otpRequestMutation.isPending,
-    verifyOTP: (email: string, otp: string) => otpVerifyMutation.mutateAsync({ email, otp }),
-    isVerifyingOTP: otpVerifyMutation.isPending,
 
     deviceId,
     logout,
