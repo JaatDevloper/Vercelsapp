@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -20,6 +20,9 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  Easing,
+  withRepeat,
+  withSequence,
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -43,6 +46,7 @@ interface Discussion {
   category: string;
   avatar: string;
   color: string;
+  answer: string;
 }
 
 const TOP_ARTICLES: Article[] = [
@@ -80,6 +84,7 @@ const DISCUSSIONS: Discussion[] = [
     category: "Multiplayer",
     avatar: "M",
     color: "#4F46E5",
+    answer: "To join a multiplayer room, follow these steps:\n\n1. Open TestOne and go to the Multiplayer section\n2. Tap 'Join Room' button\n3. Enter the room code shared by your friend\n4. Select a quiz from the available options\n5. Tap 'Ready' to start playing\n\nYou and your friends will compete in real-time, answering the same questions. Your scores will be displayed on the leaderboard!",
   },
   {
     id: "2",
@@ -88,6 +93,7 @@ const DISCUSSIONS: Discussion[] = [
     category: "Account",
     avatar: "P",
     color: "#EC4899",
+    answer: "Changing your profile picture is easy:\n\n1. Navigate to your Profile by tapping the profile icon\n2. Tap on your current profile picture\n3. Choose 'Change Photo' from the options\n4. Select 'Camera' to take a new photo or 'Gallery' to choose from existing images\n5. Crop and adjust the image as needed\n6. Tap 'Save' to confirm\n\nYour new profile picture will be visible to all users immediately!",
   },
   {
     id: "3",
@@ -96,6 +102,7 @@ const DISCUSSIONS: Discussion[] = [
     category: "Quizzes",
     avatar: "R",
     color: "#F59E0B",
+    answer: "Yes, absolutely! You can retake quizzes to improve your scores:\n\n1. Open the quiz you want to retake from your quiz history\n2. Tap the 'Retake Quiz' button\n3. Review the questions carefully and provide your answers\n4. Your new score will replace the previous one if it's higher\n\nNote: You can retake each quiz unlimited times. Only your best score will be displayed in your profile stats and badges!",
   },
   {
     id: "4",
@@ -104,6 +111,7 @@ const DISCUSSIONS: Discussion[] = [
     category: "Analytics",
     avatar: "H",
     color: "#10B981",
+    answer: "To view your quiz history and progress:\n\n1. Go to your Profile section\n2. Tap on 'Statistics' or 'History' tab\n3. You'll see all completed quizzes with dates and scores\n4. Tap on any quiz to see detailed results\n5. View your overall statistics including:\n   - Total quizzes completed\n   - Average score\n   - Total time spent\n   - Progress towards badges\n\nYour analytics help you track improvement over time!",
   },
 ];
 
@@ -117,8 +125,49 @@ export default function HelpSupportScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDiscussion, setSelectedDiscussion] = useState<Discussion | null>(null);
+  const modalScale = useSharedValue(0.8);
+  const modalOpacity = useSharedValue(0);
+  
+  // Animated values for Contact Us button
+  const buttonScale = useSharedValue(1);
+  const buttonPulse = useSharedValue(1);
+
+  // Initialize pulse animation
+  useEffect(() => {
+    buttonPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1
+    );
+  }, []);
+
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: buttonPulse.value }
+    ],
+  }));
+
+  const handleDiscussionPress = (discussion: Discussion) => {
+    setSelectedDiscussion(discussion);
+    modalOpacity.value = withTiming(1, { duration: 300 });
+    modalScale.value = withSpring(1, { damping: 12, mass: 1 });
+  };
+
+  const closeModal = () => {
+    modalOpacity.value = withTiming(0, { duration: 200 });
+    modalScale.value = withTiming(0.8, { duration: 200 });
+    setTimeout(() => setSelectedDiscussion(null), 200);
+  };
 
   const handleEmailPress = async () => {
+    buttonScale.value = withSpring(0.95, { damping: 10, mass: 1 });
+    setTimeout(() => {
+      buttonScale.value = withSpring(1, { damping: 10, mass: 1 });
+    }, 100);
+    
     const mailtoUrl = `mailto:${CONTACT_INFO.email}?subject=${encodeURIComponent(
       CONTACT_INFO.emailSubject
     )}`;
@@ -128,6 +177,11 @@ export default function HelpSupportScreen() {
       console.error("Failed to open email", error);
     }
   };
+
+  const animatedModalStyle = useAnimatedStyle(() => ({
+    opacity: modalOpacity.value,
+    transform: [{ scale: modalScale.value }],
+  }));
 
   return (
     <ThemedView style={styles.container}>
@@ -142,11 +196,6 @@ export default function HelpSupportScreen() {
             style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
           >
             <Feather name="chevron-left" size={28} color={theme.text} />
-          </Pressable>
-          <Pressable>
-            <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-              <ThemedText style={{ color: "#FFFFFF", fontWeight: "700" }}>G</ThemedText>
-            </View>
           </Pressable>
         </View>
       </Animated.View>
@@ -252,7 +301,7 @@ export default function HelpSupportScreen() {
               entering={FadeInDown.delay(550 + index * 50).duration(500)}
             >
               <Pressable
-                onPress={handleEmailPress}
+                onPress={() => handleDiscussionPress(discussion)}
                 style={({ pressed }) => [
                   styles.discussionItem,
                   { 
@@ -285,33 +334,99 @@ export default function HelpSupportScreen() {
           ))}
         </Animated.View>
 
-        {/* Bottom Navigation Icons */}
+        {/* Contact Us Section */}
         <Animated.View 
           entering={FadeInDown.delay(600).duration(500)}
-          style={styles.bottomNav}
+          style={styles.contactSection}
         >
-          <Pressable style={styles.navIcon}>
-            <Feather name="home" size={24} color={theme.textSecondary} />
-          </Pressable>
-          <Pressable style={styles.navIcon}>
-            <Feather name="file-text" size={24} color={theme.textSecondary} />
-          </Pressable>
-          <Pressable 
-            onPress={handleEmailPress}
-            style={styles.navIcon}
+          <Animated.View 
+            style={[animatedButtonStyle, styles.contactButtonWrapper]}
           >
-            <View style={[styles.primaryButton, { backgroundColor: theme.primary }]}>
-              <Feather name="send" size={20} color="#FFFFFF" />
-            </View>
-          </Pressable>
-          <Pressable style={styles.navIcon}>
-            <Feather name="play" size={24} color={theme.textSecondary} />
-          </Pressable>
-          <Pressable style={styles.navIcon}>
-            <Feather name="menu" size={24} color={theme.textSecondary} />
-          </Pressable>
+            <LinearGradient
+              colors={[theme.primary, theme.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientWrapper}
+            >
+              <Pressable 
+                onPress={handleEmailPress}
+                style={({ pressed }) => [
+                  styles.contactButton,
+                  { 
+                    opacity: pressed ? 0.85 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  },
+                ]}
+              >
+                <View style={styles.iconWrapper}>
+                  <Feather name="mail" size={24} color="#FFFFFF" />
+                </View>
+                <ThemedText style={styles.contactButtonText}>Contact Us</ThemedText>
+              </Pressable>
+            </LinearGradient>
+          </Animated.View>
+          <ThemedText style={styles.contactDescription}>
+            Have a question? Reach out to our App Team directly for quick support.
+          </ThemedText>
         </Animated.View>
       </ScrollView>
+
+      {/* Answer Modal */}
+      {selectedDiscussion && (
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={closeModal}
+          activeOpacity={1}
+        >
+          <Animated.View 
+            style={[styles.modalContainer, animatedModalStyle]}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <View style={[styles.modalAvatar, { backgroundColor: selectedDiscussion.color }]}>
+                  <ThemedText style={styles.modalAvatarText}>
+                    {selectedDiscussion.avatar}
+                  </ThemedText>
+                </View>
+                <Pressable 
+                  onPress={closeModal}
+                  style={styles.closeButton}
+                >
+                  <Feather name="x" size={24} color={theme.text} />
+                </Pressable>
+              </View>
+
+              {/* Modal Body */}
+              <ScrollView 
+                style={styles.modalBody}
+                showsVerticalScrollIndicator={false}
+              >
+                <ThemedText style={styles.modalTitle}>
+                  {selectedDiscussion.title}
+                </ThemedText>
+                
+                <View style={styles.modalMeta}>
+                  <ThemedText style={styles.modalCategory}>
+                    {selectedDiscussion.category}
+                  </ThemedText>
+                  <ThemedText style={styles.modalDate}>
+                    {selectedDiscussion.date}
+                  </ThemedText>
+                </View>
+
+                <View style={styles.answerDivider} />
+
+                <ThemedText style={styles.answerLabel}>Answer</ThemedText>
+                <ThemedText style={styles.answerText}>
+                  {selectedDiscussion.answer}
+                </ThemedText>
+              </ScrollView>
+            </View>
+          </Animated.View>
+        </Pressable>
+      )}
     </ThemedView>
   );
 }
@@ -496,24 +611,149 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999999",
   },
-  bottomNav: {
+  contactSection: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  contactButtonWrapper: {
+    width: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 12,
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+  },
+  gradientWrapper: {
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  contactButton: {
     flexDirection: "row",
-    justifyContent: "center",
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     alignItems: "center",
-    paddingVertical: 16,
-    gap: 24,
-  },
-  navIcon: {
-    width: 48,
-    height: 48,
     justifyContent: "center",
-    alignItems: "center",
+    gap: 12,
+    width: "100%",
   },
-  primaryButton: {
+  iconWrapper: {
     width: 48,
     height: 48,
     borderRadius: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
     justifyContent: "center",
     alignItems: "center",
+  },
+  contactButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  contactDescription: {
+    fontSize: 12,
+    color: "#999999",
+    textAlign: "center",
+    marginTop: 14,
+    lineHeight: 18,
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: SCREEN_WIDTH - 32,
+    maxHeight: SCREEN_WIDTH * 1.4,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  modalContent: {
+    borderRadius: 24,
+    overflow: "hidden",
+    elevation: 20,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  modalAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalAvatarText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 20,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  modalBody: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    maxHeight: SCREEN_WIDTH,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    lineHeight: 26,
+    marginBottom: 12,
+  },
+  modalMeta: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  modalCategory: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4F46E5",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "#F0E7FF",
+    borderRadius: 6,
+  },
+  modalDate: {
+    fontSize: 12,
+    color: "#999999",
+    paddingVertical: 4,
+  },
+  answerDivider: {
+    height: 1,
+    backgroundColor: "#F0F0F0",
+    marginVertical: 16,
+  },
+  answerLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 10,
+    color: "#1A1A1A",
+  },
+  answerText: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#666666",
+    marginBottom: 20,
   },
 });
