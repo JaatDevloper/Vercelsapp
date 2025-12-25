@@ -334,40 +334,30 @@ export default function HelpSupportScreen() {
           ))}
         </Animated.View>
 
-        {/* Contact Us Section */}
+        {/* Minimalist Contact Us Button */}
         <Animated.View 
           entering={FadeInDown.delay(600).duration(500)}
-          style={styles.contactSection}
+          style={styles.minimalistContactSection}
         >
           <Animated.View 
-            style={[animatedButtonStyle, styles.contactButtonWrapper]}
+            style={[animatedButtonStyle, styles.minimalistButtonContainer]}
           >
-            <LinearGradient
-              colors={[theme.primary, theme.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientWrapper}
+            <Pressable 
+              onPress={handleEmailPress}
+              style={({ pressed }) => [
+                styles.minimalistButton,
+                { 
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.95 : 1 }],
+                },
+              ]}
             >
-              <Pressable 
-                onPress={handleEmailPress}
-                style={({ pressed }) => [
-                  styles.contactButton,
-                  { 
-                    opacity: pressed ? 0.85 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  },
-                ]}
-              >
-                <View style={styles.iconWrapper}>
-                  <Feather name="mail" size={24} color="#FFFFFF" />
-                </View>
-                <ThemedText style={styles.contactButtonText}>Contact Us</ThemedText>
-              </Pressable>
-            </LinearGradient>
+              <View style={[styles.minimalistIconBox, { backgroundColor: theme.primary }]}>
+                <Feather name="mail" size={18} color="#FFFFFF" />
+              </View>
+              <ThemedText style={styles.minimalistButtonText}>Contact Us</ThemedText>
+            </Pressable>
           </Animated.View>
-          <ThemedText style={styles.contactDescription}>
-            Have a question? Reach out to our App Team directly for quick support.
-          </ThemedText>
         </Animated.View>
       </ScrollView>
 
@@ -611,54 +601,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999999",
   },
-  contactSection: {
+  minimalistContactSection: {
     paddingHorizontal: 16,
-    marginBottom: 20,
+    paddingVertical: 16,
     alignItems: "center",
   },
-  contactButtonWrapper: {
-    width: "100%",
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 12,
-    shadowColor: "#4F46E5",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-  },
-  gradientWrapper: {
-    borderRadius: 16,
+  minimalistButtonContainer: {
+    elevation: 8,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    borderRadius: 12,
     overflow: "hidden",
   },
-  contactButton: {
+  minimalistButton: {
     flexDirection: "row",
-    paddingVertical: 18,
-    paddingHorizontal: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
-    width: "100%",
+    gap: 10,
+    borderRadius: 12,
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
   },
-  iconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
+  minimalistIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
-  contactButtonText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: 0.5,
-  },
-  contactDescription: {
-    fontSize: 12,
-    color: "#999999",
-    textAlign: "center",
-    marginTop: 14,
-    lineHeight: 18,
+  minimalistButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333333",
+    letterSpacing: 0.3,
   },
   modalOverlay: {
     position: "absolute",
