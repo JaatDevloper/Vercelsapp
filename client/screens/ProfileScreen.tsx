@@ -300,36 +300,43 @@ export default function ProfileScreen() {
           >
             <View style={styles.avatarContainer}>
               <Pressable onPress={pickImage} disabled={isUpdatingPhoto}>
-                <View style={[styles.avatar, { backgroundColor: primaryColor }]}>
+                <View style={styles.avatar}>
                   {/* Avatar Border/Frame */}
-                  {profile?.selectedFrameId && profile.selectedFrameId !== "frame_basic" && (
-                    <View style={StyleSheet.absoluteFill}>
-                      <LinearGradient
-                        colors={profile.selectedFrameId === "frame_gold" ? ["#FFD700", "#FFA500"] : 
-                               profile.selectedFrameId === "frame_silver" ? ["#C0C0C0", "#A8A8A8"] :
-                               profile.selectedFrameId === "frame_bronze" ? ["#CD7F32", "#B8860B"] :
-                               profile.selectedFrameId === "frame_diamond" ? ["#B9F2FF", "#00CED1"] :
-                               profile.selectedFrameId === "frame_legendary" ? ["#8B5CF6", "#EC4899"] :
-                               ["#3498db", "#2980b9"]}
-                        style={styles.avatarFrame}
-                      />
+                  <LinearGradient
+                    colors={
+                      profile?.selectedFrameId === "frame_gold" ? ["#FFD700", "#FFA500"] : 
+                      profile?.selectedFrameId === "frame_silver" ? ["#C0C0C0", "#A8A8A8"] :
+                      profile?.selectedFrameId === "frame_bronze" ? ["#CD7F32", "#B8860B"] :
+                      profile?.selectedFrameId === "frame_diamond" ? ["#B9F2FF", "#00CED1"] :
+                      profile?.selectedFrameId === "frame_legendary" ? ["#8B5CF6", "#EC4899"] :
+                      profile?.selectedFrameId === "frame_platinum" ? ["#E5E4E2", "#BCC6CC"] :
+                      profile?.selectedFrameId === "frame_champion" ? ["#EF4444", "#F59E0B"] :
+                      ["#FFFFFF", "#FFFFFF"] // Default to white if no frame
+                    }
+                    style={styles.avatarFrame}
+                  >
+                    <View style={styles.avatarImageWrapper}>
+                      {isUpdatingPhoto ? (
+                        <View style={styles.avatarPlaceholder}>
+                          <ActivityIndicator size="small" color={primaryColor} />
+                        </View>
+                      ) : profile?.avatarUrl && profile.avatarUrl.startsWith("data:image") ? (
+                        <Image
+                          source={{ uri: profile.avatarUrl }}
+                          style={styles.avatarImage}
+                        />
+                      ) : (
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: primaryColor }]}>
+                          <ThemedText type="h2" style={{ color: "#FFFFFF" }}>
+                            {profile?.name?.charAt(0).toUpperCase() || "?"}
+                          </ThemedText>
+                        </View>
+                      )}
                     </View>
-                  )}
-                  {isUpdatingPhoto ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : profile.avatarUrl && profile.avatarUrl.startsWith("data:image") ? (
-                    <Image
-                      source={{ uri: profile.avatarUrl }}
-                      style={styles.avatarImage}
-                    />
-                  ) : (
-                    <ThemedText type="h2" style={{ color: "#FFFFFF" }}>
-                      {profile.name.charAt(0).toUpperCase()}
-                    </ThemedText>
-                  )}
+                  </LinearGradient>
                 </View>
                 <View style={[styles.cameraButton, { backgroundColor: theme.primary }]}>
-                  <Feather name="camera" size={14} color="#FFFFFF" />
+                  <Feather name="camera" size={16} color="#FFFFFF" />
                 </View>
               </Pressable>
             </View>
@@ -680,42 +687,62 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   avatarContainer: {
-    marginTop: -70,
+    alignItems: "center",
     marginBottom: Spacing.md,
+    marginTop: -Spacing.xl,
   },
   avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 100,
+    height: 100,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 4,
-    borderColor: "#FFFFFF",
-    overflow: "hidden",
+    position: "relative",
   },
   avatarFrame: {
-    ...StyleSheet.absoluteFillObject,
-    borderWidth: 3,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     borderRadius: 50,
-    zIndex: 1,
-    backgroundColor: "transparent",
+    padding: 4, // This creates the "thickness" of the frame
+  },
+  avatarImageWrapper: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
   },
   avatarImage: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
+    width: "100%",
+    height: "100%",
+  },
+  avatarPlaceholder: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   cameraButton: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    bottom: 4,
+    right: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: "#FFFFFF",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    zIndex: 10,
   },
   nameRow: {
     flexDirection: "row",
