@@ -784,10 +784,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Look up the user's profile to get reliable name and email
       const profile = await profileCollection.findOne({ deviceId });
       
-      // Use profile data if available, otherwise fall back to client-provided data
-      const userName = profile?.name || req.body.userName || "";
-      const userEmail = profile?.email || req.body.userEmail || "";
-      const profileId = profile?._id?.toString() || "";
+      // ONLY save history if the user has a profile (is logged in)
+      if (!profile) {
+        return res.status(200).json({ 
+          message: "History not saved for non-logged in user",
+          skipped: true 
+        });
+      }
+      
+      // Use profile data if available
+      const userName = profile.name || "";
+      const userEmail = profile.email || "";
+      const profileId = profile._id?.toString() || "";
 
       const historyItem = {
         deviceId,
