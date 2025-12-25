@@ -104,6 +104,30 @@ export default function ProfileScreen() {
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
+  const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  const fetchNotifications = async () => {
+    setNotificationsLoading(true);
+    try {
+      const response = await fetch("/api/notifications");
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  const handleOpenNotifications = () => {
+    setNotificationsModalVisible(true);
+    fetchNotifications();
+  };
+  
   // Initialize from profile if available
   const [selectedBadge, setSelectedBadge] = useState<VerificationBadge>(
     profile?.selectedBadgeId 
@@ -398,7 +422,12 @@ export default function ProfileScreen() {
           >
             <MenuItem icon="user" label="Profile Settings" theme={theme} />
             <MenuItem icon="lock" label="Change Password" theme={theme} />
-            <MenuItem icon="bell" label="Notification" theme={theme} />
+            <MenuItem 
+              icon="bell" 
+              label="Notification" 
+              theme={theme} 
+              onPress={handleOpenNotifications}
+            />
             <MenuItem icon="clock" label="Quiz History" theme={theme} showBorder={false} />
           </Animated.View>
         </View>
@@ -650,6 +679,63 @@ export default function ProfileScreen() {
         selectedBadge={selectedBadge}
         onSelectBadge={handleSelectBadge}
       />
+
+      {/* Notifications Modal */}
+      <Modal
+        visible={notificationsModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setNotificationsModalVisible(false)}
+      >
+        <View style={styles.aboutModalOverlay}>
+          <View style={[styles.aboutModalContent, { backgroundColor: theme.backgroundDefault }]}>
+            <View style={[styles.modalHeader, { borderBottomWidth: 1, borderBottomColor: theme.border }]}>
+              <ThemedText type="h2">Notifications</ThemedText>
+              <Pressable onPress={() => setNotificationsModalVisible(false)}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            {notificationsLoading ? (
+              <View style={{ padding: Spacing.xl, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={theme.primary} />
+              </View>
+            ) : (
+              <ScrollView style={{ padding: Spacing.md }} showsVerticalScrollIndicator={false}>
+                {notifications.length === 0 ? (
+                  <View style={{ padding: Spacing.xl, alignItems: 'center' }}>
+                    <Feather name="bell-off" size={48} color={theme.textSecondary} style={{ marginBottom: Spacing.md }} />
+                    <ThemedText style={{ color: theme.textSecondary }}>No new notifications</ThemedText>
+                  </View>
+                ) : (
+                  notifications.map((notif, index) => (
+                    <Animated.View 
+                      key={notif._id || index}
+                      entering={FadeInDown.delay(index * 100)}
+                      style={[
+                        styles.notificationCard, 
+                        { backgroundColor: theme.backgroundSecondary }
+                      ]}
+                    >
+                      <View style={[styles.notificationIcon, { backgroundColor: `${theme.primary}15` }]}>
+                        <Feather name="zap" size={20} color={theme.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <ThemedText type="body" style={{ fontWeight: '700' }}>{notif.title}</ThemedText>
+                        <ThemedText type="small" style={{ marginTop: 4, lineHeight: 18 }}>{notif.message}</ThemedText>
+                        <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 8, fontSize: 10 }}>
+                          {new Date(notif.createdAt).toLocaleString()}
+                        </ThemedText>
+                      </View>
+                    </Animated.View>
+                  ))
+                )}
+                <View style={{ height: 40 }} />
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -1062,5 +1148,27 @@ const styles = StyleSheet.create({
   },
   experienceContent: {
     flex: 1,
+  },
+  notificationCard: {
+    flexDirection: 'row',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  notificationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.lg,
   },
 });

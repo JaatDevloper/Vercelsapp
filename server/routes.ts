@@ -264,6 +264,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ BROADCAST API ENDPOINTS ============
+
+  // Post a broadcast message
+  app.post("/api/admin/broadcast", async (req: Request, res: Response) => {
+    try {
+      const { message, title, type } = req.body;
+
+      if (!message || message.trim().length === 0) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("broadcasts");
+
+      const broadcastData = {
+        title: title || "System Broadcast",
+        message: message.trim(),
+        type: type || "info",
+        createdAt: new Date().toISOString(),
+      };
+
+      await collection.insertOne(broadcastData);
+
+      res.status(201).json({ message: "Broadcast sent successfully" });
+    } catch (error) {
+      console.error("Error sending broadcast:", error);
+      res.status(500).json({
+        error: "Failed to send broadcast",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  // Get notifications for user
+  app.get("/api/notifications", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("broadcasts");
+
+      const notifications = await collection.find()
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .toArray();
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({
+        error: "Failed to fetch notifications",
+      });
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", async (req: Request, res: Response) => {
     try {

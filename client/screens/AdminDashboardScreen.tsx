@@ -273,6 +273,47 @@ export default function AdminDashboardScreen() {
     setSelectedUser(user);
   };
 
+  const [broadcastModalVisible, setBroadcastModalVisible] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastMessage.trim()) {
+      Alert.alert("Error", "Please enter a message");
+      return;
+    }
+
+    setBroadcastLoading(true);
+    try {
+      const response = await fetch("/api/admin/broadcast", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: broadcastTitle || "System Update",
+          message: broadcastMessage,
+          type: "info",
+        }),
+      });
+
+      if (response.ok) {
+        Alert.alert("Success", "Broadcast sent successfully");
+        setBroadcastModalVisible(false);
+        setBroadcastTitle("");
+        setBroadcastMessage("");
+      } else {
+        Alert.alert("Error", "Failed to send broadcast");
+      }
+    } catch (error) {
+      console.error("Error sending broadcast:", error);
+      Alert.alert("Error", "Something went wrong");
+    } finally {
+      setBroadcastLoading(false);
+    }
+  };
+
   const handleChangeUserRole = (newRole: "admin" | "moderator" | "user") => {
     if (selectedUser) {
       setUsers((prev) =>
@@ -381,6 +422,13 @@ export default function AdminDashboardScreen() {
             label="View Analytics"
             onPress={handleViewAnalytics}
             theme={theme}
+          />
+          <ActionButton
+            icon="radio"
+            label="Broadcast"
+            onPress={() => setBroadcastModalVisible(true)}
+            theme={theme}
+            color="#8B5CF6"
           />
           <ActionButton
             icon="trash-2"
@@ -603,6 +651,81 @@ export default function AdminDashboardScreen() {
             </Modal>
           )}
         </ThemedView>
+      </Modal>
+
+      {/* Broadcast Modal */}
+      <Modal
+        visible={broadcastModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setBroadcastModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.userDetailModal, { backgroundColor: theme.backgroundDefault, padding: Spacing.lg }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md }}>
+              <ThemedText type="h2">Send Broadcast</ThemedText>
+              <Pressable onPress={() => setBroadcastModalVisible(false)}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <ThemedText type="small" style={{ marginBottom: Spacing.xs, color: theme.textSecondary }}>Title (Optional)</ThemedText>
+            <TextInput
+              placeholder="e.g. System Update"
+              value={broadcastTitle}
+              onChangeText={setBroadcastTitle}
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.searchInput, { 
+                backgroundColor: theme.backgroundSecondary, 
+                color: theme.text,
+                borderRadius: BorderRadius.md,
+                padding: Spacing.sm,
+                marginBottom: Spacing.md,
+                width: '100%'
+              }]}
+            />
+
+            <ThemedText type="small" style={{ marginBottom: Spacing.xs, color: theme.textSecondary }}>Message</ThemedText>
+            <TextInput
+              placeholder="Enter your message here..."
+              value={broadcastMessage}
+              onChangeText={setBroadcastMessage}
+              multiline
+              numberOfLines={4}
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.searchInput, { 
+                backgroundColor: theme.backgroundSecondary, 
+                color: theme.text,
+                borderRadius: BorderRadius.md,
+                padding: Spacing.sm,
+                height: 120,
+                textAlignVertical: 'top',
+                width: '100%'
+              }]}
+            />
+
+            <Pressable
+              onPress={handleSendBroadcast}
+              disabled={broadcastLoading}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: theme.primary,
+                  padding: Spacing.md,
+                  borderRadius: BorderRadius.md,
+                  alignItems: 'center',
+                  marginTop: Spacing.lg,
+                  opacity: pressed || broadcastLoading ? 0.8 : 1
+                }
+              ]}
+            >
+              {broadcastLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <ThemedText style={{ color: 'white', fontWeight: 'bold' }}>Send Broadcast</ThemedText>
+              )}
+            </Pressable>
+          </View>
+        </View>
       </Modal>
 
       {/* Analytics Modal */}
