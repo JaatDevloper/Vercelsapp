@@ -438,7 +438,7 @@ export default function ProfileScreen() {
             entering={FadeInDown.delay(400).duration(400)}
             style={[styles.menuCard, { backgroundColor: theme.backgroundDefault }]}
           >
-            <MenuItem icon="help-circle" label="Help & Support" theme={theme} />
+            <MenuItem icon="help-circle" label="Help & Support" onPress={() => navigation.navigate("HelpSupport")} theme={theme} />
             <MenuItem icon="info" label="About TestOne" onPress={handleAbout} theme={theme} showBorder={false} />
           </Animated.View>
         </View>

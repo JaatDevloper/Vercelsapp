@@ -15,6 +15,7 @@ import MultiplayerResultsScreen from "@/screens/MultiplayerResultsScreen";
 import BadgesScreen from "@/screens/BadgesScreen";
 import AdminDashboardScreen from "@/screens/AdminDashboardScreen";
 import ManageQuizzesScreen from "@/screens/ManageQuizzesScreen";
+import HelpSupportScreen from "@/screens/HelpSupportScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   LoginProfile: undefined;
   OwnerLogin: undefined;
   Badges: undefined;
+  HelpSupport: undefined;
   CreateRoom: { quizId: string; quizTitle: string };
   JoinRoom: undefined;
   Lobby: { roomCode: string; odId: string; quizId: string; isHost: boolean; playerName: string };
@@ -187,6 +189,14 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="ManageQuizzes"
         component={ManageQuizzesScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="HelpSupport"
+        component={HelpSupportScreen}
         options={{
           presentation: "modal",
           headerShown: false,
