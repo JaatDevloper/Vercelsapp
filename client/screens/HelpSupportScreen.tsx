@@ -26,7 +26,7 @@ interface FAQItem {
   id: string;
   question: string;
   answer: string;
-  category: "general" | "bot" | "quizzes" | "account";
+  category: "general" | "quizzes" | "account";
 }
 
 const FAQ_DATA: FAQItem[] = [
@@ -34,31 +34,31 @@ const FAQ_DATA: FAQItem[] = [
     id: "1",
     category: "general",
     question: "What is TestOne?",
-    answer: "TestOne is your ultimate quiz companion app designed to help you prepare for exams and assessments. Features include multiple quiz modes, real-time multiplayer competitions, progress tracking, and personalized learning paths.",
+    answer: "TestOne is your ultimate quiz companion app designed to help you prepare for exams and assessments. Features include multiple quiz modes, real-time multiplayer competitions, progress tracking, and leaderboards to compete with others.",
   },
   {
     id: "2",
-    category: "bot",
-    question: "How does the Bot feature work?",
-    answer: "Our advanced bot analyzes your quiz performance and provides personalized recommendations. It learns from your mistakes and suggests topics you need to focus on for better results.",
+    category: "quizzes",
+    question: "How do I take a quiz?",
+    answer: "Browse available quizzes in the Discover section, tap on a quiz to view details, and click 'Start Quiz' to begin. Answer all questions within the time limit and submit to see your results and detailed feedback.",
   },
   {
     id: "3",
-    category: "bot",
-    question: "Can the Bot help me improve my scores?",
-    answer: "Absolutely! The Bot provides detailed analytics, identifies weak areas, suggests practice quizzes, and tracks your improvement over time. Use its insights to focus your study efforts effectively.",
+    category: "quizzes",
+    question: "Can I create my own quiz?",
+    answer: "Yes! Log in as an admin/owner, navigate to 'Manage Quizzes', and click 'Create New Quiz'. Add your questions, set answer options, difficulty levels, and publish. Your quiz will be available for others to take.",
   },
   {
     id: "4",
     category: "quizzes",
-    question: "How do I create my own quiz?",
-    answer: "Log in as an admin/owner, navigate to 'Manage Quizzes', and click 'Create New Quiz'. Add your questions, answer options, set difficulty levels, and publish. Your quiz will be available for others to take.",
+    question: "What is Multiplayer mode?",
+    answer: "Multiplayer mode lets you compete with friends in real-time. Create a room, share the code, and challenge others to take the same quiz simultaneously. See who finishes first and with the best score!",
   },
   {
     id: "5",
     category: "quizzes",
-    question: "What is Multiplayer mode?",
-    answer: "Multiplayer mode lets you compete with friends in real-time. Create a room, share the code, and challenge others to take the same quiz simultaneously. See who finishes first and with the best score!",
+    question: "How do I join a multiplayer room?",
+    answer: "Go to the Discover tab, tap 'Join Room', enter the room code shared by your friend, and wait for the host to start. Once started, you'll compete in real-time with other players!",
   },
   {
     id: "6",
@@ -70,13 +70,13 @@ const FAQ_DATA: FAQItem[] = [
     id: "7",
     category: "account",
     question: "What are badges and frames?",
-    answer: "Badges are achievements you earn by reaching milestones. Frames are decorative borders for your profile that unlock as you progress. They showcase your accomplishments!",
+    answer: "Badges are achievements you earn by reaching milestones like completing quizzes or achieving high scores. Frames are decorative borders for your profile that unlock as you progress. They showcase your accomplishments!",
   },
   {
     id: "8",
     category: "general",
-    question: "How is my progress tracked?",
-    answer: "We track your quiz scores, completion rates, average performance, and improvement trends. Check your Dashboard for detailed analytics and insights about your learning journey.",
+    question: "How do I track my progress?",
+    answer: "Check your Profile or History sections to view your quiz statistics, scores, average performance, and improvement trends. The Leaderboard shows how you rank against other users.",
   },
 ];
 
@@ -96,7 +96,6 @@ export default function HelpSupportScreen() {
   const categories = [
     { id: "all", label: "All", icon: "grid" as const },
     { id: "general", label: "General", icon: "info" as const },
-    { id: "bot", label: "Bot", icon: "zap" as const },
     { id: "quizzes", label: "Quizzes", icon: "book" as const },
     { id: "account", label: "Account", icon: "user" as const },
   ];
@@ -426,19 +425,19 @@ export default function HelpSupportScreen() {
           <View style={[styles.tipItem, { borderLeftColor: theme.primary }]}>
             <Feather name="zap" size={20} color={theme.primary} />
             <ThemedText type="body" style={{ color: theme.text, marginLeft: Spacing.md, flex: 1 }}>
-              Check the Bot analytics regularly for personalized improvement suggestions
+              Take multiple quizzes to build your knowledge and improve your scores over time
             </ThemedText>
           </View>
           <View style={[styles.tipItem, { borderLeftColor: theme.secondary }]}>
             <Feather name="users" size={20} color={theme.secondary} />
             <ThemedText type="body" style={{ color: theme.text, marginLeft: Spacing.md, flex: 1 }}>
-              Invite friends to multiplayer mode for a competitive learning experience
+              Invite friends to multiplayer mode and compete in real-time quizzes together
             </ThemedText>
           </View>
           <View style={[styles.tipItem, { borderLeftColor: "#F59E0B" }]}>
             <Feather name="trending-up" size={20} color="#F59E0B" />
             <ThemedText type="body" style={{ color: theme.text, marginLeft: Spacing.md, flex: 1 }}>
-              Focus on weak areas highlighted by the Bot to improve your scores
+              Check the Leaderboard to see your ranking and compete with other quiz enthusiasts
             </ThemedText>
           </View>
         </Animated.View>
