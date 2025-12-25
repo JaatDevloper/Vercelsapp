@@ -48,34 +48,62 @@ interface Discussion {
 const TOP_ARTICLES: Article[] = [
   {
     id: "1",
-    title: "How do I cancel my auction bids for a place to stay?",
-    description: "You can cancel a reservation any time before or during your trip.",
-    icon: "x-circle",
+    title: "How do I start taking quizzes on TestOne?",
+    description: "Browse available quizzes, tap one to view details, then click 'Start Quiz' to begin answering questions within the time limit.",
+    icon: "book-open",
   },
   {
     id: "2",
-    title: "How to get started with your account?",
-    description: "You can cancel a reservation any time before or during your trip.",
-    icon: "arrow-right",
+    title: "How do I create and publish my own quiz?",
+    description: "Log in as an admin, go to 'Manage Quizzes', click 'Create New Quiz', add questions, set difficulty, and publish to make it available for others.",
+    icon: "plus-circle",
+  },
+  {
+    id: "3",
+    title: "What is Multiplayer Mode and how does it work?",
+    description: "Compete with friends in real-time. Create a room, share the code with friends, and challenge them to take the same quiz simultaneously.",
+    icon: "users",
+  },
+  {
+    id: "4",
+    title: "How do I earn badges and unlock frames?",
+    description: "Badges are achievements earned by reaching milestones. Frames are decorative borders that unlock as you progress and showcase your accomplishments.",
+    icon: "award",
   },
 ];
 
 const DISCUSSIONS: Discussion[] = [
   {
     id: "1",
-    title: "How do I cancel my reservation?",
-    date: "31 Oct 2020",
-    category: "Payments",
-    avatar: "D",
+    title: "How do I join a multiplayer room with my friends?",
+    date: "22 Dec 2025",
+    category: "Multiplayer",
+    avatar: "M",
     color: "#4F46E5",
   },
   {
     id: "2",
-    title: "How do I change my reservation?",
-    date: "31 Oct 2020",
-    category: "Changes",
-    avatar: "C",
+    title: "How can I change my profile picture in TestOne?",
+    date: "20 Dec 2025",
+    category: "Account",
+    avatar: "P",
     color: "#EC4899",
+  },
+  {
+    id: "3",
+    title: "Can I retake quizzes to improve my score?",
+    date: "18 Dec 2025",
+    category: "Quizzes",
+    avatar: "R",
+    color: "#F59E0B",
+  },
+  {
+    id: "4",
+    title: "How do I view my quiz history and progress?",
+    date: "15 Dec 2025",
+    category: "Analytics",
+    avatar: "H",
+    color: "#10B981",
   },
 ];
 
@@ -163,7 +191,7 @@ export default function HelpSupportScreen() {
                   { color: "#666666" },
                 ]}
               >
-                Enter your details to proceed further add more detail about your bio.
+                Get answers about TestOne quizzes, multiplayer mode, badges, and your account.
               </ThemedText>
             </View>
 
