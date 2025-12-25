@@ -6,19 +6,25 @@ import {
   Pressable,
   TextInput,
   Linking,
-  ActivityIndicator,
   Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, { 
+  FadeInDown, 
+  FadeIn,
+  ZoomIn,
+  withSpring,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -27,6 +33,7 @@ interface FAQItem {
   question: string;
   answer: string;
   category: "general" | "quizzes" | "account";
+  icon: keyof typeof Feather.glyphMap;
 }
 
 const FAQ_DATA: FAQItem[] = [
@@ -34,49 +41,57 @@ const FAQ_DATA: FAQItem[] = [
     id: "1",
     category: "general",
     question: "What is TestOne?",
-    answer: "TestOne is your ultimate quiz companion app designed to help you prepare for exams and assessments. Features include multiple quiz modes, real-time multiplayer competitions, progress tracking, and leaderboards to compete with others.",
+    answer: "TestOne is your ultimate quiz companion designed to help you prepare for exams and assessments with multiple quiz modes, multiplayer competitions, and leaderboards.",
+    icon: "zap",
   },
   {
     id: "2",
     category: "quizzes",
     question: "How do I take a quiz?",
-    answer: "Browse available quizzes in the Discover section, tap on a quiz to view details, and click 'Start Quiz' to begin. Answer all questions within the time limit and submit to see your results and detailed feedback.",
+    answer: "Browse quizzes in Discover, tap one to view details, and click 'Start Quiz' to begin answering questions within the time limit.",
+    icon: "book-open",
   },
   {
     id: "3",
     category: "quizzes",
     question: "Can I create my own quiz?",
-    answer: "Yes! Log in as an admin/owner, navigate to 'Manage Quizzes', and click 'Create New Quiz'. Add your questions, set answer options, difficulty levels, and publish. Your quiz will be available for others to take.",
+    answer: "Log in as admin, navigate to 'Manage Quizzes', click 'Create New Quiz', add questions, set difficulty levels, and publish.",
+    icon: "edit-3",
   },
   {
     id: "4",
     category: "quizzes",
     question: "What is Multiplayer mode?",
-    answer: "Multiplayer mode lets you compete with friends in real-time. Create a room, share the code, and challenge others to take the same quiz simultaneously. See who finishes first and with the best score!",
+    answer: "Compete with friends in real-time. Create a room, share the code, and challenge others to take the same quiz simultaneously.",
+    icon: "users",
   },
   {
     id: "5",
     category: "quizzes",
     question: "How do I join a multiplayer room?",
-    answer: "Go to the Discover tab, tap 'Join Room', enter the room code shared by your friend, and wait for the host to start. Once started, you'll compete in real-time with other players!",
+    answer: "Go to Discover, tap 'Join Room', enter the room code shared by your friend, and wait for the host to start the quiz.",
+    icon: "log-in",
   },
   {
     id: "6",
     category: "account",
     question: "How do I change my profile picture?",
-    answer: "Go to your Profile page, tap on your current avatar, and select a new image from your device. You can crop and customize it before uploading.",
+    answer: "Go to Profile, tap your avatar, select a new image from your device, crop it, and upload.",
+    icon: "camera",
   },
   {
     id: "7",
     category: "account",
     question: "What are badges and frames?",
-    answer: "Badges are achievements you earn by reaching milestones like completing quizzes or achieving high scores. Frames are decorative borders for your profile that unlock as you progress. They showcase your accomplishments!",
+    answer: "Badges are achievements for milestones. Frames are decorative profile borders that unlock as you progress.",
+    icon: "award",
   },
   {
     id: "8",
     category: "general",
     question: "How do I track my progress?",
-    answer: "Check your Profile or History sections to view your quiz statistics, scores, average performance, and improvement trends. The Leaderboard shows how you rank against other users.",
+    answer: "Check Profile or History to view quiz statistics, scores, and trends. The Leaderboard shows your ranking.",
+    icon: "bar-chart-2",
   },
 ];
 
@@ -121,96 +136,53 @@ export default function HelpSupportScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <LinearGradient
-        colors={isDark ? ["#6366F1", "#8B5CF6"] : ["#06B6D4", "#0891B2"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top }]}
-      >
+      {/* Header */}
+      <Animated.View entering={FadeIn.duration(400)} style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerTop}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <Feather name="chevron-left" size={28} color="#FFFFFF" />
+          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+            <Feather name="chevron-left" size={28} color={theme.text} />
           </Pressable>
-          <ThemedText type="h3" style={styles.headerTitle}>
+          <ThemedText type="h3" style={{ fontWeight: "700" }}>
             Help & Support
           </ThemedText>
           <View style={{ width: 28 }} />
         </View>
 
-        <View style={styles.headerContent}>
-          <View style={[styles.heroIcon, { backgroundColor: "rgba(255, 255, 255, 0.2)" }]}>
-            <Feather name="help-circle" size={48} color="#FFFFFF" />
-          </View>
-          <ThemedText type="h2" style={styles.heroTitle}>
-            How can we
-          </ThemedText>
-          <ThemedText type="h2" style={[styles.heroTitle, { fontWeight: "700" }]}>
-            help you?
-          </ThemedText>
-        </View>
-      </LinearGradient>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
         {/* Search Bar */}
-        <Animated.View
-          entering={FadeInDown.delay(100).duration(400)}
-          style={[styles.searchContainer, { backgroundColor: theme.backgroundDefault }]}
-        >
-          <View style={[styles.searchInput, { borderColor: theme.border }]}>
-            <Feather name="search" size={20} color={theme.textSecondary} />
-            <TextInput
-              placeholder="Search questions..."
-              placeholderTextColor={theme.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={[styles.input, { color: theme.text }]}
-            />
-          </View>
+        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={[styles.searchWrapper, { backgroundColor: theme.backgroundDefault }]}>
+          <Feather name="search" size={18} color={theme.textSecondary} />
+          <TextInput
+            placeholder="Search help..."
+            placeholderTextColor={theme.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={[styles.searchInput, { color: theme.text }]}
+          />
         </Animated.View>
+      </Animated.View>
 
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Category Tabs */}
-        <Animated.View
-          entering={FadeInDown.delay(150).duration(400)}
-          style={styles.categoriesContainer}
-        >
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesScroll}
-          >
+        <Animated.View entering={FadeInDown.delay(150).duration(400)} style={styles.categoriesContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
             {categories.map((cat) => (
               <Pressable
                 key={cat.id}
                 onPress={() => setSelectedCategory(cat.id)}
                 style={({ pressed }) => [
-                  styles.categoryChip,
+                  styles.categoryTab,
                   {
-                    backgroundColor:
-                      selectedCategory === cat.id
-                        ? theme.primary
-                        : theme.backgroundSecondary,
+                    backgroundColor: selectedCategory === cat.id ? theme.primary : theme.backgroundSecondary,
                     opacity: pressed ? 0.8 : 1,
                   },
                 ]}
               >
-                <Feather
-                  name={cat.icon}
-                  size={16}
-                  color={
-                    selectedCategory === cat.id ? "#FFFFFF" : theme.textSecondary
-                  }
-                />
+                <Feather name={cat.icon} size={16} color={selectedCategory === cat.id ? "#FFFFFF" : theme.text} />
                 <ThemedText
                   type="small"
                   style={{
                     color: selectedCategory === cat.id ? "#FFFFFF" : theme.text,
-                    marginLeft: Spacing.xs,
+                    marginLeft: 6,
                     fontWeight: "600",
                   }}
                 >
@@ -221,228 +193,108 @@ export default function HelpSupportScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* FAQ Section Title */}
-        <View style={styles.sectionTitleContainer}>
-          <ThemedText
-            type="h4"
-            style={{
-              color: theme.text,
-              fontWeight: "700",
-              marginBottom: Spacing.sm,
-            }}
-          >
-            Frequently Asked Questions
-          </ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {filteredFAQ.length} question{filteredFAQ.length !== 1 ? "s" : ""}
-          </ThemedText>
-        </View>
-
-        {/* FAQ Items */}
-        <Animated.View
-          entering={FadeInDown.delay(200).duration(400)}
-          style={{ width: "100%" }}
-        >
+        {/* FAQ List */}
+        <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.faqContainer}>
           {filteredFAQ.length > 0 ? (
             filteredFAQ.map((item, index) => (
-              <Pressable
+              <FAQAccordion
                 key={item.id}
-                onPress={() =>
-                  setExpandedId(expandedId === item.id ? null : item.id)
-                }
-                style={({ pressed }) => [
-                  styles.faqItem,
-                  {
-                    backgroundColor: theme.backgroundDefault,
-                    borderColor: theme.border,
-                    opacity: pressed ? 0.8 : 1,
-                  },
-                ]}
-              >
-                <View style={styles.faqHeader}>
-                  <View
-                    style={[
-                      styles.categoryBadge,
-                      {
-                        backgroundColor:
-                          item.category === "bot"
-                            ? `${theme.primary}20`
-                            : item.category === "quizzes"
-                            ? `${theme.secondary}20`
-                            : item.category === "account"
-                            ? `#F59E0B20`
-                            : `#10B98120`,
-                      },
-                    ]}
-                  >
-                    <ThemedText
-                      type="small"
-                      style={{
-                        color:
-                          item.category === "bot"
-                            ? theme.primary
-                            : item.category === "quizzes"
-                            ? theme.secondary
-                            : item.category === "account"
-                            ? "#F59E0B"
-                            : "#10B981",
-                        fontWeight: "600",
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {item.category}
-                    </ThemedText>
-                  </View>
-                  <Feather
-                    name={expandedId === item.id ? "chevron-up" : "chevron-down"}
-                    size={20}
-                    color={theme.primary}
-                  />
-                </View>
-
-                <ThemedText
-                  type="body"
-                  style={{
-                    color: theme.text,
-                    fontWeight: "600",
-                    marginTop: Spacing.sm,
-                  }}
-                >
-                  {item.question}
-                </ThemedText>
-
-                {expandedId === item.id && (
-                  <Animated.View entering={FadeInDown.duration(300)}>
-                    <ThemedText
-                      type="body"
-                      style={{
-                        color: theme.textSecondary,
-                        marginTop: Spacing.md,
-                        lineHeight: 24,
-                      }}
-                    >
-                      {item.answer}
-                    </ThemedText>
-                  </Animated.View>
-                )}
-              </Pressable>
+                item={item}
+                isExpanded={expandedId === item.id}
+                onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                index={index}
+                theme={theme}
+              />
             ))
           ) : (
-            <View style={styles.emptyState}>
+            <Animated.View entering={FadeIn.duration(300)} style={styles.emptyState}>
               <Feather name="search" size={48} color={theme.textSecondary} />
-              <ThemedText
-                type="body"
-                style={{ color: theme.textSecondary, marginTop: Spacing.md }}
-              >
+              <ThemedText type="body" style={{ color: theme.textSecondary, marginTop: 12 }}>
                 No results found
               </ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                Try a different search term
-              </ThemedText>
-            </View>
+            </Animated.View>
           )}
         </Animated.View>
 
         {/* Contact Section */}
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(400)}
-          style={styles.contactSection}
-        >
-          <View style={[styles.contactCard, { backgroundColor: theme.backgroundDefault }]}>
-            <View
-              style={[
-                styles.contactIconContainer,
-                { backgroundColor: `${theme.primary}15` },
-              ]}
-            >
-              <Feather name="mail" size={32} color={theme.primary} />
+        <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.contactSection}>
+          <Pressable
+            onPress={handleEmailPress}
+            style={({ pressed }) => [
+              styles.contactButton,
+              {
+                backgroundColor: theme.primary,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <Animated.View entering={ZoomIn.delay(350).duration(400)}>
+              <Feather name="send" size={24} color="#FFFFFF" />
+            </Animated.View>
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "700" }}>
+                Still need help?
+              </ThemedText>
+              <ThemedText type="small" style={{ color: "#FFFFFF", opacity: 0.9, marginTop: 2 }}>
+                Contact our support team
+              </ThemedText>
             </View>
-
-            <ThemedText
-              type="h4"
-              style={{
-                color: theme.text,
-                fontWeight: "700",
-                marginTop: Spacing.lg,
-              }}
-            >
-              Still need help?
-            </ThemedText>
-            <ThemedText
-              type="body"
-              style={{
-                color: theme.textSecondary,
-                marginTop: Spacing.sm,
-                textAlign: "center",
-              }}
-            >
-              Contact our support team directly
-            </ThemedText>
-
-            <Pressable
-              onPress={handleEmailPress}
-              style={({ pressed }) => [
-                styles.emailButton,
-                { opacity: pressed ? 0.8 : 1 },
-              ]}
-            >
-              <LinearGradient
-                colors={
-                  isDark ? [theme.primary, "#7C3AED"] : ["#06B6D4", "#0891B2"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.emailButtonGradient}
-              >
-                <Feather name="send" size={18} color="#FFFFFF" />
-                <ThemedText
-                  type="body"
-                  style={{
-                    color: "#FFFFFF",
-                    fontWeight: "600",
-                    marginLeft: Spacing.sm,
-                  }}
-                >
-                  Contact Support
-                </ThemedText>
-              </LinearGradient>
-            </Pressable>
-
-            <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.lg, textAlign: "center" }}>
-              Tap above to send us an email with your questions or feedback
-            </ThemedText>
-          </View>
-        </Animated.View>
-
-        {/* Quick Tips */}
-        <Animated.View
-          entering={FadeInDown.delay(350).duration(400)}
-          style={styles.tipsSection}
-        >
-          <ThemedText type="h4" style={{ color: theme.text, fontWeight: "700" }}>
-            Quick Tips
-          </ThemedText>
-          <View style={[styles.tipItem, { borderLeftColor: theme.primary }]}>
-            <Feather name="zap" size={20} color={theme.primary} />
-            <ThemedText type="body" style={{ color: theme.text, marginLeft: Spacing.md, flex: 1 }}>
-              Take multiple quizzes to build your knowledge and improve your scores over time
-            </ThemedText>
-          </View>
-          <View style={[styles.tipItem, { borderLeftColor: theme.secondary }]}>
-            <Feather name="users" size={20} color={theme.secondary} />
-            <ThemedText type="body" style={{ color: theme.text, marginLeft: Spacing.md, flex: 1 }}>
-              Invite friends to multiplayer mode and compete in real-time quizzes together
-            </ThemedText>
-          </View>
-          <View style={[styles.tipItem, { borderLeftColor: "#F59E0B" }]}>
-            <Feather name="trending-up" size={20} color="#F59E0B" />
-            <ThemedText type="body" style={{ color: theme.text, marginLeft: Spacing.md, flex: 1 }}>
-              Check the Leaderboard to see your ranking and compete with other quiz enthusiasts
-            </ThemedText>
-          </View>
+            <Feather name="arrow-right" size={20} color="#FFFFFF" />
+          </Pressable>
         </Animated.View>
       </ScrollView>
     </ThemedView>
+  );
+}
+
+interface FAQAccordionProps {
+  item: FAQItem;
+  isExpanded: boolean;
+  onToggle: () => void;
+  index: number;
+  theme: any;
+}
+
+function FAQAccordion({ item, isExpanded, onToggle, index, theme }: FAQAccordionProps) {
+  const rotateZ = useSharedValue(0);
+
+  React.useEffect(() => {
+    rotateZ.value = withTiming(isExpanded ? 1 : 0, { duration: 300 });
+  }, [isExpanded, rotateZ]);
+
+  const iconAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotateZ.value * 180}deg` }],
+    };
+  });
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(250 + index * 50).duration(400)}
+      style={[styles.faqItem, { backgroundColor: theme.backgroundDefault }]}
+    >
+      <Pressable onPress={onToggle} style={styles.faqHeader}>
+        <View style={styles.faqTitleContainer}>
+          <View style={[styles.faqIcon, { backgroundColor: `${theme.primary}15` }]}>
+            <Feather name={item.icon} size={18} color={theme.primary} />
+          </View>
+          <ThemedText type="body" style={{ fontWeight: "600", flex: 1 }}>
+            {item.question}
+          </ThemedText>
+        </View>
+        <Animated.View style={iconAnimatedStyle}>
+          <Feather name="chevron-down" size={20} color={theme.primary} />
+        </Animated.View>
+      </Pressable>
+
+      {isExpanded && (
+        <Animated.View entering={FadeInDown.duration(300)} style={styles.faqAnswer}>
+          <ThemedText type="body" style={{ color: theme.textSecondary, lineHeight: 24 }}>
+            {item.answer}
+          </ThemedText>
+        </Animated.View>
+      )}
+    </Animated.View>
   );
 }
 
@@ -451,134 +303,91 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 20,
   },
-  headerTitle: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-  },
-  headerContent: {
+  searchWrapper: {
+    flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 14,
+    height: 48,
+    borderRadius: 12,
   },
-  heroIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  heroTitle: {
-    color: "#FFFFFF",
-    textAlign: "center",
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+    fontWeight: "500",
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 24,
-  },
-  searchContainer: {
-    marginBottom: 16,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  searchInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 16,
-  },
-  input: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
+    paddingBottom: 40,
   },
   categoriesContainer: {
-    marginBottom: 20,
+    marginBottom: 28,
   },
   categoriesScroll: {
     paddingRight: 16,
   },
-  categoryChip: {
+  categoryTab: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 9999,
+    borderRadius: 20,
     marginRight: 8,
   },
-  sectionTitleContainer: {
-    marginBottom: 16,
+  faqContainer: {
+    marginBottom: 20,
   },
   faqItem: {
+    borderRadius: 14,
     padding: 16,
-    borderRadius: 16,
     marginBottom: 12,
-    borderWidth: 1,
+    overflow: "hidden",
   },
   faqHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
-  categoryBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  faqTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  faqIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  faqAnswer: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.05)",
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: 32,
+    paddingVertical: 48,
   },
   contactSection: {
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 8,
   },
-  contactCard: {
-    borderRadius: 20,
-    padding: 20,
+  contactButton: {
+    flexDirection: "row",
     alignItems: "center",
-  },
-  contactIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emailButton: {
-    marginTop: 16,
-    borderRadius: 16,
+    padding: 18,
+    borderRadius: 14,
     overflow: "hidden",
-    width: "100%",
-  },
-  emailButtonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-  },
-  tipsSection: {
-    marginTop: 20,
-    paddingHorizontal: 16,
-  },
-  tipItem: {
-    flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    marginTop: 12,
-    borderLeftWidth: 3,
-    backgroundColor: "rgba(0, 0, 0, 0.02)",
-    borderRadius: 16,
-    alignItems: "flex-start",
   },
 });
