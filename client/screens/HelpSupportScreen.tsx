@@ -403,13 +403,13 @@ export default function HelpSupportScreen() {
                     marginLeft: Spacing.sm,
                   }}
                 >
-                  Email Us
+                  Contact Support
                 </ThemedText>
               </LinearGradient>
             </Pressable>
 
-            <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.lg }}>
-              {CONTACT_INFO.email}
+            <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.lg, textAlign: "center" }}>
+              Tap above to send us an email with your questions or feedback
             </ThemedText>
           </View>
         </Animated.View>
