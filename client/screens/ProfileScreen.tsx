@@ -428,7 +428,13 @@ export default function ProfileScreen() {
               theme={theme} 
               onPress={handleOpenNotifications}
             />
-            <MenuItem icon="clock" label="Quiz History" theme={theme} showBorder={false} />
+            <MenuItem 
+              icon="clock" 
+              label="Quiz History" 
+              theme={theme} 
+              showBorder={false} 
+              onPress={() => navigation.navigate("Main", { screen: "History" } as any)}
+            />
           </Animated.View>
         </View>
 
