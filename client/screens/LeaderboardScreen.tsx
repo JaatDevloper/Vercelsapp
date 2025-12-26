@@ -529,99 +529,85 @@ export default function LeaderboardScreen() {
   const primaryColor = isDark ? Colors.dark.primary : Colors.light.primary;
 
   // Show modal overlay if no profile
-  if (!profileLoading && !profileExists && showProfileModal) {
+  if (!profileLoading && !profileExists) {
     return (
       <ThemedView style={styles.container}>
-        <Modal
-          visible={showProfileModal}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={() => setShowProfileModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <Animated.View 
-              entering={FadeInDown}
-              style={[
-                styles.modalContent,
-                { backgroundColor: theme.backgroundDefault }
-              ]}
+        <View style={styles.modalOverlay}>
+          <Animated.View 
+            entering={FadeInDown}
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.backgroundDefault }
+            ]}
+          >
+            <View style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}>
+              <Feather name="lock" size={32} color={primaryColor} />
+              <ThemedText type="h2" style={{ marginTop: Spacing.md, textAlign: "center" }}>
+                See Your Rank
+              </ThemedText>
+              <ThemedText 
+                type="body" 
+                style={{ 
+                  marginTop: Spacing.md, 
+                  textAlign: "center",
+                  color: theme.textSecondary
+                }}
+              >
+                Create your profile to see your rank and compete on the leaderboard!
+              </ThemedText>
+            </View>
+
+            <ScrollView 
+              style={styles.modalPreview}
+              contentContainerStyle={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.lg }}
             >
-              <Pressable 
-                onPress={() => setShowProfileModal(false)}
-                style={styles.closeButton}
-              >
-                <Feather name="x" size={24} color={theme.textSecondary} />
-              </Pressable>
-              <View style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}>
-                <Feather name="lock" size={32} color={primaryColor} />
-                <ThemedText type="h2" style={{ marginTop: Spacing.md, textAlign: "center" }}>
-                  See Your Rank
-                </ThemedText>
-                <ThemedText 
-                  type="body" 
-                  style={{ 
-                    marginTop: Spacing.md, 
-                    textAlign: "center",
-                    color: theme.textSecondary
-                  }}
-                >
-                  Create your profile to see your rank and compete on the leaderboard!
-                </ThemedText>
-              </View>
-
-              <ScrollView 
-                style={styles.modalPreview}
-                contentContainerStyle={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.lg }}
-              >
-                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
-                  LEADERBOARD PREVIEW
-                </ThemedText>
-                {leaderboardData.slice(0, 5).map((user) => (
-                  <View 
-                    key={user.id}
-                    style={[
-                      styles.previewCard,
-                      { backgroundColor: theme.backgroundSecondary }
-                    ]}
-                  >
-                    <View style={styles.previewRank}>
-                      <ThemedText style={{ color: primaryColor, fontWeight: "700" }}>
-                        #{user.rank}
-                      </ThemedText>
-                    </View>
-                    <View style={styles.previewInfo}>
-                      <ThemedText type="small" style={{ fontWeight: "600" }}>
-                        {user.name}
-                      </ThemedText>
-                      <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                        {user.points} pts
-                      </ThemedText>
-                    </View>
-                    <Feather name="arrow-right" size={16} color={theme.textSecondary} />
-                  </View>
-                ))}
-              </ScrollView>
-
-              <View style={styles.modalActions}>
-                <Pressable
-                  onPress={() => {
-                    setShowProfileModal(false);
-                    navigation.navigate("Profile");
-                  }}
+              <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
+                LEADERBOARD PREVIEW
+              </ThemedText>
+              {leaderboardData.slice(0, 5).map((user) => (
+                <View 
+                  key={user.id}
                   style={[
-                    styles.createButton,
-                    { backgroundColor: primaryColor }
+                    styles.previewCard,
+                    { backgroundColor: theme.backgroundSecondary }
                   ]}
                 >
-                  <Feather name="user-plus" size={18} color="white" />
-                  <ThemedText style={{ color: "white", fontWeight: "600", marginLeft: Spacing.sm }}>
-                    Create Profile
-                  </ThemedText>
-                </Pressable>
-              </View>
-            </Animated.View>
-          </View>
-        </Modal>
+                  <View style={styles.previewRank}>
+                    <ThemedText style={{ color: primaryColor, fontWeight: "700" }}>
+                      #{user.rank}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.previewInfo}>
+                    <ThemedText type="small" style={{ fontWeight: "600" }}>
+                      {user.name}
+                    </ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                      {user.points} pts
+                    </ThemedText>
+                  </View>
+                  <Feather name="arrow-right" size={16} color={theme.textSecondary} />
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                onPress={() => {
+                  navigation.navigate("Profile");
+                }}
+                style={[
+                  styles.createButton,
+                  { backgroundColor: primaryColor }
+                ]}
+              >
+                <Feather name="user-plus" size={18} color="white" />
+                <ThemedText style={{ color: "white", fontWeight: "600", marginLeft: Spacing.sm }}>
+                  Create Profile
+                </ThemedText>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </View>
       </ThemedView>
     );
   }
