@@ -18,6 +18,7 @@ import ManageQuizzesScreen from "@/screens/ManageQuizzesScreen";
 import HelpSupportScreen from "@/screens/HelpSupportScreen";
 import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import TermsConditionsScreen from "@/screens/TermsConditionsScreen";
+import ProfileSettingsScreen from "@/screens/ProfileSettingsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -33,6 +34,7 @@ export type RootStackParamList = {
   HelpSupport: undefined;
   PrivacyPolicy: undefined;
   TermsConditions: undefined;
+  ProfileSettings: undefined;
   CreateRoom: { quizId: string; quizTitle: string };
   JoinRoom: undefined;
   Lobby: { roomCode: string; odId: string; quizId: string; isHost: boolean; playerName: string };
@@ -219,6 +221,13 @@ export default function RootStackNavigator() {
         component={TermsConditionsScreen}
         options={{
           presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ProfileSettings"
+        component={ProfileSettingsScreen}
+        options={{
           headerShown: false,
         }}
       />

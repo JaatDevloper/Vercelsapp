@@ -420,7 +420,12 @@ export default function ProfileScreen() {
             entering={FadeInDown.delay(300).duration(400)}
             style={[styles.menuCard, { backgroundColor: theme.backgroundDefault }]}
           >
-            <MenuItem icon="user" label="Profile Settings" theme={theme} />
+            <MenuItem 
+              icon="user" 
+              label="Profile Settings" 
+              theme={theme} 
+              onPress={() => navigation.navigate("ProfileSettings")}
+            />
             <MenuItem icon="lock" label="Change Password" theme={theme} />
             <MenuItem 
               icon="bell" 

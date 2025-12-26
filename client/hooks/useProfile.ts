@@ -278,6 +278,58 @@ export function useProfile() {
     updateFrame: updateFrameMutation.mutate,
     isUpdatingFrame: updateFrameMutation.isPending,
 
+    requestOTP: async (email: string) => {
+      const res = await fetch(`${baseUrl}/api/otp/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error || "Failed to request OTP");
+      }
+      return res.json();
+    },
+
+    verifyOTP: async (email: string, otp: string) => {
+      const res = await fetch(`${baseUrl}/api/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error || "Invalid OTP");
+      }
+      return res.json();
+    },
+
+    resetPassword: async (data: any) => {
+      const res = await fetch(`${baseUrl}/api/profile/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error || "Failed to reset password");
+      }
+      return res.json();
+    },
+
+    changePassword: async (data: any) => {
+      const res = await fetch(`${baseUrl}/api/profile/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, deviceId: deviceId! }),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error || "Failed to change password");
+      }
+      return res.json();
+    },
+
     deviceId,
     logout,
   };

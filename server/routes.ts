@@ -464,6 +464,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reset Password with OTP
+  app.post("/api/profile/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { email, otp, newPassword } = req.body;
+
+      if (!email || !otp || !newPassword) {
+        return res.status(400).json({ error: "Email, OTP, and new password are required" });
+      }
+
+      const normalizedEmail = email.toLowerCase();
+      const storedOTP = otpStore.get(normalizedEmail);
+
+      if (!storedOTP || storedOTP.otp !== otp || Date.now() > storedOTP.expiresAt) {
+        return res.status(400).json({ error: "Invalid or expired OTP" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("appprofile");
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const result = await collection.updateOne(
+        { email: normalizedEmail },
+        { $set: { passwordHash: hashedPassword, updatedAt: new Date().toISOString() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ error: "Profile not found with this email" });
+      }
+
+      otpStore.delete(normalizedEmail);
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ error: "Failed to reset password" });
+    }
+  });
+
+  // Change Password (Authenticated)
+  app.post("/api/profile/change-password", async (req: Request, res: Response) => {
+    try {
+      const { deviceId, oldPassword, newPassword } = req.body;
+
+      if (!deviceId || !oldPassword || !newPassword) {
+        return res.status(400).json({ error: "Device ID, old password, and new password are required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("appprofile");
+
+      const profile = await collection.findOne({ deviceId });
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(oldPassword, profile.passwordHash);
+      if (!isPasswordValid) {
+        return res.status(400).json({ error: "Incorrect current password" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await collection.updateOne(
+        { deviceId },
+        { $set: { passwordHash: hashedPassword, updatedAt: new Date().toISOString() } }
+      );
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Failed to change password" });
+    }
+  });
+
   // ============ PROFILE API ENDPOINTS ============
 
   // Get profile by device ID or login with name/email

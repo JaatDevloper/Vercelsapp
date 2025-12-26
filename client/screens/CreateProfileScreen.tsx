@@ -392,6 +392,27 @@ export default function CreateProfileScreen() {
                 )}
               </LinearGradient>
             </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate("LoginProfile")}
+              style={({ pressed }) => [
+                { opacity: pressed ? 0.7 : 1, marginTop: Spacing.xl, alignItems: "center" },
+              ]}
+            >
+              <ThemedText type="small" style={{ color: primaryColor }}>
+                Already have a profile? Login
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => navigation.navigate("LoginProfile")}
+              style={({ pressed }) => [
+                { opacity: pressed ? 0.7 : 1, marginTop: Spacing.sm, alignItems: "center" },
+              ]}
+            >
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Forgot Password?
+              </ThemedText>
+            </Pressable>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
