@@ -772,6 +772,16 @@ const styles = StyleSheet.create({
     borderTopRightRadius: BorderRadius.xl,
     maxHeight: "85%",
     overflow: "hidden",
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: Spacing.md,
+    right: Spacing.md,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 20,
   },
   modalHeader: {
     paddingHorizontal: Spacing.lg,
