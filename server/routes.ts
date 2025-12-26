@@ -1173,6 +1173,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dateFilter = { completedAt: { $gte: startOfMonth.toISOString() } };
       }
 
+      // Build indices for better performance
+      await historyCollection.createIndex({ completedAt: -1 });
+      await historyCollection.createIndex({ deviceId: 1 });
+
       const leaderboardData = await historyCollection.aggregate([
         { $match: dateFilter },
         {
@@ -1186,7 +1190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         },
         { $sort: { totalPoints: -1 } },
-        { $limit: 50 },
+        { $limit: 20 }, // Reduced from 50 for performance
         {
           $lookup: {
             from: "appprofile",
@@ -1214,7 +1218,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             profileAvatarUrl: "$profileData.avatarUrl"
           }
         }
-      ]).toArray();
+      ], {
+        allowDiskUse: true,
+        maxTimeMS: 15000 // 15 second timeout for the query itself
+      }).toArray();
 
       const leaderboard = leaderboardData.map((entry: any, index: number) => {
         const name = entry.profileName || entry.userName || "Anonymous";
