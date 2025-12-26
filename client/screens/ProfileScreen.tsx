@@ -426,7 +426,12 @@ export default function ProfileScreen() {
               theme={theme} 
               onPress={() => navigation.navigate("ProfileSettings")}
             />
-            <MenuItem icon="lock" label="Change Password" theme={theme} />
+            <MenuItem 
+              icon="lock" 
+              label="Change Password" 
+              theme={theme} 
+              onPress={() => navigation.navigate("ChangePassword")}
+            />
             <MenuItem 
               icon="bell" 
               label="Notification" 

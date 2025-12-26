@@ -19,6 +19,7 @@ import HelpSupportScreen from "@/screens/HelpSupportScreen";
 import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import TermsConditionsScreen from "@/screens/TermsConditionsScreen";
 import ProfileSettingsScreen from "@/screens/ProfileSettingsScreen";
+import ChangePasswordScreen from "@/screens/ChangePasswordScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -35,6 +36,7 @@ export type RootStackParamList = {
   PrivacyPolicy: undefined;
   TermsConditions: undefined;
   ProfileSettings: undefined;
+  ChangePassword: undefined;
   CreateRoom: { quizId: string; quizTitle: string };
   JoinRoom: undefined;
   Lobby: { roomCode: string; odId: string; quizId: string; isHost: boolean; playerName: string };
@@ -227,6 +229,13 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="ProfileSettings"
         component={ProfileSettingsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
         options={{
           headerShown: false,
         }}
