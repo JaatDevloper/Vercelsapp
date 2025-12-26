@@ -37,9 +37,11 @@ export default function CreateProfileScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [termsError, setTermsError] = useState("");
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [pendingProfileData, setPendingProfileData] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -92,6 +94,7 @@ export default function CreateProfileScreen() {
     setNameError("");
     setEmailError("");
     setPasswordError("");
+    setTermsError("");
 
     let hasError = false;
 
@@ -113,6 +116,11 @@ export default function CreateProfileScreen() {
       hasError = true;
     } else if (!validatePassword(password)) {
       setPasswordError("Password must have 8+ chars, uppercase, lowercase, number & special char");
+      hasError = true;
+    }
+
+    if (!acceptedTerms) {
+      setTermsError("You must accept the Terms and Privacy Policy");
       hasError = true;
     }
 
@@ -306,6 +314,46 @@ export default function CreateProfileScreen() {
                 <ThemedText type="small" style={styles.errorText}>{passwordError}</ThemedText>
               ) : null}
             </View>
+
+            <View style={styles.termsGroup}>
+              <Pressable 
+                onPress={() => setAcceptedTerms(!acceptedTerms)}
+                style={styles.checkboxRow}
+              >
+                <View style={[
+                  styles.checkbox,
+                  { 
+                    borderColor: termsError ? Colors.light.error : theme.border,
+                    backgroundColor: acceptedTerms ? primaryColor : "transparent"
+                  }
+                ]}>
+                  {acceptedTerms && <Feather name="check" size={14} color="#FFFFFF" />}
+                </View>
+                <View style={styles.termsTextContainer}>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                    I have read the{" "}
+                    <ThemedText 
+                      type="small" 
+                      style={{ color: primaryColor, fontWeight: "600" }}
+                      onPress={() => navigation.navigate("PrivacyPolicy")}
+                    >
+                      Privacy Policy
+                    </ThemedText>
+                    {" "}and accept the{" "}
+                    <ThemedText 
+                      type="small" 
+                      style={{ color: primaryColor, fontWeight: "600" }}
+                      onPress={() => navigation.navigate("TermsConditions")}
+                    >
+                      Terms and Conditions
+                    </ThemedText>
+                  </ThemedText>
+                </View>
+              </Pressable>
+              {termsError ? (
+                <ThemedText type="small" style={styles.errorText}>{termsError}</ThemedText>
+              ) : null}
+            </View>
           </Animated.View>
 
           {createError && (
@@ -473,5 +521,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: Spacing.lg,
     gap: Spacing.md,
+  },
+  termsGroup: {
+    marginTop: Spacing.md,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  termsTextContainer: {
+    flex: 1,
   },
 });
