@@ -546,6 +546,12 @@ export default function LeaderboardScreen() {
                 { backgroundColor: theme.backgroundDefault }
               ]}
             >
+              <Pressable 
+                onPress={() => setShowProfileModal(false)}
+                style={styles.closeButton}
+              >
+                <Feather name="x" size={24} color={theme.textSecondary} />
+              </Pressable>
               <View style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}>
                 <Feather name="lock" size={32} color={primaryColor} />
                 <ThemedText type="h2" style={{ marginTop: Spacing.md, textAlign: "center" }}>
