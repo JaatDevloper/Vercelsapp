@@ -404,7 +404,7 @@ export default function CreateProfileScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => navigation.navigate("LoginProfile")}
+              onPress={() => navigation.navigate("ForgotPassword")}
               style={({ pressed }) => [
                 { opacity: pressed ? 0.7 : 1, marginTop: Spacing.sm, alignItems: "center" },
               ]}

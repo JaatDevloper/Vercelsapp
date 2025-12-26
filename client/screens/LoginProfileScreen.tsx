@@ -288,14 +288,7 @@ export default function LoginProfileScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                  Alert.alert("Email Required", "Please enter your valid email address first to reset your password.");
-                  return;
-                }
-                navigation.navigate("HelpSupport"); // Temporary redirect until ForgotPasswordScreen is built
-                Alert.alert("Feature Coming Soon", "The OTP-based password reset is being finalized. Please contact support if you need immediate assistance.");
-              }}
+              onPress={() => navigation.navigate("ForgotPassword")}
               style={({ pressed }) => [
                 styles.forgotPasswordLink,
                 { opacity: pressed ? 0.7 : 1, marginTop: Spacing.sm },
