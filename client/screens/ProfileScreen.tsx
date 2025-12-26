@@ -468,6 +468,7 @@ export default function ProfileScreen() {
             style={[styles.menuCard, { backgroundColor: theme.backgroundDefault }]}
           >
             <MenuItem icon="help-circle" label="Help & Support" onPress={() => navigation.navigate("HelpSupport")} theme={theme} />
+            <MenuItem icon="shield" label="Privacy Policy" onPress={() => navigation.navigate("PrivacyPolicy")} theme={theme} />
             <MenuItem icon="info" label="About TestOne" onPress={handleAbout} theme={theme} showBorder={false} />
           </Animated.View>
         </View>
