@@ -1021,9 +1021,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profileCollection = db.collection("appprofile");
 
       // Create index on deviceId for efficient queries
-      await historyCollection.createIndex({ deviceId: 1 });
+      historyCollection.createIndex({ deviceId: 1 }).catch(e => console.warn("Index creation failed:", e));
       // Create compound index for sorting
-      await historyCollection.createIndex({ deviceId: 1, completedAt: -1 });
+      historyCollection.createIndex({ deviceId: 1, completedAt: -1 }).catch(e => console.warn("Index creation failed:", e));
 
       // Look up the user's profile to get reliable name and email
       const profile = await profileCollection.findOne({ deviceId });
@@ -1174,8 +1174,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Build indices for better performance
-      await historyCollection.createIndex({ completedAt: -1 });
-      await historyCollection.createIndex({ deviceId: 1 });
+      // Only try to create index if it's the first time or we're sure it's needed
+      // Note: In serverless environments like Vercel, frequent index creation can be slow
+      // Ideally these should be created once via a migration script or DB console
+      try {
+        historyCollection.createIndex({ completedAt: -1 }).catch(e => console.warn("Index creation failed:", e));
+        historyCollection.createIndex({ deviceId: 1 }).catch(e => console.warn("Index creation failed:", e));
+      } catch (e) {
+        console.warn("Index creation attempt failed", e);
+      }
 
       const leaderboardData = await historyCollection.aggregate([
         { $match: dateFilter },
@@ -1190,7 +1197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         },
         { $sort: { totalPoints: -1 } },
-        { $limit: 20 }, // Reduced from 50 for performance
+        { $limit: 10 }, // Further reduced for serverless performance
         {
           $lookup: {
             from: "appprofile",
@@ -1220,7 +1227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ], {
         allowDiskUse: true,
-        maxTimeMS: 15000 // 15 second timeout for the query itself
+        maxTimeMS: 8000 // Reduced timeout to fail faster and allow for retries/error handling
       }).toArray();
 
       const leaderboard = leaderboardData.map((entry: any, index: number) => {
