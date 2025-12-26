@@ -36,7 +36,7 @@ async function getMongoClient(): Promise<MongoClient> {
 
   if (isConnecting) {
     // Wait for existing connection attempt
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 200)); // Shorter wait for Vercel
     return getMongoClient();
   }
 
@@ -48,37 +48,26 @@ async function getMongoClient(): Promise<MongoClient> {
     throw new Error("MONGODB_URL environment variable is not set");
   }
 
-  while (connectionRetryCount < MAX_RETRY_ATTEMPTS) {
-    try {
-      mongoClient = new MongoClient(uri, {
-        connectTimeoutMS: 10000,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 45000,
-        maxPoolSize: 10,
-        minPoolSize: 1,
-        retryWrites: true,
-        retryReads: true,
-      });
-      
-      await mongoClient.connect();
-      console.log("Connected to MongoDB successfully");
-      connectionRetryCount = 0;
-      isConnecting = false;
-      return mongoClient;
-    } catch (error) {
-      connectionRetryCount++;
-      console.error(`MongoDB connection attempt ${connectionRetryCount} failed:`, error);
-      
-      if (connectionRetryCount < MAX_RETRY_ATTEMPTS) {
-        console.log(`Retrying in ${RETRY_DELAY_MS}ms...`);
-        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-      }
-    }
+  try {
+    mongoClient = new MongoClient(uri, {
+      connectTimeoutMS: 5000, // Shorter connection timeout
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
+      maxPoolSize: 1, // Single connection for serverless
+      minPoolSize: 0,
+      retryWrites: true,
+      retryReads: true,
+    });
+    
+    await mongoClient.connect();
+    console.log("Connected to MongoDB successfully");
+    isConnecting = false;
+    return mongoClient;
+  } catch (error) {
+    console.error("MongoDB connection failed:", error);
+    isConnecting = false;
+    throw error;
   }
-
-  isConnecting = false;
-  connectionRetryCount = 0;
-  throw new Error("Failed to connect to MongoDB after multiple attempts");
 }
 
 // Helper to safely format quiz data
@@ -1177,15 +1166,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Only try to create index if it's the first time or we're sure it's needed
       // Note: In serverless environments like Vercel, frequent index creation can be slow
       // Ideally these should be created once via a migration script or DB console
-      try {
-        historyCollection.createIndex({ completedAt: -1 }).catch(e => console.warn("Index creation failed:", e));
-        historyCollection.createIndex({ deviceId: 1 }).catch(e => console.warn("Index creation failed:", e));
-      } catch (e) {
-        console.warn("Index creation attempt failed", e);
+      if (!mongoClient || !isConnecting) {
+        try {
+          historyCollection.createIndex({ completedAt: -1 }).catch(e => console.warn("Index creation failed:", e));
+          historyCollection.createIndex({ deviceId: 1 }).catch(e => console.warn("Index creation failed:", e));
+        } catch (e) {
+          console.warn("Index creation attempt failed", e);
+        }
       }
 
+      // Use a lean projection immediately to reduce the data set
       const leaderboardData = await historyCollection.aggregate([
         { $match: dateFilter },
+        { $project: { deviceId: 1, score: 1, correctAnswers: 1, userName: 1, userEmail: 1 } },
         {
           $group: {
             _id: "$deviceId",
@@ -1197,7 +1190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         },
         { $sort: { totalPoints: -1 } },
-        { $limit: 10 }, // Further reduced for serverless performance
+        { $limit: 10 },
         {
           $lookup: {
             from: "appprofile",
@@ -1206,12 +1199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             as: "profileData"
           }
         },
-        {
-          $unwind: {
-            path: "$profileData",
-            preserveNullAndEmptyArrays: true
-          }
-        },
+        { $unwind: { path: "$profileData", preserveNullAndEmptyArrays: true } },
         {
           $project: {
             deviceId: "$_id",
@@ -1227,7 +1215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ], {
         allowDiskUse: true,
-        maxTimeMS: 8000 // Reduced timeout to fail faster and allow for retries/error handling
+        maxTimeMS: 4000 // Further reduced to prevent Vercel gateway timeout
       }).toArray();
 
       const leaderboard = leaderboardData.map((entry: any, index: number) => {
