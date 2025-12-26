@@ -50,11 +50,11 @@ async function getMongoClient(): Promise<MongoClient> {
 
   try {
     mongoClient = new MongoClient(uri, {
-      connectTimeoutMS: 5000, // Shorter connection timeout
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 30000,
-      maxPoolSize: 1, // Single connection for serverless
-      minPoolSize: 0,
+      connectTimeoutMS: 10000, // Increased for stability
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10, // Increased for concurrent requests
+      minPoolSize: 1,
       retryWrites: true,
       retryReads: true,
     });
@@ -1215,7 +1215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ], {
         allowDiskUse: true,
-        maxTimeMS: 4000 // Further reduced to prevent Vercel gateway timeout
+        maxTimeMS: 15000 // Restore reasonable timeout
       }).toArray();
 
       const leaderboard = leaderboardData.map((entry: any, index: number) => {
