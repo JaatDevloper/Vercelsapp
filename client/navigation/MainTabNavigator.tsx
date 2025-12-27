@@ -102,6 +102,15 @@ export default function MainTabNavigator() {
                 style={StyleSheet.absoluteFill}
               />
             ) : null,
+          tabBarButton: (props: any) => (
+            <Pressable
+              {...props}
+              onLongPress={(e) => {
+                e.preventDefault();
+              }}
+              delayLongPress={100}
+            />
+          ),
           headerShown: false,
         }}
       >
