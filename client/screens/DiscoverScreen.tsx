@@ -209,7 +209,7 @@ export default function DiscoverScreen() {
         <View style={styles.titleRow}>
           <View style={styles.logoContainer}>
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
-            <ThemedText type="h3" style={styles.appTitle}>QuizzyEdu</ThemedText>
+            <ThemedText type="h3">QuizzyEdu</ThemedText>
           </View>
 
           <View style={styles.headerButtons}>
@@ -344,7 +344,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
   },
   appTitle: {
     marginLeft: Spacing.xs,

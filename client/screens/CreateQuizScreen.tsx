@@ -127,18 +127,46 @@ export default function CreateQuizScreen() {
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "text/plain",
+        type: ["text/plain", "application/octet-stream"],
       });
 
       if (result.assets && result.assets.length > 0) {
         const file = result.assets[0];
-        const text = await fetch(file.uri).then((r) => r.text());
+        console.log("File picked:", file.name, "URI:", file.uri);
+        
+        let text = "";
+        try {
+          // In Replit environment, web fetch(uri) might fail for local blob URIs in some cases
+          // Prefer direct access to file content if available
+          if (file.file instanceof File) {
+             text = await file.file.text();
+          } else {
+            const response = await fetch(file.uri);
+            if (!response.ok) throw new Error("Fetch failed");
+            text = await response.text();
+          }
+        } catch (fetchError) {
+          console.error("Error reading file content:", fetchError);
+          // Last ditch effort for React Native Web file access
+          if (file.file) {
+             try {
+               text = await file.file.text();
+             } catch (e) {
+               throw fetchError;
+             }
+          } else {
+            throw fetchError;
+          }
+        }
+
+        console.log("File content length:", text.length);
         const parsedQuestions = parseQuestions(text);
+        console.log("Parsed questions count:", parsedQuestions.length);
 
         if (parsedQuestions.length === 0) {
           Alert.alert(
             "No questions found",
-            "Could not parse any valid questions from the file. Please check the format."
+            "Could not parse any valid questions from the file. Please ensure questions are separated by blank lines and correct answers are marked with ✅"
           );
           return;
         }
@@ -151,7 +179,8 @@ export default function CreateQuizScreen() {
         setStep("questions");
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to read file");
+      console.error("File upload error:", error);
+      Alert.alert("Error", "Failed to read file. Please try again.");
     }
   };
 
