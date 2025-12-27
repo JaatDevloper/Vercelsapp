@@ -14,7 +14,7 @@ export default function PremiumLockBadge({ position = "top-right" }: PremiumLock
     return (
       <View style={styles.badgeContainer}>
         <LinearGradient
-          colors={["#FF6B9D", "#C44569"]}
+          colors={["#FFD700", "#DAA520"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.badge}
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
-    shadowColor: "#FF6B9D",
+    shadowColor: "#FFD700",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,
