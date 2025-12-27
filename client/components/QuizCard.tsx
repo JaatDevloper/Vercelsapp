@@ -124,10 +124,10 @@ export default function QuizCard({ quiz, onPress, style, isPremiumLocked = false
       style={[
         styles.card,
         { 
-          backgroundColor: theme.backgroundDefault,
-          borderWidth: isNew ? 1.5 : 0,
-          borderColor: isNew ? (isDark ? '#10B981' : '#059669') : 'transparent',
-          opacity: isLocked ? 0.7 : 1,
+          backgroundColor: isLocked ? 'rgba(255, 107, 157, 0.08)' : theme.backgroundDefault,
+          borderWidth: isLocked ? 2 : isNew ? 1.5 : 0,
+          borderColor: isLocked ? '#FF6B9D' : isNew ? (isDark ? '#10B981' : '#059669') : 'transparent',
+          opacity: 1,
         },
         animatedStyle,
         style,
@@ -151,12 +151,13 @@ export default function QuizCard({ quiz, onPress, style, isPremiumLocked = false
       <View style={styles.cardContent}>
         <View style={[
           styles.iconContainer,
-          isNew && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
+          isLocked && { backgroundColor: 'rgba(255, 107, 157, 0.15)' },
+          isNew && !isLocked && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }
         ]}>
           <Feather 
-            name={isNew ? "zap" : "file-text"}
+            name={isLocked ? "lock" : isNew ? "zap" : "file-text"}
             size={24} 
-            color={isNew ? '#10B981' : (isDark ? Colors.dark.primary : Colors.light.primary)} 
+            color={isLocked ? '#FF6B9D' : isNew ? '#10B981' : (isDark ? Colors.dark.primary : Colors.light.primary)} 
           />
         </View>
         
@@ -171,7 +172,7 @@ export default function QuizCard({ quiz, onPress, style, isPremiumLocked = false
         </View>
 
         <View style={styles.arrowContainer}>
-          <Feather name="chevron-right" size={20} color={isNew ? '#10B981' : theme.textSecondary} />
+          <Feather name="chevron-right" size={20} color={isLocked ? '#FF6B9D' : isNew ? '#10B981' : theme.textSecondary} />
         </View>
       </View>
     </AnimatedPressable>
