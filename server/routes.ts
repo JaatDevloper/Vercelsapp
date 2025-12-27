@@ -1657,7 +1657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const quizId = Math.random().toString(36).substring(2, 11) + "_" + Date.now();
       
-      const newQuiz = {
+      const newQuiz: any = {
         _id: quizId,
         quiz_id: quizId,
         title: title.trim(),

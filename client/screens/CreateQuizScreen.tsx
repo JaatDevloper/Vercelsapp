@@ -277,7 +277,10 @@ export default function CreateQuizScreen() {
       Alert.alert("Success", "Quiz created successfully!", [
         {
           text: "OK",
-          onPress: () => navigation.navigate("Main", { screen: "Discover" }),
+          onPress: () => navigation.reset({
+            index: 0,
+            routes: [{ name: "Main", params: { screen: "Discover" } }],
+          }),
         },
       ]);
     } catch (error) {
@@ -571,7 +574,7 @@ D) 6`}
           style={styles.modalOverlay}
           onPress={() => setShowTimerModal(false)}
         >
-          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
             <FlatList
               data={TIMER_OPTIONS}
               keyExtractor={(item) => item.toString()}
@@ -615,7 +618,7 @@ D) 6`}
           style={styles.modalOverlay}
           onPress={() => setShowNegativeModal(false)}
         >
-          <View style={[styles.modalContent, { backgroundColor: theme.background }]}>
+          <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
             <FlatList
               data={NEGATIVE_MARKING_OPTIONS}
               keyExtractor={(item) => item.toString()}
