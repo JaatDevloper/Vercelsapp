@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import * as DocumentPicker from "expo-document-picker";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -62,7 +61,6 @@ export default function CreateQuizScreen() {
   });
 
   const [questionInput, setQuestionInput] = useState("");
-  const [useFileUpload, setUseFileUpload] = useState(false);
 
   const parseQuestions = (text: string): Question[] => {
     const questions: Question[] = [];
@@ -102,35 +100,6 @@ export default function CreateQuizScreen() {
     return questions;
   };
 
-  const handleFileUpload = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "text/plain",
-      });
-
-      if (result.assets && result.assets.length > 0) {
-        const file = result.assets[0];
-        const text = await fetch(file.uri).then((r) => r.text());
-        const parsedQuestions = parseQuestions(text);
-
-        if (parsedQuestions.length === 0) {
-          Alert.alert(
-            "No questions found",
-            "Could not parse any valid questions from the file. Please check the format."
-          );
-          return;
-        }
-
-        setQuizData((prev) => ({
-          ...prev,
-          questions: parsedQuestions,
-        }));
-        setStep("questions");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to read file");
-    }
-  };
 
   const parseManualQuestions = () => {
     const parsedQuestions = parseQuestions(questionInput);
@@ -260,51 +229,6 @@ export default function CreateQuizScreen() {
           </Pressable>
         </View>
 
-        {/* Question Input Method */}
-        <View style={styles.formGroup}>
-          <ThemedText type="body" style={styles.label}>
-            Add Questions
-          </ThemedText>
-
-          <Pressable
-            style={[
-              styles.methodButton,
-              { backgroundColor: Colors.light.primary },
-            ]}
-            onPress={handleFileUpload}
-          >
-            <Feather name="upload-cloud" size={20} color="#FFFFFF" />
-            <ThemedText type="body" style={styles.methodButtonText}>
-              Upload .txt File
-            </ThemedText>
-          </Pressable>
-
-          <View style={styles.orDivider}>
-            <View style={[styles.dividerLine, { borderColor: theme.border }]} />
-            <ThemedText
-              type="small"
-              style={{ color: theme.textSecondary, marginHorizontal: Spacing.md }}
-            >
-              OR
-            </ThemedText>
-            <View style={[styles.dividerLine, { borderColor: theme.border }]} />
-          </View>
-
-          <Pressable
-            style={[
-              styles.methodButton,
-              {
-                backgroundColor: Colors.light.primary,
-              },
-            ]}
-            onPress={() => setUseFileUpload(false)}
-          >
-            <Feather name="edit-2" size={20} color="#FFFFFF" />
-            <ThemedText type="body" style={styles.methodButtonText}>
-              Manual Entry
-            </ThemedText>
-          </Pressable>
-        </View>
       </View>
     </ScrollView>
   );
@@ -319,30 +243,26 @@ export default function CreateQuizScreen() {
           Add Questions
         </ThemedText>
 
-        {!useFileUpload && (
-          <>
-            <ThemedText type="small" style={styles.formatHint}>
-              Format: One question per block. Mark correct answer with ✅
-            </ThemedText>
-            <TextInput
-              style={[
-                styles.textarea,
-                styles.largeTextarea,
-                { color: theme.text, borderColor: theme.border },
-              ]}
-              placeholder={`महाराणा प्रताप कहा का राजा था?
+        <ThemedText type="small" style={styles.formatHint}>
+          Format: One question per block. Mark correct answer with ✅
+        </ThemedText>
+        <TextInput
+          style={[
+            styles.textarea,
+            styles.largeTextarea,
+            { color: theme.text, borderColor: theme.border },
+          ]}
+          placeholder={`महाराणा प्रताप कहा का राजा था?
 (A) उदयपुर ✅
 (B) चितौड़
 (C) जयपुर
 (D) जोधपुर`}
-              placeholderTextColor={theme.textSecondary}
-              value={questionInput}
-              onChangeText={setQuestionInput}
-              multiline
-              numberOfLines={15}
-            />
-          </>
-        )}
+          placeholderTextColor={theme.textSecondary}
+          value={questionInput}
+          onChangeText={setQuestionInput}
+          multiline
+          numberOfLines={15}
+        />
 
         {quizData.questions.length > 0 && (
           <View style={styles.questionsPreview}>
@@ -421,11 +341,7 @@ export default function CreateQuizScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              {step === "basic"
-                ? useFileUpload
-                  ? "Upload File"
-                  : "Next"
-                : "Create Quiz"}
+              {step === "basic" ? "Next" : "Create Quiz"}
             </ThemedText>
           )}
         </Pressable>
