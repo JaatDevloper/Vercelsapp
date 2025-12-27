@@ -51,6 +51,8 @@ export default function CreateQuizScreen() {
   const [loading, setLoading] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [showNegativeModal, setShowNegativeModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categories, setCategories] = useState<{name: string, color: string, icon: string}[]>([]);
 
   const [quizData, setQuizData] = useState<CreateQuizData>({
     title: "",
@@ -60,6 +62,21 @@ export default function CreateQuizScreen() {
     questions: [],
     category: "General Knowledge",
   });
+
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/manage/categories");
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const [questionInput, setQuestionInput] = useState("");
   const [inputMethod, setInputMethod] = useState<"file" | "manual" | null>(null);
@@ -339,6 +356,20 @@ export default function CreateQuizScreen() {
           />
         </View>
 
+        {/* Category Selection */}
+        <View style={styles.formGroup}>
+          <ThemedText type="body" style={styles.label}>
+            Category
+          </ThemedText>
+          <Pressable
+            style={[styles.selectButton, { borderColor: theme.border }]}
+            onPress={() => setShowCategoryModal(true)}
+          >
+            <ThemedText type="body">{quizData.category}</ThemedText>
+            <Feather name="chevron-down" size={20} color={theme.text} />
+          </Pressable>
+        </View>
+
         {/* Timer Selection */}
         <View style={styles.formGroup}>
           <ThemedText type="body" style={styles.label}>
@@ -567,6 +598,49 @@ D) 6`}
           )}
         </Pressable>
       </View>
+
+      {/* Category Modal */}
+      <Modal visible={showCategoryModal} transparent animationType="fade">
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowCategoryModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
+            <FlatList
+              data={categories}
+              keyExtractor={(item) => item.name}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={[
+                    styles.modalOption,
+                    {
+                      backgroundColor:
+                        quizData.category === item.name
+                          ? Colors.light.primary
+                          : "transparent",
+                    },
+                  ]}
+                  onPress={() => {
+                    setQuizData((prev) => ({ ...prev, category: item.name }));
+                    setShowCategoryModal(false);
+                  }}
+                >
+                  <ThemedText
+                    type="body"
+                    style={{
+                      color:
+                        quizData.category === item.name ? "#FFFFFF" : theme.text,
+                      fontWeight: quizData.category === item.name ? "600" : "400",
+                    }}
+                  >
+                    {item.name}
+                  </ThemedText>
+                </Pressable>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* Timer Modal */}
       <Modal visible={showTimerModal} transparent animationType="fade">
