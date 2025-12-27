@@ -66,56 +66,70 @@ export default function CreateQuizScreen() {
 
   const parseQuestions = (text: string): Question[] => {
     const questions: Question[] = [];
-    // Split by blocks: support different line endings and varied spacing between questions
-    const blocks = text.trim().split(/\r?\n\s*\r?\n+/);
+    const normalizedText = text.replace(/\r\n/g, "\n").trim();
+    
+    // Split by blocks: looking for question followed by options
+    const blocks = normalizedText.split(/\n\s*\n+/);
 
     for (const block of blocks) {
-      if (!block.trim()) continue;
+      const trimmedBlock = block.trim();
+      if (!trimmedBlock) continue;
       
-      const lines = block.trim().split(/\r?\n/).filter((l) => l.trim());
-      if (lines.length < 2) continue; // Need at least a question and one option
+      const lines = trimmedBlock.split(/\n/).filter((l) => l.trim());
+      if (lines.length < 2) continue;
 
       const questionLine = lines[0].trim();
-      // Remove leading numbers/bullets from question if present (e.g., "1. Question" or "Q1: Question")
       const question = questionLine.replace(/^([0-9]+[\.\)]|Q[0-9]+[:\.]?)\s*/i, "").trim();
       
       const options: string[] = [];
       let correctAnswer = -1;
 
-      // Find options in the remaining lines
-      const optionLines = lines.slice(1);
-      for (let i = 0; i < optionLines.length; i++) {
-        let optionText = optionLines[i].trim();
+      const potentialOptions = lines.slice(1);
+      for (const optLine of potentialOptions) {
+        let optionText = optLine.trim();
         
-        // Remove common option prefixes like (A), A), 1), etc.
-        optionText = optionText.replace(/^([A-D]|[0-4])[\.\)]\s*/i, "").trim();
+        // Match markers like (A), A., 1. etc.
+        const isCorrect = optionText.includes("✅") || 
+                          optionText.toLowerCase().includes("(correct)") ||
+                          optionText.toLowerCase().includes("*correct*") ||
+                          optionText.endsWith("*");
 
-        if (optionText.includes("✅")) {
-          correctAnswer = options.length;
-          optionText = optionText.replace("✅", "").trim();
-        }
-        
+        // Remove prefixes like (A), A), A., 1)
+        optionText = optionText.replace(/^[\(\[]?([A-Ea-e]|[0-9])[\)\]\.\-]?\s*/, "").trim();
+        // Clean markers
+        optionText = optionText.replace("✅", "").replace(/\(correct\)/i, "").replace(/\*correct\*/i, "").replace(/\*$/, "").trim();
+
         if (optionText) {
+          if (isCorrect && correctAnswer === -1) {
+            correctAnswer = options.length;
+          }
           options.push(optionText);
         }
       }
 
-      // If no ✅ was found, try to look for "(Correct)" or similar markers
+      // If no marker found, try to find a line that is just "Answer: A" or similar
       if (correctAnswer === -1) {
-        for (let i = 0; i < options.length; i++) {
-          if (options[i].toLowerCase().includes("(correct)")) {
-            correctAnswer = i;
-            options[i] = options[i].replace(/\(correct\)/i, "").trim();
-            break;
+        const answerLine = potentialOptions.find(l => l.toLowerCase().startsWith("answer:"));
+        if (answerLine) {
+          const match = answerLine.match(/answer:\s*([a-d1-4])/i);
+          if (match) {
+            const char = match[1].toUpperCase();
+            if (/[A-D]/.test(char)) {
+               correctAnswer = char.charCodeAt(0) - 65;
+            } else {
+               correctAnswer = parseInt(char) - 1;
+            }
           }
         }
       }
 
-      if (question && options.length >= 2 && correctAnswer !== -1) {
+      if (question && options.length >= 2) {
+        // If still no correct answer, default to first option just to prevent exclusion
+        const finalCorrectAnswer = correctAnswer === -1 ? 0 : correctAnswer;
         questions.push({
           question,
-          options: options.slice(0, 4), // Ensure max 4 options as per UI expectations
-          correctAnswer,
+          options: options.slice(0, 4),
+          correctAnswer: finalCorrectAnswer,
         });
       }
     }
@@ -392,7 +406,7 @@ export default function CreateQuizScreen() {
           </ThemedText>
 
           <ThemedText type="small" style={styles.formatHint}>
-            Format: One question per block. Mark correct answer with ✅
+            Format: One question per block. Mark correct answer with ✅ or (Correct)
           </ThemedText>
           <TextInput
             style={[
@@ -410,7 +424,19 @@ export default function CreateQuizScreen() {
             onChangeText={setQuestionInput}
             multiline
             numberOfLines={15}
+            textAlignVertical="top"
           />
+
+          <View style={styles.manualActions}>
+            <Pressable
+              style={[styles.button, { backgroundColor: Colors.light.primary, marginTop: Spacing.md }]}
+              onPress={parseManualQuestions}
+            >
+              <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                Extract Questions
+              </ThemedText>
+            </Pressable>
+          </View>
 
           {quizData.questions.length > 0 && (
             <View style={styles.questionsPreview}>
@@ -708,6 +734,10 @@ const styles = StyleSheet.create({
   },
   questionNumber: {
     opacity: 0.8,
+  },
+  manualActions: {
+    alignItems: "center",
+    marginBottom: Spacing.lg,
   },
   moreQuestions: {
     marginTop: Spacing.md,
