@@ -2472,6 +2472,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all users from appprofile collection (for premium management)
+  app.get("/api/admin/users", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const profiles = await db.collection("appprofile").find({}).toArray();
+
+      const users = profiles.map((profile: any) => ({
+        id: profile._id?.toString() || profile.user_id || "",
+        username: profile.username || profile.user_name || "Unknown",
+        role: profile.role || "user",
+        createdAt: profile.created_at || new Date().toISOString(),
+        quizCount: profile.quizCount || 0,
+        attempts: profile.attempts || 0,
+        avatarUrl: profile.profile_picture || profile.avatar_url || "",
+      }));
+
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users", users: [] });
+    }
+  });
+
+  // Grant premium to user
+  app.post("/api/admin/premium/grant", async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+
+      const premiumCollection = db.collection("Premium");
+      const profileCollection = db.collection("appprofile");
+
+      // Insert into Premium collection
+      await premiumCollection.updateOne(
+        { userId },
+        {
+          $set: {
+            userId,
+            grantedAt: new Date(),
+            status: "active",
+          },
+        },
+        { upsert: true }
+      );
+
+      // Update appprofile to mark as premium
+      await profileCollection.updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { isPremium: true } }
+      );
+
+      res.json({ message: "Premium granted successfully" });
+    } catch (error) {
+      console.error("Error granting premium:", error);
+      res.status(500).json({ error: "Failed to grant premium" });
+    }
+  });
+
+  // Remove premium from user
+  app.post("/api/admin/premium/remove", async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+
+      const premiumCollection = db.collection("Premium");
+      const profileCollection = db.collection("appprofile");
+
+      // Delete from Premium collection
+      await premiumCollection.deleteOne({ userId });
+
+      // Update appprofile to mark as non-premium
+      await profileCollection.updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { isPremium: false } }
+      );
+
+      res.json({ message: "Premium removed successfully" });
+    } catch (error) {
+      console.error("Error removing premium:", error);
+      res.status(500).json({ error: "Failed to remove premium" });
+    }
+  });
+
   // Create quiz (user-generated)
   app.post("/api/user/create-quiz", async (req: Request, res: Response) => {
     try {

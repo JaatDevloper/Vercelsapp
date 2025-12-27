@@ -46,6 +46,7 @@ interface AdminUser {
   createdAt: string;
   quizCount: number;
   attempts: number;
+  avatarUrl?: string;
 }
 
 interface Analytics {
@@ -208,6 +209,10 @@ export default function AdminDashboardScreen() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [premiumModalVisible, setPremiumModalVisible] = useState(false);
+  const [premiumUsers, setPremiumUsers] = useState<AdminUser[]>([]);
+  const [premiumLoading, setPremiumLoading] = useState(false);
+  const [premiumSearchQuery, setPremiumSearchQuery] = useState("");
 
   // Fetch users when modal opens
   useEffect(() => {
@@ -215,6 +220,33 @@ export default function AdminDashboardScreen() {
       fetchUsers();
     }
   }, [usersModalVisible]);
+
+  // Fetch premium users when modal opens
+  useEffect(() => {
+    if (premiumModalVisible) {
+      fetchPremiumUsers();
+    }
+  }, [premiumModalVisible]);
+
+  const fetchPremiumUsers = async () => {
+    setPremiumLoading(true);
+    try {
+      const response = await fetch("/api/admin/users", {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPremiumUsers(data);
+      }
+    } catch (error) {
+      console.error("Error fetching premium users:", error);
+    } finally {
+      setPremiumLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     setUsersLoading(true);
@@ -438,6 +470,13 @@ export default function AdminDashboardScreen() {
             color="#FF6B6B"
           />
           <ActionButton
+            icon="gift"
+            label="Premium Management"
+            onPress={() => setPremiumModalVisible(true)}
+            theme={theme}
+            color="#FF6B9D"
+          />
+          <ActionButton
             icon="settings"
             label="System Settings"
             onPress={() => Alert.alert("Coming Soon", "System configuration")}
@@ -486,6 +525,141 @@ export default function AdminDashboardScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Premium Management Modal */}
+      <Modal
+        visible={premiumModalVisible}
+        animationType="slide"
+        onRequestClose={() => {
+          setPremiumModalVisible(false);
+          setPremiumSearchQuery("");
+        }}
+      >
+        <ThemedView style={styles.container}>
+          <View
+            style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}
+          >
+            <Pressable onPress={() => setPremiumModalVisible(false)}>
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+            <ThemedText type="h2">Manage Premium</ThemedText>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <View style={[styles.searchBox, { backgroundColor: theme.backgroundSecondary }]}>
+            <Feather name="search" size={20} color={theme.textSecondary} />
+            <TextInput
+              placeholder="Search users..."
+              value={premiumSearchQuery}
+              onChangeText={setPremiumSearchQuery}
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.searchInput, { color: theme.text }]}
+            />
+          </View>
+
+          {premiumLoading ? (
+            <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText type="small" style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
+                Loading users...
+              </ThemedText>
+            </View>
+          ) : (
+            <FlatList
+              data={premiumUsers.filter((u) =>
+                u.username.toLowerCase().includes(premiumSearchQuery.toLowerCase())
+              )}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.userItem,
+                    { backgroundColor: theme.backgroundSecondary },
+                  ]}
+                >
+                  <View style={styles.userInfo}>
+                    <View style={[styles.userAvatar, { backgroundColor: "#FF6B9D25" }]}>
+                      <ThemedText type="small" style={{ color: "#FF6B9D" }}>
+                        {item.username.charAt(0).toUpperCase()}
+                      </ThemedText>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <ThemedText type="body">{item.username}</ThemedText>
+                      <ThemedText
+                        type="small"
+                        style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
+                      >
+                        {item.quizCount} quizzes • {item.attempts} attempts
+                      </ThemedText>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: "row", gap: Spacing.sm }}>
+                    <Pressable
+                      onPress={async () => {
+                        try {
+                          const response = await fetch(`/api/admin/premium/grant`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ userId: item.id }),
+                          });
+                          if (response.ok) {
+                            Alert.alert("Success", `${item.username} is now premium`);
+                            setPremiumModalVisible(false);
+                          }
+                        } catch (error) {
+                          Alert.alert("Error", "Failed to grant premium");
+                        }
+                      }}
+                      style={[
+                        styles.premiumButton,
+                        { backgroundColor: "#FF6B9D" },
+                      ]}
+                    >
+                      <ThemedText type="small" style={{ color: "white" }}>
+                        Get Premium
+                      </ThemedText>
+                    </Pressable>
+                    <Pressable
+                      onPress={async () => {
+                        try {
+                          const response = await fetch(`/api/admin/premium/remove`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ userId: item.id }),
+                          });
+                          if (response.ok) {
+                            Alert.alert("Success", `Premium removed from ${item.username}`);
+                            setPremiumModalVisible(false);
+                          }
+                        } catch (error) {
+                          Alert.alert("Error", "Failed to remove premium");
+                        }
+                      }}
+                      style={[
+                        styles.premiumButton,
+                        { backgroundColor: "#999" },
+                      ]}
+                    >
+                      <ThemedText type="small" style={{ color: "white" }}>
+                        Remove
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                </View>
+              )}
+              contentContainerStyle={styles.usersList}
+              scrollEnabled={true}
+              ListEmptyComponent={
+                <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                    No users found
+                  </ThemedText>
+                </View>
+              }
+            />
+          )}
+        </ThemedView>
+      </Modal>
 
       {/* Users Management Modal */}
       <Modal
@@ -1019,5 +1193,12 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     marginBottom: Spacing.xs,
     width: "100%",
+  },
+  premiumButton: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
