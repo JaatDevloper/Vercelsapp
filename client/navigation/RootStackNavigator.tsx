@@ -15,6 +15,7 @@ import MultiplayerResultsScreen from "@/screens/MultiplayerResultsScreen";
 import BadgesScreen from "@/screens/BadgesScreen";
 import AdminDashboardScreen from "@/screens/AdminDashboardScreen";
 import ManageQuizzesScreen from "@/screens/ManageQuizzesScreen";
+import CreateQuizScreen from "@/screens/CreateQuizScreen";
 import HelpSupportScreen from "@/screens/HelpSupportScreen";
 import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import TermsConditionsScreen from "@/screens/TermsConditionsScreen";
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   Main: undefined;
   AdminDashboard: undefined;
   ManageQuizzes: undefined;
+  CreateQuiz: undefined;
   QuizDetails: { quizId: string };
   Quiz: { quizId: string };
   CreateProfile: undefined;
@@ -199,6 +201,14 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="ManageQuizzes"
         component={ManageQuizzesScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="CreateQuiz"
+        component={CreateQuizScreen}
         options={{
           presentation: "modal",
           headerShown: false,

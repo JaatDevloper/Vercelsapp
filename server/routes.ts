@@ -2410,5 +2410,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create quiz (user-generated)
+  app.post("/api/user/create-quiz", async (req: Request, res: Response) => {
+    try {
+      const { title, description, timer, negativeMarking, questions, category } = req.body;
+
+      if (!title || !questions || questions.length === 0) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizdb");
+      const collection = db.collection("user_quizzes");
+
+      const userId = req.headers["x-user-id"] || `user-${Date.now()}`;
+
+      const quizData = {
+        title: title.trim(),
+        description: description?.trim() || "",
+        category: category || "General Knowledge",
+        timer: timer || 15,
+        negative_marking: negativeMarking || 0,
+        creator_id: userId,
+        creator_name: req.headers["x-user-name"] || "User",
+        type: "user",
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        questions: questions.map((q: any, idx: number) => ({
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          category: category || "General Knowledge",
+          quiz_name: title,
+          timer: timer || 15,
+          timestamp: new Date().toISOString(),
+        })),
+      };
+
+      const result = await collection.insertOne(quizData);
+
+      res.json({
+        message: "Quiz created successfully",
+        quizId: result.insertedId.toString(),
+      });
+    } catch (error) {
+      console.error("Error creating quiz:", error);
+      res.status(500).json({
+        error: "Failed to create quiz",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
   return httpServer;
 }

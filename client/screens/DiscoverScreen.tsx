@@ -208,6 +208,22 @@ export default function DiscoverScreen() {
       <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.lg }]}>
         <View style={styles.joinRoomRow}>
           <Pressable
+            onPress={() => navigation.navigate("CreateQuiz")}
+            style={({ pressed }) => [
+              styles.joinRoomButton,
+              { 
+                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Feather name="plus" size={16} color="#FFFFFF" />
+            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+              Create Quiz
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
             onPress={handleJoinRoom}
             style={({ pressed }) => [
               styles.joinRoomButton,
