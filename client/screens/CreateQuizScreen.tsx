@@ -69,7 +69,6 @@ export default function CreateQuizScreen() {
     const normalizedText = text.replace(/\r\n/g, "\n").trim();
     
     // Split by blocks: A block starts with a question and ends before the next question
-    // Questions often start with numbers or are separated by multiple newlines
     const blocks = normalizedText.split(/\n\s*\n+/);
 
     for (const block of blocks) {
@@ -87,35 +86,38 @@ export default function CreateQuizScreen() {
       // Scan for options and markers
       const potentialOptions = lines.slice(1);
       for (const line of potentialOptions) {
-        // Skip metadata lines
+        // Skip metadata lines or question-like lines at the end of block
         if (line.toLowerCase().startsWith("answer:")) continue;
+        if (line.toLowerCase().startsWith("explanation:")) continue;
 
-        let optionText = line;
-        // Comprehensive marker detection: ✅, ✔, [Correct], (Correct)
-        const isMarked = optionText.includes("✅") || 
-                        optionText.includes("\u2705") ||
-                        optionText.includes("✔") ||
-                        optionText.includes("\u2714") ||
-                        optionText.toLowerCase().includes("(correct)") ||
-                        optionText.toLowerCase().includes("[correct]");
+        let optionLine = line;
+        // Comprehensive marker detection: ✅, ✔, [Correct], (Correct), *, Answer:
+        const isMarked = optionLine.includes("✅") || 
+                        optionLine.includes("\u2705") ||
+                        optionLine.includes("✔") ||
+                        optionLine.includes("\u2714") ||
+                        optionLine.toLowerCase().includes("(correct)") ||
+                        optionLine.toLowerCase().includes("[correct]") ||
+                        optionLine.trim().endsWith("*");
         
-        // Remove prefixes like (A), A., 1., -
-        optionText = optionText.replace(/^[\(\[]?([A-Ea-e]|[0-9])[\)\]\.\-]?\s*/, "").trim();
+        // Remove prefixes like (A), A., 1., - and leading numbers/dots
+        let cleanedOption = optionLine.replace(/^[\(\[]?([A-Ea-e]|[0-9])[\)\]\.\-]?\s*/, "").trim();
         
-        // Remove all variations of correct markers
-        optionText = optionText.replace(/✅/g, "")
+        // Remove all variations of correct markers including trailing asterisks
+        cleanedOption = cleanedOption.replace(/✅/g, "")
                                .replace(/\u2705/g, "")
                                .replace(/✔/g, "")
                                .replace(/\u2714/g, "")
                                .replace(/\(correct\)/i, "")
                                .replace(/\[correct\]/i, "")
+                               .replace(/\*$/, "")
                                .trim();
 
-        if (optionText) {
+        if (cleanedOption) {
           if (isMarked && correctAnswer === -1) {
             correctAnswer = options.length;
           }
-          options.push(optionText);
+          options.push(cleanedOption);
         }
       }
 
@@ -138,6 +140,7 @@ export default function CreateQuizScreen() {
         }
       }
 
+      // Final validation
       if (question && options.length >= 2) {
         questions.push({
           question,
@@ -418,7 +421,7 @@ export default function CreateQuizScreen() {
           </ThemedText>
 
           <ThemedText type="small" style={styles.formatHint}>
-            Format: One question per block. Mark correct answer with ✅ (Required)
+            Format: One question per block. Mark correct answer with ✅ or ✔ (Required)
           </ThemedText>
           <TextInput
             style={[
@@ -430,7 +433,13 @@ export default function CreateQuizScreen() {
 (A) उदयपुर ✅
 (B) चितौड़
 (C) जयपुर
-(D) जोधपुर`}
+(D) जोधपुर
+
+What is 2+2?
+A) 3
+B) 4 ✔
+C) 5
+D) 6`}
             placeholderTextColor={theme.textSecondary}
             value={questionInput}
             onChangeText={setQuestionInput}
