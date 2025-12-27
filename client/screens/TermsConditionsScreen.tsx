@@ -27,7 +27,7 @@ export default function TermsConditionsScreen() {
         <ThemedText style={styles.paragraph}>
           <strong>Terms & Conditions</strong>
           {"\n\n"}
-          These terms and conditions apply to the TestOne app (hereby referred to as "Application") for mobile devices that was created by Govind Chowdhury (hereby referred to as "Service Provider") as a Freemium service.
+          These terms and conditions apply to the QuizzyEdu app (hereby referred to as "Application") for mobile devices that was created by Govind Chowdhury (hereby referred to as "Service Provider") as a Freemium service.
         </ThemedText>
 
         <ThemedText style={styles.paragraph}>

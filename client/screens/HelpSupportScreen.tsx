@@ -52,7 +52,7 @@ interface Discussion {
 const TOP_ARTICLES: Article[] = [
   {
     id: "1",
-    title: "How do I start taking quizzes on TestOne?",
+    title: "How do I start taking quizzes on QuizzyEdu?",
     description: "Browse available quizzes, tap one to view details, then click 'Start Quiz' to begin answering questions within the time limit.",
     icon: "book-open",
   },
@@ -84,11 +84,11 @@ const DISCUSSIONS: Discussion[] = [
     category: "Multiplayer",
     avatar: "M",
     color: "#4F46E5",
-    answer: "To join a multiplayer room, follow these steps:\n\n1. Open TestOne and go to the Multiplayer section\n2. Tap 'Join Room' button\n3. Enter the room code shared by your friend\n4. Select a quiz from the available options\n5. Tap 'Ready' to start playing\n\nYou and your friends will compete in real-time, answering the same questions. Your scores will be displayed on the leaderboard!",
+    answer: "To join a multiplayer room, follow these steps:\n\n1. Open QuizzyEdu and go to the Multiplayer section\n2. Tap 'Join Room' button\n3. Enter the room code shared by your friend\n4. Select a quiz from the available options\n5. Tap 'Ready' to start playing\n\nYou and your friends will compete in real-time, answering the same questions. Your scores will be displayed on the leaderboard!",
   },
   {
     id: "2",
-    title: "How can I change my profile picture in TestOne?",
+    title: "How can I change my profile picture in QuizzyEdu?",
     date: "20 Dec 2025",
     category: "Account",
     avatar: "P",
@@ -117,7 +117,7 @@ const DISCUSSIONS: Discussion[] = [
 
 const CONTACT_INFO = {
   email: "jaatcoderx@gmail.com",
-  emailSubject: "Help & Support - TestOne",
+  emailSubject: "Help & Support - QuizzyEdu",
 };
 
 export default function HelpSupportScreen() {
@@ -240,7 +240,7 @@ export default function HelpSupportScreen() {
                   { color: "#666666" },
                 ]}
               >
-                Get answers about TestOne quizzes, multiplayer mode, badges, and your account.
+                Get answers about QuizzyEdu quizzes, multiplayer mode, badges, and your account.
               </ThemedText>
             </View>
 

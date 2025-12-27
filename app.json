@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "TestOne",
-    "slug": "testone",
+    "name": "QuizzyEdu",
+    "slug": "quizzyedu",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "testone",
+    "scheme": "quizzyedu",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

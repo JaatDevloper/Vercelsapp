@@ -28,7 +28,7 @@ export default function PrivacyPolicyScreen() {
         <ThemedText style={styles.paragraph}>
           <strong>Privacy Policy</strong>
           {"\n\n"}
-          This privacy policy applies to the TestOne app (hereby referred to as "Application") for mobile devices that was created by Govind Chowdhury (hereby referred to as "Service Provider") as a Freemium service. This service is intended for use "AS IS".
+          This privacy policy applies to the QuizzyEdu app (hereby referred to as "Application") for mobile devices that was created by Govind Chowdhury (hereby referred to as "Service Provider") as a Freemium service. This service is intended for use "AS IS".
         </ThemedText>
 
         <ThemedText style={styles.sectionTitle}>Information Collection and Use</ThemedText>

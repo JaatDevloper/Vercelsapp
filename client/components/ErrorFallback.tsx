@@ -59,7 +59,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
       <View style={styles.content}>
         <ThemedText type="h1" style={styles.title}>
-          Oops! TestOne hit a snag
+          Oops! QuizzyEdu hit a snag
         </ThemedText>
 
         <ThemedText type="body" style={styles.message}>
@@ -81,7 +81,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
             type="body"
             style={[styles.buttonText, { color: theme.buttonText }]}
           >
-            Restart TestOne
+            Restart QuizzyEdu
           </ThemedText>
         </Pressable>
       </View>

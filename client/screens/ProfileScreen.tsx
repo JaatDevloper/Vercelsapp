@@ -486,7 +486,7 @@ export default function ProfileScreen() {
             <MenuItem icon="help-circle" label="Help & Support" onPress={() => navigation.navigate("HelpSupport")} theme={theme} />
             <MenuItem icon="file-text" label="Terms & Conditions" onPress={() => navigation.navigate("TermsConditions")} theme={theme} />
             <MenuItem icon="shield" label="Privacy Policy" onPress={() => navigation.navigate("PrivacyPolicy")} theme={theme} />
-            <MenuItem icon="info" label="About TestOne" onPress={handleAbout} theme={theme} showBorder={false} />
+            <MenuItem icon="info" label="About QuizzyEdu" onPress={handleAbout} theme={theme} showBorder={false} />
           </Animated.View>
         </View>
       </ScrollView>
@@ -528,7 +528,7 @@ export default function ProfileScreen() {
                   <Feather name="zap" size={32} color="#FFFFFF" />
                 </View>
               </View>
-              <ThemedText type="h2" style={styles.aboutTitle}>TestOne</ThemedText>
+              <ThemedText type="h2" style={styles.aboutTitle}>QuizzyEdu</ThemedText>
               <ThemedText type="body" style={styles.aboutSubtitle}>Your Ultimate Quiz Companion</ThemedText>
               
               <Pressable 
