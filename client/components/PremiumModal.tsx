@@ -1,0 +1,480 @@
+import React, { useState } from "react";
+import {
+  View,
+  StyleSheet,
+  Modal,
+  Pressable,
+  ScrollView,
+  SafeAreaView,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Feather } from "@expo/vector-icons";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+
+import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@/hooks/useTheme";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+
+interface PremiumModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSubscribe?: (plan: "monthly" | "yearly") => void;
+}
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+interface PremiumFeature {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+const PREMIUM_FEATURES: PremiumFeature[] = [
+  {
+    icon: "book-open",
+    title: "Access All Quizzes",
+    description: "Unlimited access to all quizzes in the app",
+  },
+  {
+    icon: "edit-3",
+    title: "Create Unlimited Quizzes",
+    description: "Create and share as many quizzes as you want",
+  },
+  {
+    icon: "trending-up",
+    title: "Advanced Leaderboard",
+    description: "Track detailed performance metrics and rankings",
+  },
+  {
+    icon: "users",
+    title: "Create Unlimited Rooms",
+    description: "Host multiplayer quiz rooms with no restrictions",
+  },
+  {
+    icon: "star",
+    title: "Premium Features",
+    description: "Access all exclusive app features",
+  },
+  {
+    icon: "zap",
+    title: "No Advertisements",
+    description: "Enjoy ad-free experience",
+  },
+];
+
+const PRICING_PLANS = [
+  {
+    id: "monthly",
+    label: "Monthly",
+    price: "$2.99",
+    period: "/month",
+    popular: false,
+  },
+  {
+    id: "yearly",
+    label: "Yearly",
+    price: "$19.99",
+    period: "/year",
+    popular: true,
+    savings: "Save 45%",
+  },
+];
+
+export default function PremiumModal({
+  visible,
+  onClose,
+  onSubscribe,
+}: PremiumModalProps) {
+  const { theme, isDark } = useTheme();
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">(
+    "yearly"
+  );
+  const monthlyScale = useSharedValue(1);
+  const yearlyScale = useSharedValue(1.05);
+
+  const handlePlanSelect = (plan: "monthly" | "yearly") => {
+    setSelectedPlan(plan);
+    if (plan === "monthly") {
+      monthlyScale.value = withSpring(1.05, { damping: 10 });
+      yearlyScale.value = withSpring(1, { damping: 10 });
+    } else {
+      yearlyScale.value = withSpring(1.05, { damping: 10 });
+      monthlyScale.value = withSpring(1, { damping: 10 });
+    }
+  };
+
+  const monthlyAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: monthlyScale.value }],
+  }));
+
+  const yearlyAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: yearlyScale.value }],
+  }));
+
+  const handleSubscribe = () => {
+    if (onSubscribe) {
+      onSubscribe(selectedPlan);
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onClose}
+    >
+      <SafeAreaView
+        style={[
+          styles.container,
+          { backgroundColor: theme.backgroundRoot },
+        ]}
+      >
+        <View style={styles.header}>
+          <Pressable onPress={onClose} hitSlop={10}>
+            <Feather name="x" size={28} color={theme.text} />
+          </Pressable>
+          <ThemedText type="h2">Go Premium</ThemedText>
+          <View style={{ width: 28 }} />
+        </View>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          {/* Header Section */}
+          <LinearGradient
+            colors={["#FF6B9D", "#C44569", "#6B2E5F"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerSection}
+          >
+            <Feather name="crown" size={48} color="#FFFFFF" />
+            <ThemedText
+              type="h2"
+              style={[styles.headerTitle, { color: "#FFFFFF" }]}
+            >
+              Unlock Premium
+            </ThemedText>
+            <ThemedText
+              type="body"
+              style={[styles.headerSubtitle, { color: "rgba(255,255,255,0.9)" }]}
+            >
+              Get unlimited access to all features
+            </ThemedText>
+          </LinearGradient>
+
+          {/* Pricing Plans */}
+          <View style={styles.pricingSection}>
+            <ThemedText type="h3" style={styles.sectionTitle}>
+              Choose Your Plan
+            </ThemedText>
+
+            <View style={styles.pricingPlans}>
+              {PRICING_PLANS.map((plan) => (
+                <AnimatedPressable
+                  key={plan.id}
+                  onPress={() => handlePlanSelect(plan.id as "monthly" | "yearly")}
+                  style={[
+                    styles.planCard,
+                    {
+                      backgroundColor: theme.backgroundDefault,
+                      borderColor:
+                        selectedPlan === plan.id
+                          ? "#FF6B9D"
+                          : theme.backgroundSecondary,
+                      borderWidth: 2,
+                    },
+                    plan.id === "yearly"
+                      ? yearlyAnimatedStyle
+                      : monthlyAnimatedStyle,
+                  ]}
+                >
+                  {plan.popular && (
+                    <LinearGradient
+                      colors={["#FF6B9D", "#C44569"]}
+                      style={styles.popularBadge}
+                    >
+                      <ThemedText style={styles.popularText}>
+                        BEST VALUE
+                      </ThemedText>
+                    </LinearGradient>
+                  )}
+
+                  <ThemedText type="h4" style={styles.planLabel}>
+                    {plan.label}
+                  </ThemedText>
+
+                  <View style={styles.priceContainer}>
+                    <ThemedText
+                      type="h2"
+                      style={[
+                        styles.price,
+                        {
+                          color:
+                            selectedPlan === plan.id
+                              ? "#FF6B9D"
+                              : theme.text,
+                        },
+                      ]}
+                    >
+                      {plan.price}
+                    </ThemedText>
+                    <ThemedText
+                      type="small"
+                      style={[
+                        styles.period,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      {plan.period}
+                    </ThemedText>
+                  </View>
+
+                  {plan.savings && (
+                    <ThemedText style={styles.savings}>
+                      {plan.savings}
+                    </ThemedText>
+                  )}
+
+                  <View
+                    style={[
+                      styles.checkmark,
+                      {
+                        backgroundColor:
+                          selectedPlan === plan.id
+                            ? "#FF6B9D"
+                            : "transparent",
+                        borderColor:
+                          selectedPlan === plan.id
+                            ? "#FF6B9D"
+                            : theme.border,
+                      },
+                    ]}
+                  >
+                    {selectedPlan === plan.id && (
+                      <Feather name="check" size={16} color="#FFFFFF" />
+                    )}
+                  </View>
+                </AnimatedPressable>
+              ))}
+            </View>
+          </View>
+
+          {/* Features Section */}
+          <View style={styles.featuresSection}>
+            <ThemedText type="h3" style={styles.sectionTitle}>
+              Premium Features
+            </ThemedText>
+
+            <View style={styles.featuresList}>
+              {PREMIUM_FEATURES.map((feature, index) => (
+                <View key={index} style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureIcon,
+                      { backgroundColor: "rgba(255, 107, 157, 0.1)" },
+                    ]}
+                  >
+                    <Feather name={feature.icon as any} size={20} color="#FF6B9D" />
+                  </View>
+                  <View style={styles.featureContent}>
+                    <ThemedText type="body" style={styles.featureTitle}>
+                      {feature.title}
+                    </ThemedText>
+                    <ThemedText
+                      type="small"
+                      style={[
+                        styles.featureDescription,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      {feature.description}
+                    </ThemedText>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Subscribe Button */}
+          <Pressable
+            onPress={handleSubscribe}
+            style={({ pressed }) => [
+              styles.subscribeButton,
+              {
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={["#FF6B9D", "#C44569"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.subscribeGradient}
+            >
+              <Feather name="lock-open" size={20} color="#FFFFFF" />
+              <ThemedText
+                type="body"
+                style={{ color: "#FFFFFF", fontWeight: "600" }}
+              >
+                Subscribe Now
+              </ThemedText>
+            </LinearGradient>
+          </Pressable>
+
+          {/* Footer Text */}
+          <ThemedText
+            type="small"
+            style={[
+              styles.footerText,
+              { color: theme.textSecondary, textAlign: "center" },
+            ]}
+          >
+            7-day free trial included. Cancel anytime.
+          </ThemedText>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  content: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl,
+  },
+  headerSection: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    alignItems: "center",
+    marginVertical: Spacing.lg,
+    gap: Spacing.md,
+  },
+  headerTitle: {
+    color: "#FFFFFF",
+  },
+  headerSubtitle: {
+    color: "rgba(255,255,255,0.9)",
+  },
+  sectionTitle: {
+    marginBottom: Spacing.lg,
+    fontWeight: "700",
+  },
+  pricingSection: {
+    marginVertical: Spacing.lg,
+  },
+  pricingPlans: {
+    gap: Spacing.md,
+  },
+  planCard: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    position: "relative",
+    alignItems: "center",
+  },
+  popularBadge: {
+    position: "absolute",
+    top: -10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  popularText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  planLabel: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: Spacing.xs,
+    marginVertical: Spacing.md,
+  },
+  price: {
+    fontWeight: "700",
+  },
+  period: {
+    marginBottom: 4,
+  },
+  savings: {
+    color: "#10B981",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: Spacing.md,
+  },
+  checkmark: {
+    width: 28,
+    height: 28,
+    borderRadius: BorderRadius.full,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  featuresSection: {
+    marginVertical: Spacing.lg,
+  },
+  featuresList: {
+    gap: Spacing.md,
+  },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+  },
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.md,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: Spacing.xs,
+  },
+  featureContent: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  featureTitle: {
+    fontWeight: "600",
+    marginBottom: Spacing.xs,
+  },
+  featureDescription: {
+    lineHeight: 18,
+  },
+  subscribeButton: {
+    marginVertical: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+  },
+  subscribeGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    gap: Spacing.md,
+  },
+  footerText: {
+    marginBottom: Spacing.lg,
+  },
+});

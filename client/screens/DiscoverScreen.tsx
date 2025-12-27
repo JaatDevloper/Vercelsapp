@@ -20,6 +20,7 @@ import { ThemedView } from "@/components/ThemedView";
 import QuizCard, { getQuizCreatedTime } from "@/components/QuizCard";
 import CategoryChip from "@/components/CategoryChip";
 import SkeletonCard from "@/components/SkeletonCard";
+import PremiumModal from "@/components/PremiumModal";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -41,6 +42,7 @@ export default function DiscoverScreen() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [categories, setCategories] = useState<Category[]>([]);
   const searchInputRef = useRef<TextInput>(null);
+  const [premiumModalVisible, setPremiumModalVisible] = useState(false);
 
   // Fetch categories from API
   React.useEffect(() => {
@@ -134,13 +136,23 @@ export default function DiscoverScreen() {
     });
   }, [quizzes, searchQuery]);
 
-  const handleQuizPress = useCallback((quizId: string) => {
-    navigation.navigate("QuizDetails", { quizId });
+  const handleQuizPress = useCallback((quizId: string, isPremiumLocked: boolean) => {
+    if (isPremiumLocked) {
+      setPremiumModalVisible(true);
+    } else {
+      navigation.navigate("QuizDetails", { quizId });
+    }
   }, [navigation]);
 
   const handleJoinRoom = useCallback(() => {
     navigation.navigate("JoinRoom");
   }, [navigation]);
+
+  const handlePremiumSubscribe = useCallback((plan: "monthly" | "yearly") => {
+    console.log(`User selected ${plan} plan`);
+    // TODO: Implement actual payment processing
+    setPremiumModalVisible(false);
+  }, []);
 
   const renderQuizCard = useCallback(({ item, index }: { item: Quiz; index: number }) => {
     // First 5 quizzes are free for all users, rest require premium
@@ -150,7 +162,7 @@ export default function DiscoverScreen() {
     return (
       <QuizCard
         quiz={item}
-        onPress={() => handleQuizPress(item._id)}
+        onPress={() => handleQuizPress(item._id, isPremiumLocked)}
         isPremiumLocked={isPremiumLocked}
         isUserPremium={false} // TODO: Get from user context/API
       />
@@ -322,6 +334,12 @@ export default function DiscoverScreen() {
             tintColor={theme.primary}
           />
         }
+      />
+
+      <PremiumModal
+        visible={premiumModalVisible}
+        onClose={() => setPremiumModalVisible(false)}
+        onSubscribe={handlePremiumSubscribe}
       />
     </ThemedView>
   );
