@@ -117,6 +117,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### December 27, 2025
+- **Added User-Facing Quiz Creation Feature**:
+  - Created CreateQuizScreen with multi-step form (title, description, timer, negative marking, questions)
+  - Question format: Manual text entry (one question per block, 4 options marked A-D, ✅ indicates correct answer)
+  - Timer selection: 15, 20, or 30 seconds per question
+  - Negative marking: 0, 0.33, or 0.66 options
+  - Question parsing logic extracts questions with automatic correct answer detection
+  - Created `/api/user/create-quiz` endpoint to save user-generated quizzes to MongoDB (`user_quizzes` collection)
+  - Added "Create Quiz" button to Discover screen header (left of "Join Room" button)
+  - Integrated CreateQuizScreen into navigation as modal (no file upload dependency, manual text entry only)
+- **Quiz Creation Workflow**: Title/Description → Timer/Negative Marking → Question Input → Confirmation → Submit to Backend
+
 ### December 16, 2025
 - **Added Verification Badge System**:
   - Created VerificationBadgesModal with 8 unique gradient badges
