@@ -17,9 +17,19 @@ import { useTheme } from "@/hooks/useTheme";
 
 function AppContent() {
   const { isDark } = useTheme();
-  
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const disableContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+      };
+      window.addEventListener('contextmenu', disableContextMenu);
+      return () => window.removeEventListener('contextmenu', disableContextMenu);
+    }
+  }, []);
+
   return (
-    <GestureHandlerRootView style={[styles.root, { userSelect: 'none' } as any]}>
+    <GestureHandlerRootView style={[styles.root, { userSelect: 'none', webkitTouchCallout: 'none' } as any]}>
       <KeyboardProvider>
         <NavigationContainer>
           <RootStackNavigator />
