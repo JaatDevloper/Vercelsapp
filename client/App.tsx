@@ -19,7 +19,7 @@ function AppContent() {
   const { isDark } = useTheme();
   
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={[styles.root, { userSelect: 'none' } as any]}>
       <KeyboardProvider>
         <NavigationContainer>
           <RootStackNavigator />
