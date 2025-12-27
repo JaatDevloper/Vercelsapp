@@ -205,7 +205,7 @@ export default function DiscoverScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.lg + 48 }]}>
+      <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.lg }]}>
         <View style={styles.titleRow}>
           <View style={styles.logoContainer}>
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
@@ -325,6 +325,7 @@ const styles = StyleSheet.create({
   },
   fixedHeader: {
     paddingHorizontal: Spacing.lg,
+    zIndex: 10,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,

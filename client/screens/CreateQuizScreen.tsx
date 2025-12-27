@@ -66,34 +66,55 @@ export default function CreateQuizScreen() {
 
   const parseQuestions = (text: string): Question[] => {
     const questions: Question[] = [];
-    const blocks = text.split(/\n\n+/);
+    // Split by blocks: support different line endings and varied spacing between questions
+    const blocks = text.trim().split(/\r?\n\s*\r?\n+/);
 
     for (const block of blocks) {
-      const lines = block.trim().split("\n").filter((l) => l.trim());
-      if (lines.length < 5) continue;
+      if (!block.trim()) continue;
+      
+      const lines = block.trim().split(/\r?\n/).filter((l) => l.trim());
+      if (lines.length < 2) continue; // Need at least a question and one option
 
-      const question = lines[0].trim();
-      const optionsText = lines.slice(1, 5);
+      const questionLine = lines[0].trim();
+      // Remove leading numbers/bullets from question if present (e.g., "1. Question" or "Q1: Question")
+      const question = questionLine.replace(/^([0-9]+[\.\)]|Q[0-9]+[:\.]?)\s*/i, "").trim();
+      
       const options: string[] = [];
       let correctAnswer = -1;
 
-      for (let i = 0; i < optionsText.length; i++) {
-        let optionText = optionsText[i].trim();
+      // Find options in the remaining lines
+      const optionLines = lines.slice(1);
+      for (let i = 0; i < optionLines.length; i++) {
+        let optionText = optionLines[i].trim();
+        
+        // Remove common option prefixes like (A), A), 1), etc.
+        optionText = optionText.replace(/^([A-D]|[0-4])[\.\)]\s*/i, "").trim();
+
         if (optionText.includes("✅")) {
-          correctAnswer = i;
+          correctAnswer = options.length;
           optionText = optionText.replace("✅", "").trim();
         }
-        options.push(optionText);
+        
+        if (optionText) {
+          options.push(optionText);
+        }
       }
 
-      if (
-        options.length === 4 &&
-        correctAnswer !== -1 &&
-        question.length > 0
-      ) {
+      // If no ✅ was found, try to look for "(Correct)" or similar markers
+      if (correctAnswer === -1) {
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].toLowerCase().includes("(correct)")) {
+            correctAnswer = i;
+            options[i] = options[i].replace(/\(correct\)/i, "").trim();
+            break;
+          }
+        }
+      }
+
+      if (question && options.length >= 2 && correctAnswer !== -1) {
         questions.push({
           question,
-          options,
+          options: options.slice(0, 4), // Ensure max 4 options as per UI expectations
           correctAnswer,
         });
       }
