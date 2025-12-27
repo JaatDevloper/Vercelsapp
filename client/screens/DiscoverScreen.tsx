@@ -20,6 +20,7 @@ import { ThemedView } from "@/components/ThemedView";
 import QuizCard, { getQuizCreatedTime } from "@/components/QuizCard";
 import CategoryChip from "@/components/CategoryChip";
 import SkeletonCard from "@/components/SkeletonCard";
+import DayNightToggle from "@/components/DayNightToggle";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -206,12 +207,14 @@ export default function DiscoverScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.lg + 48 }]}>
-        <View style={styles.titleRow}>
+        <View style={styles.appNameRow}>
           <View style={styles.logoContainer}>
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
             <ThemedText type="h3">QuizzyEdu</ThemedText>
           </View>
+        </View>
 
+        <View style={styles.controlsRow}>
           <View style={styles.headerButtons}>
             <Pressable
               onPress={() => navigation.navigate("CreateQuiz")}
@@ -245,6 +248,8 @@ export default function DiscoverScreen() {
               </ThemedText>
             </Pressable>
           </View>
+
+          <DayNightToggle />
         </View>
 
         <View style={[styles.searchContainer, { backgroundColor: theme.backgroundDefault }]}>
@@ -331,7 +336,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
   },
-  titleRow: {
+  appNameRow: {
+    marginBottom: Spacing.md,
+  },
+  controlsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -340,6 +348,7 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: "row",
     gap: Spacing.sm,
+    flex: 1,
   },
   logoContainer: {
     flexDirection: "row",
