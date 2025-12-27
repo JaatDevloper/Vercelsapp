@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -18,8 +18,25 @@ import { useTheme } from "@/hooks/useTheme";
 function AppContent() {
   const { isDark } = useTheme();
   
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      const handleCopy = (e: ClipboardEvent) => e.preventDefault();
+      const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+      
+      document.addEventListener("copy", handleCopy);
+      document.addEventListener("cut", handleCopy);
+      document.addEventListener("contextmenu", handleContextMenu);
+      
+      return () => {
+        document.removeEventListener("copy", handleCopy);
+        document.removeEventListener("cut", handleCopy);
+        document.removeEventListener("contextmenu", handleContextMenu);
+      };
+    }
+  }, []);
+
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={[styles.root, Platform.OS === 'web' && { userSelect: 'none', WebkitUserSelect: 'none' } as any]}>
       <KeyboardProvider>
         <NavigationContainer>
           <RootStackNavigator />
