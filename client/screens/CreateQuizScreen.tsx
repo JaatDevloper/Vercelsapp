@@ -156,66 +156,61 @@ export default function CreateQuizScreen() {
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["text/plain", "application/octet-stream"],
+        type: ["text/plain", "*/*"],
+        copyToCacheDirectory: true,
       });
 
-      if (result.assets && result.assets.length > 0) {
+      console.log("DocumentPicker result:", JSON.stringify(result));
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
         console.log("File picked:", file.name, "URI:", file.uri);
         
         let text = "";
         try {
-          // In Replit environment, web fetch(uri) might fail for local blob URIs in some cases
-          // Prefer direct access to file content if available
-          if (file.file instanceof File) {
-             text = await file.file.text();
-          } else {
+          // Check if file.file is available (Web)
+          if ((file as any).file instanceof File) {
+            text = await (file as any).file.text();
+          } 
+          
+          // Try fetch if text is still empty (Native/Web fallback)
+          if (!text) {
             const response = await fetch(file.uri);
-            if (!response.ok) throw new Error("Fetch failed");
+            if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
             text = await response.text();
           }
-        } catch (fetchError) {
-          console.error("Error reading file content:", fetchError);
-          // Last ditch effort for React Native Web file access
-          if (file.file) {
-             try {
-               text = await file.file.text();
-             } catch (e) {
-               throw fetchError;
-             }
+        } catch (readError) {
+          console.error("Read error:", readError);
+          // Last ditch for some picker versions
+          if ((file as any).output) {
+            text = (file as any).output;
           } else {
-            throw fetchError;
+            throw new Error("Could not read file content");
           }
         }
 
-        console.log("File content length:", text.length);
-        const parsedQuestions = parseQuestions(text);
-        console.log("Parsed questions count:", parsedQuestions.length);
+        if (!text) throw new Error("File is empty");
 
-        if (parsedQuestions.length === 0) {
-          Alert.alert(
-            "No questions found",
-            "Could not parse any valid questions from the file. Please ensure questions are separated by blank lines and correct answers are marked with ✅"
-          );
+        console.log("Extracted text length:", text.length);
+        const parsed = parseQuestions(text);
+        console.log("Parsed count:", parsed.length);
+
+        if (parsed.length === 0) {
+          Alert.alert("No Questions Found", "Please check the file format.");
           return;
         }
 
-        Alert.alert(
-          "Import Successful",
-          `Successfully extracted ${parsedQuestions.length} questions from ${file.name}.`,
-          [{ text: "Continue", onPress: () => {
-            setQuizData((prev) => ({
-              ...prev,
-              questions: parsedQuestions,
-            }));
-            setInputMethod(null);
-            setStep("questions");
-          }}]
-        );
+        // Apply data and switch to manual view for review
+        setQuizData(prev => ({ ...prev, questions: parsed }));
+        setQuestionInput(text);
+        setInputMethod("manual");
+        setStep("questions");
+
+        Alert.alert("Success", `Imported ${parsed.length} questions.`);
       }
-    } catch (error) {
-      console.error("File upload error:", error);
-      Alert.alert("Error", "Failed to read file. Please try again.");
+    } catch (err) {
+      console.error("Upload error:", err);
+      Alert.alert("Error", "Failed to upload file. Try manual pasting.");
     }
   };
 
@@ -368,7 +363,7 @@ export default function CreateQuizScreen() {
         <Pressable
           style={[
             styles.methodButton,
-            { backgroundColor: Colors.light.primary },
+            { backgroundColor: Colors.light.primary, marginBottom: Spacing.md },
           ]}
           onPress={handleFileUpload}
         >
@@ -442,22 +437,18 @@ C) 5
 D) 6`}
             placeholderTextColor={theme.textSecondary}
             value={questionInput}
-            onChangeText={setQuestionInput}
+            onChangeText={(text) => {
+              setQuestionInput(text);
+              const parsed = parseQuestions(text);
+              setQuizData((prev) => ({
+                ...prev,
+                questions: parsed,
+              }));
+            }}
             multiline
             numberOfLines={15}
             textAlignVertical="top"
           />
-
-          <View style={styles.manualActions}>
-            <Pressable
-              style={[styles.button, { backgroundColor: Colors.light.primary, marginTop: Spacing.md }]}
-              onPress={parseManualQuestions}
-            >
-              <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-                Extract Questions
-              </ThemedText>
-            </Pressable>
-          </View>
 
           {quizData.questions.length > 0 && (
             <View style={styles.questionsPreview}>
@@ -547,8 +538,6 @@ D) 6`}
             <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
               {step === "basic"
                 ? "Next"
-                : inputMethod === "manual"
-                ? "Parse Questions"
                 : "Create Quiz"}
             </ThemedText>
           )}
