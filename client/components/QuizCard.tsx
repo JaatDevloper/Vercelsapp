@@ -14,12 +14,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
+import PremiumLockBadge from "@/components/PremiumLockBadge";
 import type { Quiz } from "@/types/quiz";
 
 interface QuizCardProps {
   quiz: Quiz;
   onPress: () => void;
   style?: ViewStyle;
+  isPremiumLocked?: boolean;
+  isUserPremium?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -65,12 +68,13 @@ export function getQuizCreatedTime(createdAt: string | Date | undefined): number
   return isNaN(createdDate.getTime()) ? 0 : createdDate.getTime();
 }
 
-export default function QuizCard({ quiz, onPress, style }: QuizCardProps) {
+export default function QuizCard({ quiz, onPress, style, isPremiumLocked = false, isUserPremium = false }: QuizCardProps) {
   const { theme, isDark } = useTheme();
   const scale = useSharedValue(1);
   const badgePulse = useSharedValue(1);
 
   const isNew = isNewQuiz(quiz.created_at || quiz.timestamp);
+  const isLocked = isPremiumLocked && !isUserPremium;
 
   React.useEffect(() => {
     if (isNew) {
@@ -94,11 +98,15 @@ export default function QuizCard({ quiz, onPress, style }: QuizCardProps) {
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.98, { damping: 15, stiffness: 150 });
+    if (!isLocked) {
+      scale.value = withSpring(0.98, { damping: 15, stiffness: 150 });
+    }
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    if (!isLocked) {
+      scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    }
   };
 
   const questionCount = quiz.questionCount || 
@@ -110,21 +118,24 @@ export default function QuizCard({ quiz, onPress, style }: QuizCardProps) {
 
   return (
     <AnimatedPressable
-      onPress={onPress}
+      onPress={isLocked ? undefined : onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      disabled={isLocked}
       style={[
         styles.card,
         { 
           backgroundColor: theme.backgroundDefault,
           borderWidth: isNew ? 1.5 : 0,
           borderColor: isNew ? (isDark ? '#10B981' : '#059669') : 'transparent',
+          opacity: isLocked ? 0.7 : 1,
         },
         animatedStyle,
         style,
       ]}
     >
-      {isNew && (
+      {isLocked && <PremiumLockBadge position="top-right" />}
+      {isNew && !isLocked && (
         <Animated.View style={[styles.newBadgeContainer, badgeAnimatedStyle]}>
           <LinearGradient
             colors={['#10B981', '#059669', '#047857']}

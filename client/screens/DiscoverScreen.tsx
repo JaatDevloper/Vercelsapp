@@ -142,12 +142,20 @@ export default function DiscoverScreen() {
     navigation.navigate("JoinRoom");
   }, [navigation]);
 
-  const renderQuizCard = useCallback(({ item }: { item: Quiz }) => (
-    <QuizCard
-      quiz={item}
-      onPress={() => handleQuizPress(item._id)}
-    />
-  ), [handleQuizPress]);
+  const renderQuizCard = useCallback(({ item, index }: { item: Quiz; index: number }) => {
+    // First 5 quizzes are free for all users, rest require premium
+    const isFreeQuiz = index < 5;
+    const isPremiumLocked = !isFreeQuiz;
+    
+    return (
+      <QuizCard
+        quiz={item}
+        onPress={() => handleQuizPress(item._id)}
+        isPremiumLocked={isPremiumLocked}
+        isUserPremium={false} // TODO: Get from user context/API
+      />
+    );
+  }, [handleQuizPress]);
 
   const handleSearchChange = useCallback((text: string) => {
     setSearchQuery(text);
