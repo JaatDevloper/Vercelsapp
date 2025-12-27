@@ -118,10 +118,9 @@ export default function QuizCard({ quiz, onPress, style, isPremiumLocked = false
 
   return (
     <AnimatedPressable
-      onPress={isLocked ? undefined : onPress}
+      onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={isLocked}
       style={[
         styles.card,
         { 
