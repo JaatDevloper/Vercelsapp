@@ -171,12 +171,18 @@ export default function CreateQuizScreen() {
           return;
         }
 
-        setQuizData((prev) => ({
-          ...prev,
-          questions: parsedQuestions,
-        }));
-        setInputMethod(null);
-        setStep("questions");
+        Alert.alert(
+          "Import Successful",
+          `Successfully extracted ${parsedQuestions.length} questions from ${file.name}.`,
+          [{ text: "Continue", onPress: () => {
+            setQuizData((prev) => ({
+              ...prev,
+              questions: parsedQuestions,
+            }));
+            setInputMethod(null);
+            setStep("questions");
+          }}]
+        );
       }
     } catch (error) {
       console.error("File upload error:", error);
