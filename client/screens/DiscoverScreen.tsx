@@ -206,44 +206,44 @@ export default function DiscoverScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.lg }]}>
-        <View style={styles.joinRoomRow}>
-          <Pressable
-            onPress={() => navigation.navigate("CreateQuiz")}
-            style={({ pressed }) => [
-              styles.joinRoomButton,
-              { 
-                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Feather name="plus" size={16} color="#FFFFFF" />
-            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              Create Quiz
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={handleJoinRoom}
-            style={({ pressed }) => [
-              styles.joinRoomButton,
-              { 
-                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Feather name="users" size={16} color="#FFFFFF" />
-            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              Join Room
-            </ThemedText>
-          </Pressable>
-        </View>
-
         <View style={styles.titleRow}>
           <View style={styles.logoContainer}>
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
             <ThemedText type="h3" style={styles.appTitle}>QuizzyEdu</ThemedText>
+          </View>
+
+          <View style={styles.headerButtons}>
+            <Pressable
+              onPress={() => navigation.navigate("CreateQuiz")}
+              style={({ pressed }) => [
+                styles.joinRoomButton,
+                { 
+                  backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
+            >
+              <Feather name="plus" size={16} color="#FFFFFF" />
+              <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                Create Quiz
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={handleJoinRoom}
+              style={({ pressed }) => [
+                styles.joinRoomButton,
+                { 
+                  backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
+            >
+              <Feather name="users" size={16} color="#FFFFFF" />
+              <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+                Join Room
+              </ThemedText>
+            </Pressable>
           </View>
         </View>
 
@@ -330,15 +330,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
   },
-  joinRoomRow: {
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
   titleRow: {
     flexDirection: "row",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.lg,
+  },
+  headerButtons: {
+    flexDirection: "row",
+    gap: Spacing.sm,
   },
   logoContainer: {
     flexDirection: "row",
