@@ -2353,18 +2353,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const client = await getMongoClient();
       const db = client.db("quizbot");
+      const quizzesCollection = db.collection("quizzes");
       const manageCollection = db.collection("manage");
 
-      // Fetch quizzes directly from "manage" collection for this category (exclude deleted)
-      const categoryQuizzes = await manageCollection.find({
+      // 1. Fetch from "manage" collection (admin/system quizzes)
+      const manageQuizzes = await manageCollection.find({
         category: categoryName,
-        isDeleted: { $ne: true }  // Skip deleted quizzes
-      })
-      .sort({ updatedAt: -1, created_at: -1 })
-      .toArray();
+        isDeleted: { $ne: true }
+      }).toArray();
 
-      // Format the response with all quiz data
-      const formattedQuizzes = categoryQuizzes.map((quiz: any) => ({
+      // 2. Fetch from "quizzes" collection (user-created quizzes)
+      const userQuizzes = await quizzesCollection.find({
+        category: categoryName,
+        isDeleted: { $ne: true }
+      }).toArray();
+
+      // Combine and format
+      const allQuizzes = [...manageQuizzes, ...userQuizzes];
+
+      // Format the response
+      const formattedQuizzes = allQuizzes.map((quiz: any) => ({
         _id: quiz._id?.toString() || "",
         quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
         title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
@@ -2380,6 +2388,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updatedAt: quiz.updatedAt || new Date().toISOString(),
         isDeleted: quiz.isDeleted || false,
       }));
+
+      // Sort combined results by time
+      formattedQuizzes.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.json(formattedQuizzes);
