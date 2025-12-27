@@ -20,7 +20,6 @@ import { ThemedView } from "@/components/ThemedView";
 import QuizCard, { getQuizCreatedTime } from "@/components/QuizCard";
 import CategoryChip from "@/components/CategoryChip";
 import SkeletonCard from "@/components/SkeletonCard";
-import DayNightToggle from "@/components/DayNightToggle";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -215,41 +214,37 @@ export default function DiscoverScreen() {
         </View>
 
         <View style={styles.controlsRow}>
-          <View style={styles.headerButtons}>
-            <Pressable
-              onPress={() => navigation.navigate("CreateQuiz")}
-              style={({ pressed }) => [
-                styles.joinRoomButton,
-                { 
-                  backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                  opacity: pressed ? 0.8 : 1,
-                },
-              ]}
-            >
-              <Feather name="plus" size={16} color="#FFFFFF" />
-              <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-                Create Quiz
-              </ThemedText>
-            </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate("CreateQuiz")}
+            style={({ pressed }) => [
+              styles.joinRoomButton,
+              { 
+                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Feather name="plus" size={16} color="#FFFFFF" />
+            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+              Create Quiz
+            </ThemedText>
+          </Pressable>
 
-            <Pressable
-              onPress={handleJoinRoom}
-              style={({ pressed }) => [
-                styles.joinRoomButton,
-                { 
-                  backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                  opacity: pressed ? 0.8 : 1,
-                },
-              ]}
-            >
-              <Feather name="users" size={16} color="#FFFFFF" />
-              <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-                Join Room
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <DayNightToggle />
+          <Pressable
+            onPress={handleJoinRoom}
+            style={({ pressed }) => [
+              styles.joinRoomButton,
+              { 
+                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Feather name="users" size={16} color="#FFFFFF" />
+            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+              Join Room
+            </ThemedText>
+          </Pressable>
         </View>
 
         <View style={[styles.searchContainer, { backgroundColor: theme.backgroundDefault }]}>
@@ -341,14 +336,8 @@ const styles = StyleSheet.create({
   },
   controlsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  headerButtons: {
-    flexDirection: "row",
     gap: Spacing.sm,
-    flex: 1,
+    marginBottom: Spacing.lg,
   },
   logoContainer: {
     flexDirection: "row",
