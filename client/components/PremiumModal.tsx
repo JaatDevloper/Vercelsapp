@@ -148,7 +148,7 @@ export default function PremiumModal({
         >
           {/* Header Section */}
           <LinearGradient
-            colors={["#FFD700", "#DAA520", "#B8860B"]}
+            colors={["#FF6B9D", "#C44569", "#6B2E5F"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerSection}
@@ -185,7 +185,7 @@ export default function PremiumModal({
                       backgroundColor: theme.backgroundDefault,
                       borderColor:
                         selectedPlan === plan.id
-                          ? "#FFD700"
+                          ? "#FF6B9D"
                           : theme.backgroundSecondary,
                       borderWidth: 2,
                     },
@@ -196,7 +196,7 @@ export default function PremiumModal({
                 >
                   {plan.popular && (
                     <LinearGradient
-                      colors={["#FFD700", "#DAA520"]}
+                      colors={["#FF6B9D", "#C44569"]}
                       style={styles.popularBadge}
                     >
                       <ThemedText style={styles.popularText}>
@@ -217,7 +217,7 @@ export default function PremiumModal({
                         {
                           color:
                             selectedPlan === plan.id
-                              ? "#FFD700"
+                              ? "#FF6B9D"
                               : theme.text,
                         },
                       ]}
@@ -247,11 +247,11 @@ export default function PremiumModal({
                       {
                         backgroundColor:
                           selectedPlan === plan.id
-                            ? "#FFD700"
+                            ? "#FF6B9D"
                             : "transparent",
                         borderColor:
                           selectedPlan === plan.id
-                            ? "#FFD700"
+                            ? "#FF6B9D"
                             : theme.border,
                       },
                     ]}
@@ -277,10 +277,10 @@ export default function PremiumModal({
                   <View
                     style={[
                       styles.featureIcon,
-                      { backgroundColor: "rgba(255, 215, 0, 0.1)" },
+                      { backgroundColor: "rgba(255, 107, 157, 0.1)" },
                     ]}
                   >
-                    <Feather name={feature.icon as any} size={20} color="#FFD700" />
+                    <Feather name={feature.icon as any} size={20} color="#FF6B9D" />
                   </View>
                   <View style={styles.featureContent}>
                     <ThemedText type="body" style={styles.featureTitle}>
@@ -312,7 +312,7 @@ export default function PremiumModal({
             ]}
           >
             <LinearGradient
-              colors={["#FFD700", "#DAA520"]}
+              colors={["#FF6B9D", "#C44569"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.subscribeGradient}
