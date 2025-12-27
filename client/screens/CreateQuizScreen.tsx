@@ -246,22 +246,43 @@ export default function CreateQuizScreen() {
 
     setLoading(true);
     try {
+      // Get profile info if available
+      let profileData = null;
+      try {
+        const profileResponse = await fetch("/api/profile?deviceId=unknown"); // We should ideally use the actual deviceId
+        if (profileResponse.ok) {
+          profileData = await profileResponse.json();
+        }
+      } catch (e) {
+        console.warn("Could not fetch profile for creator info");
+      }
+
+      const payload = {
+        ...quizData,
+        creator_id: profileData?.deviceId || "anonymous",
+        creator_name: profileData?.name || "User",
+      };
+
       const response = await fetch("/api/user/create-quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(quizData),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to create quiz");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create quiz");
+      }
 
       Alert.alert("Success", "Quiz created successfully!", [
         {
           text: "OK",
-          onPress: () => navigation.goBack(),
+          onPress: () => navigation.navigate("Main", { screen: "Discover" }),
         },
       ]);
     } catch (error) {
-      Alert.alert("Error", "Failed to create quiz. Please try again.");
+      console.error("Create quiz error:", error);
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to create quiz. Please try again.");
     } finally {
       setLoading(false);
     }

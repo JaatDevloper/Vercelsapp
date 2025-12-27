@@ -1638,8 +1638,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error submitting result:", error);
+      res.status(500).json({ error: "Failed to submit result" });
+    }
+  });
+
+  // Create a new quiz (User created)
+  app.post("/api/user/create-quiz", async (req: Request, res: Response) => {
+    try {
+      const { title, description, timer, negativeMarking, questions, category, creator_id, creator_name } = req.body;
+
+      if (!title || !questions || !Array.isArray(questions)) {
+        return res.status(400).json({ error: "Title and questions are required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("quizzes");
+
+      const quizId = Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+      
+      const newQuiz = {
+        _id: quizId,
+        quiz_id: quizId,
+        title: title.trim(),
+        description: description?.trim() || "",
+        category: category || "General",
+        timer: timer || 15,
+        negative_marking: negativeMarking || 0,
+        type: "user_created",
+        creator_id: creator_id || "anonymous",
+        creator_name: creator_name || "User",
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+        questions: questions.map((q: any, index: number) => ({
+          _id: `q-${quizId}-${index}`,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          timer: timer || 15,
+        })),
+        isDeleted: false
+      };
+
+      await collection.insertOne(newQuiz);
+
+      res.status(201).json({ 
+        message: "Quiz created successfully", 
+        quiz_id: quizId,
+        quiz: formatQuiz(newQuiz)
+      });
+    } catch (error) {
+      console.error("Error creating quiz:", error);
       res.status(500).json({
-        error: "Failed to submit result",
+        error: "Failed to create quiz",
         message: error instanceof Error ? error.message : "Unknown error",
       });
     }
