@@ -56,6 +56,6 @@ export function ThemedText({
   };
 
   return (
-    <Text style={[{ color: getColor() }, getTypeStyle(), style]} {...rest} />
+    <Text style={[{ color: getColor(), userSelect: 'none' } as any, getTypeStyle(), style]} {...rest} />
   );
 }
