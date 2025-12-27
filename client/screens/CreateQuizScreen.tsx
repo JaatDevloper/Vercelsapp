@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as DocumentPicker from "expo-document-picker";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -61,6 +62,7 @@ export default function CreateQuizScreen() {
   });
 
   const [questionInput, setQuestionInput] = useState("");
+  const [inputMethod, setInputMethod] = useState<"file" | "manual" | null>(null);
 
   const parseQuestions = (text: string): Question[] => {
     const questions: Question[] = [];
@@ -101,6 +103,37 @@ export default function CreateQuizScreen() {
   };
 
 
+  const handleFileUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "text/plain",
+      });
+
+      if (result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        const text = await fetch(file.uri).then((r) => r.text());
+        const parsedQuestions = parseQuestions(text);
+
+        if (parsedQuestions.length === 0) {
+          Alert.alert(
+            "No questions found",
+            "Could not parse any valid questions from the file. Please check the format."
+          );
+          return;
+        }
+
+        setQuizData((prev) => ({
+          ...prev,
+          questions: parsedQuestions,
+        }));
+        setInputMethod(null);
+        setStep("questions");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to read file");
+    }
+  };
+
   const parseManualQuestions = () => {
     const parsedQuestions = parseQuestions(questionInput);
 
@@ -116,6 +149,7 @@ export default function CreateQuizScreen() {
       ...prev,
       questions: parsedQuestions,
     }));
+    setInputMethod(null);
     setStep("questions");
   };
 
@@ -233,7 +267,7 @@ export default function CreateQuizScreen() {
     </ScrollView>
   );
 
-  const renderQuestionsStep = () => (
+  const renderInputMethodSelection = () => (
     <ScrollView
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
@@ -242,55 +276,114 @@ export default function CreateQuizScreen() {
         <ThemedText type="h2" style={styles.stepTitle}>
           Add Questions
         </ThemedText>
-
         <ThemedText type="small" style={styles.formatHint}>
-          Format: One question per block. Mark correct answer with ✅
+          Choose how you want to add questions to your quiz
         </ThemedText>
-        <TextInput
+
+        <Pressable
           style={[
-            styles.textarea,
-            styles.largeTextarea,
-            { color: theme.text, borderColor: theme.border },
+            styles.methodButton,
+            { backgroundColor: Colors.light.primary },
           ]}
-          placeholder={`महाराणा प्रताप कहा का राजा था?
+          onPress={handleFileUpload}
+        >
+          <Feather name="upload-cloud" size={20} color="#FFFFFF" />
+          <ThemedText type="body" style={styles.methodButtonText}>
+            Upload .txt File
+          </ThemedText>
+        </Pressable>
+
+        <View style={styles.orDivider}>
+          <View style={[styles.dividerLine, { borderColor: theme.border }]} />
+          <ThemedText
+            type="small"
+            style={{ color: theme.textSecondary, marginHorizontal: Spacing.md }}
+          >
+            OR
+          </ThemedText>
+          <View style={[styles.dividerLine, { borderColor: theme.border }]} />
+        </View>
+
+        <Pressable
+          style={[
+            styles.methodButton,
+            { backgroundColor: Colors.light.primary },
+          ]}
+          onPress={() => setInputMethod("manual")}
+        >
+          <Feather name="edit-2" size={20} color="#FFFFFF" />
+          <ThemedText type="body" style={styles.methodButtonText}>
+            Manual Entry
+          </ThemedText>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+
+  const renderQuestionsStep = () => {
+    if (inputMethod === null) {
+      return renderInputMethodSelection();
+    }
+
+    return (
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.stepContainer}>
+          <ThemedText type="h2" style={styles.stepTitle}>
+            Add Questions
+          </ThemedText>
+
+          <ThemedText type="small" style={styles.formatHint}>
+            Format: One question per block. Mark correct answer with ✅
+          </ThemedText>
+          <TextInput
+            style={[
+              styles.textarea,
+              styles.largeTextarea,
+              { color: theme.text, borderColor: theme.border },
+            ]}
+            placeholder={`महाराणा प्रताप कहा का राजा था?
 (A) उदयपुर ✅
 (B) चितौड़
 (C) जयपुर
 (D) जोधपुर`}
-          placeholderTextColor={theme.textSecondary}
-          value={questionInput}
-          onChangeText={setQuestionInput}
-          multiline
-          numberOfLines={15}
-        />
+            placeholderTextColor={theme.textSecondary}
+            value={questionInput}
+            onChangeText={setQuestionInput}
+            multiline
+            numberOfLines={15}
+          />
 
-        {quizData.questions.length > 0 && (
-          <View style={styles.questionsPreview}>
-            <ThemedText type="body" style={styles.previewTitle}>
-              Questions: {quizData.questions.length}
-            </ThemedText>
-            <FlatList
-              data={quizData.questions.slice(0, 3)}
-              keyExtractor={(_, index) => index.toString()}
-              scrollEnabled={false}
-              renderItem={({ item, index }) => (
-                <View style={styles.questionCard}>
-                  <ThemedText type="small" style={styles.questionNumber}>
-                    Q{index + 1}: {item.question}
-                  </ThemedText>
-                </View>
-              )}
-            />
-            {quizData.questions.length > 3 && (
-              <ThemedText type="small" style={styles.moreQuestions}>
-                +{quizData.questions.length - 3} more
+          {quizData.questions.length > 0 && (
+            <View style={styles.questionsPreview}>
+              <ThemedText type="body" style={styles.previewTitle}>
+                Questions: {quizData.questions.length}
               </ThemedText>
-            )}
-          </View>
-        )}
-      </View>
-    </ScrollView>
-  );
+              <FlatList
+                data={quizData.questions.slice(0, 3)}
+                keyExtractor={(_, index) => index.toString()}
+                scrollEnabled={false}
+                renderItem={({ item, index }) => (
+                  <View style={styles.questionCard}>
+                    <ThemedText type="small" style={styles.questionNumber}>
+                      Q{index + 1}: {item.question}
+                    </ThemedText>
+                  </View>
+                )}
+              />
+              {quizData.questions.length > 3 && (
+                <ThemedText type="small" style={styles.moreQuestions}>
+                  +{quizData.questions.length - 3} more
+                </ThemedText>
+              )}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -310,7 +403,13 @@ export default function CreateQuizScreen() {
         {step === "questions" && (
           <Pressable
             style={[styles.button, styles.secondaryButton]}
-            onPress={() => setStep("basic")}
+            onPress={() => {
+              if (inputMethod === "manual") {
+                setInputMethod(null);
+              } else {
+                setStep("basic");
+              }
+            }}
           >
             <ThemedText type="body" style={{ color: theme.text }}>
               Back
@@ -328,11 +427,13 @@ export default function CreateQuizScreen() {
           ]}
           onPress={() => {
             if (step === "basic") {
-              if (!useFileUpload) {
-                parseManualQuestions();
-              }
+              setStep("questions");
             } else {
-              handleCreateQuiz();
+              if (inputMethod === "manual") {
+                parseManualQuestions();
+              } else {
+                handleCreateQuiz();
+              }
             }
           }}
           disabled={loading}
@@ -341,7 +442,11 @@ export default function CreateQuizScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              {step === "basic" ? "Next" : "Create Quiz"}
+              {step === "basic"
+                ? "Next"
+                : inputMethod === "manual"
+                ? "Parse Questions"
+                : "Create Quiz"}
             </ThemedText>
           )}
         </Pressable>
