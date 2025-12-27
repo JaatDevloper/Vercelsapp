@@ -205,7 +205,7 @@ export default function DiscoverScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.lg + 48 }]}>
+      <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.appNameRow}>
           <View style={styles.logoContainer}>
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
   },
   appNameRow: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   controlsRow: {
     flexDirection: "row",
