@@ -63,7 +63,7 @@ export default function DiscoverScreen() {
   });
 
   const handleBatchPress = (batch: any) => {
-    Alert.alert(batch.title, batch.description);
+    navigation.navigate("BatchDetails" as any, { batchId: batch._id });
   };
 
   const renderBatchItem = ({ item }: { item: any }) => (

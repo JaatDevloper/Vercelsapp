@@ -25,6 +25,7 @@ import ChangePasswordScreen from "@/screens/ChangePasswordScreen";
 import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
 import ManageBatchesScreen from "@/screens/ManageBatchesScreen";
 import EditBatchScreen from "@/screens/EditBatchScreen";
+import BatchDetailsScreen from "@/screens/BatchDetailsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -33,6 +34,7 @@ export type RootStackParamList = {
   ManageQuizzes: undefined;
   ManageBatches: undefined;
   EditBatch: { batch: any };
+  BatchDetails: { batchId: string };
   CreateQuiz: undefined;
   QuizDetails: { quizId: string };
   Quiz: { quizId: string };
@@ -225,6 +227,13 @@ export default function RootStackNavigator() {
         component={EditBatchScreen}
         options={{
           presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="BatchDetails"
+        component={BatchDetailsScreen}
+        options={{
           headerShown: false,
         }}
       />

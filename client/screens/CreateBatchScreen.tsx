@@ -27,6 +27,7 @@ export default function CreateBatchScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState("");
+  const [price, setPrice] = useState("0");
   const [topics, setTopics] = useState<{ id: string; name: string; quizId: string }[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [showQuizModal, setShowQuizModal] = useState(false);
@@ -92,7 +93,7 @@ export default function CreateBatchScreen() {
       const response = await fetch("/api/admin/batches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, thumbnail, topics }),
+        body: JSON.stringify({ title, description, thumbnail, topics, price: parseFloat(price) || 0 }),
       });
       if (response.ok) {
         Alert.alert("Success", "Batch created successfully");
@@ -173,6 +174,18 @@ export default function CreateBatchScreen() {
               />
             </View>
           </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <ThemedText type="body" style={styles.label}>Price (₹)</ThemedText>
+          <TextInput
+            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            placeholder="Enter price (0 for free)"
+            placeholderTextColor={theme.textSecondary}
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
         </View>
 
         <View style={styles.formGroup}>

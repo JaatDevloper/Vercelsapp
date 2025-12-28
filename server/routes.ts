@@ -532,9 +532,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============ BATCHES API ENDPOINTS ============
+  app.post("/api/batches/purchase", async (req: Request, res: Response) => {
+    try {
+      const { deviceId, batchId } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      
+      await db.collection("appprofile").updateOne(
+        { deviceId },
+        { $addToSet: { unlockedBatches: batchId } }
+      );
+      
+      res.json({ message: "Batch purchased successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Purchase failed" });
+    }
+  });
+
   app.post("/api/admin/batches", async (req: Request, res: Response) => {
     try {
-      const { title, description, thumbnail, topics } = req.body;
+      const { title, description, thumbnail, topics, price } = req.body;
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const collection = db.collection("batches");
@@ -544,6 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description,
         thumbnail,
         topics,
+        price: price || 0,
         createdAt: new Date().toISOString(),
       };
       
@@ -568,14 +586,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/batches/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { title, description, thumbnail, topics } = req.body;
+      const { title, description, thumbnail, topics, price } = req.body;
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const collection = db.collection("batches");
       
       const result = await collection.updateOne(
         { _id: ObjectId.isValid(id) ? new ObjectId(id) : id as any },
-        { $set: { title, description, thumbnail, topics, updatedAt: new Date().toISOString() } }
+        { $set: { title, description, thumbnail, topics, price: price || 0, updatedAt: new Date().toISOString() } }
       );
       
       if (result.matchedCount === 0) {

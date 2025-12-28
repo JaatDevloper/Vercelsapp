@@ -29,6 +29,7 @@ export default function EditBatchScreen() {
   const [title, setTitle] = useState(batch.title);
   const [description, setDescription] = useState(batch.description);
   const [thumbnail, setThumbnail] = useState(batch.thumbnail);
+  const [price, setPrice] = useState(batch.price?.toString() || "0");
   const [topics, setTopics] = useState<{ id: string; name: string; quizId: string }[]>(batch.topics || []);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [showQuizModal, setShowQuizModal] = useState(false);
@@ -86,7 +87,7 @@ export default function EditBatchScreen() {
       const response = await fetch(`/api/admin/batches/${batch._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, thumbnail, topics }),
+        body: JSON.stringify({ title, description, thumbnail, topics, price: parseFloat(price) || 0 }),
       });
       if (response.ok) {
         Alert.alert("Success", "Batch updated successfully");
@@ -167,6 +168,18 @@ export default function EditBatchScreen() {
               />
             </View>
           </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <ThemedText type="body" style={styles.label}>Price (₹)</ThemedText>
+          <TextInput
+            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            placeholder="Enter price (0 for free)"
+            placeholderTextColor={theme.textSecondary}
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
         </View>
 
         <View style={styles.formGroup}>
