@@ -26,7 +26,7 @@ interface QuizCardProps {
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const NEW_QUIZ_THRESHOLD_HOURS = 168; // 7 days
+const NEW_QUIZ_THRESHOLD_HOURS = 720; // 30 days
 
 function isNewQuiz(createdAt: string | Date | undefined): boolean {
   if (!createdAt) return false;

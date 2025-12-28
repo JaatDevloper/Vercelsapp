@@ -69,7 +69,7 @@ export default function DiscoverScreen() {
   const renderBatchItem = ({ item }: { item: any }) => (
     <Pressable 
       onPress={() => handleBatchPress(item)}
-      style={[styles.batchCard, { backgroundColor: theme.backgroundSecondary, width: isOfferTab ? '100%' : 200, marginBottom: isOfferTab ? Spacing.md : 0 }]}
+      style={[styles.batchCard, { backgroundColor: theme.backgroundSecondary, width: isOfferTab ? '100%' : 200, marginBottom: isOfferTab ? Spacing.md : 0, marginRight: isOfferTab ? 0 : Spacing.md }]}
     >
       <Image 
         source={{ uri: item.thumbnail || "https://via.placeholder.com/150" }} 
@@ -211,39 +211,49 @@ export default function DiscoverScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight + Spacing.xl + 80 }]} showsVerticalScrollIndicator={false}>
-        {isOfferTab ? (
-          <View>
-            <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Ongoing Batches</ThemedText>
-            {batchesLoading ? <ActivityIndicator size="large" color={theme.primary} /> : (
-              <FlatList data={batches} keyExtractor={item => item._id} renderItem={renderBatchItem} scrollEnabled={false} />
-            )}
-          </View>
-        ) : (
-          <>
-            {selectedCategory === "All" && batches && batches.length > 0 && (
-              <View style={{ marginBottom: Spacing.xl }}>
-                <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
-                <FlatList 
-                  horizontal 
-                  data={batches} 
-                  keyExtractor={item => item._id} 
-                  renderItem={renderBatchItem} 
-                  showsHorizontalScrollIndicator={false} 
-                  contentContainerStyle={{ gap: Spacing.md }} 
-                />
-              </View>
-            )}
-            <FlatList 
-              data={filteredQuizzes} 
-              keyExtractor={item => item._id} 
-              renderItem={renderQuizCard} 
-              ListEmptyComponent={renderEmpty} 
-              scrollEnabled={false} 
+      <FlatList
+        data={isOfferTab ? batches : [1]} // Use a dummy single item to render header/footer in non-offer tab
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => {
+          if (isOfferTab) return renderBatchItem({ item });
+          
+          return (
+            <View>
+              {selectedCategory === "All" && batches && batches.length > 0 && (
+                <View style={{ marginBottom: Spacing.xl }}>
+                  <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
+                  <FlatList 
+                    horizontal 
+                    data={batches} 
+                    keyExtractor={item => item._id} 
+                    renderItem={renderBatchItem} 
+                    showsHorizontalScrollIndicator={false} 
+                    contentContainerStyle={{ gap: Spacing.md }} 
+                  />
+                </View>
+              )}
+              <FlatList 
+                data={filteredQuizzes} 
+                keyExtractor={item => item._id} 
+                renderItem={renderQuizCard} 
+                ListEmptyComponent={renderEmpty} 
+                scrollEnabled={false} 
+              />
+            </View>
+          );
+        }}
+        contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight + Spacing.xl + 80 }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          !isOfferTab ? (
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={theme.primary}
             />
-          </>
-        )}
-      </ScrollView>
+          ) : undefined
+        }
+      />
 
       <PremiumModal visible={premiumModalVisible} onClose={() => setPremiumModalVisible(false)} onSubscribe={() => setPremiumModalVisible(false)} />
     </ThemedView>
