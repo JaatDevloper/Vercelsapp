@@ -918,7 +918,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
   },
   premiumBanner: {
-    marginHorizontal: Spacing.lg * 2,
+    marginHorizontal: Spacing.md,
     marginTop: Spacing.xl,
     borderRadius: 40,
     overflow: 'hidden',
