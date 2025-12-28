@@ -419,7 +419,7 @@ export default function ProfileScreen() {
               >
                 <View style={styles.premiumContent}>
                   <View style={{ flex: 1 }} />
-                  <ThemedText style={styles.premiumTitle}>Get premium</ThemedText>
+                  <ThemedText style={styles.premiumTitle} numberOfLines={1}>Get premium</ThemedText>
                   <View style={styles.premiumIconContainer}>
                     <Feather name="chevron-right" size={24} color="rgba(255,255,255,0.8)" />
                   </View>
@@ -919,11 +919,11 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
   },
   premiumBanner: {
-    marginHorizontal: Spacing.lg * 2,
+    marginHorizontal: Spacing.lg,
     marginTop: Spacing.xl,
     borderRadius: 40,
     overflow: 'hidden',
-    height: 120,
+    height: 56,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
