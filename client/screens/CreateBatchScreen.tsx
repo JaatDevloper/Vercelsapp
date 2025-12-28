@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -7,10 +7,12 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -30,8 +32,11 @@ export default function CreateBatchScreen() {
   const [loading, setLoading] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
 
-  React.useEffect(() => {
-    fetch("/api/quizzes").then(res => res.json()).then(setQuizzes).catch(console.error);
+  useEffect(() => {
+    fetch("/api/quizzes")
+      .then((res) => res.json())
+      .then(setQuizzes)
+      .catch(console.error);
   }, []);
 
   const handleAddTopic = () => {
@@ -208,7 +213,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     marginBottom: Spacing.lg,
   },
-  addTopicButton: { flexDirection: "row", alignItems: "center" },
+  addTopicButton: { height: 48 },
   topicCard: { padding: Spacing.md, borderRadius: BorderRadius.md, marginBottom: Spacing.sm },
   footer: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md },
   createButton: {

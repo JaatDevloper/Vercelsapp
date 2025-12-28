@@ -7,13 +7,16 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { Image } from "expo-image";
 import { useQuery } from "@tanstack/react-query";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -37,6 +40,8 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
+  const isOfferTab = route.name === "Offer";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -44,7 +49,39 @@ export default function DiscoverScreen() {
   const searchInputRef = useRef<TextInput>(null);
   const [premiumModalVisible, setPremiumModalVisible] = useState(false);
 
-  // Fetch categories from API
+  const { 
+    data: batches,
+    isLoading: batchesLoading
+  } = useQuery<any[]>({
+    queryKey: ["/api/batches"],
+    queryFn: async () => {
+      const response = await fetch("/api/batches");
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: true
+  });
+
+  const handleBatchPress = (batch: any) => {
+    Alert.alert(batch.title, batch.description);
+  };
+
+  const renderBatchItem = ({ item }: { item: any }) => (
+    <Pressable 
+      onPress={() => handleBatchPress(item)}
+      style={[styles.batchCard, { backgroundColor: theme.backgroundSecondary, width: isOfferTab ? '100%' : 200, marginBottom: isOfferTab ? Spacing.md : 0 }]}
+    >
+      <Image 
+        source={{ uri: item.thumbnail || "https://via.placeholder.com/150" }} 
+        style={[styles.batchThumbnail, { height: isOfferTab ? 180 : 120 }]} 
+      />
+      <View style={styles.batchInfo}>
+        <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.title}</ThemedText>
+        <ThemedText type="small" numberOfLines={2}>{item.description}</ThemedText>
+      </View>
+    </Pressable>
+  );
+
   React.useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -53,8 +90,6 @@ export default function DiscoverScreen() {
           const data = await response.json();
           setCategories(data);
         } else {
-          console.error("Failed to fetch categories, status:", response.status);
-          // Fallback to default categories if API fails
           setCategories([
             { name: "Science", color: "#FF6B6B", icon: "flask" },
             { name: "History", color: "#4ECDC4", icon: "book" },
@@ -67,8 +102,6 @@ export default function DiscoverScreen() {
           ]);
         }
       } catch (error) {
-        console.error("Error fetching categories:", error);
-        // Fallback to default categories on error
         setCategories([
           { name: "Science", color: "#FF6B6B", icon: "flask" },
           { name: "History", color: "#4ECDC4", icon: "book" },
@@ -86,14 +119,10 @@ export default function DiscoverScreen() {
 
   const CATEGORIES = ["All", ...categories.map((c) => c.name)];
 
-  const { 
-    data: profile 
-  } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ["/api/profile"],
     queryFn: async () => {
-      // In a real app, deviceId should be retrieved from storage/context
-      const deviceId = "web-mjopnu0j-fgwwt2fwwkq"; 
-      const response = await fetch(`/api/profile?deviceId=${deviceId}`);
+      const response = await fetch(`/api/profile?deviceId=unknown`);
       if (!response.ok) return null;
       return response.json();
     }
@@ -101,18 +130,9 @@ export default function DiscoverScreen() {
 
   const isUserPremium = profile?.isPremium === true;
 
-  const { 
-    data: quizzes, 
-    isLoading, 
-    refetch, 
-    isRefetching,
-    error,
-    isError 
-  } = useQuery<Quiz[]>({
+  const { data: quizzes, isLoading, refetch, isRefetching } = useQuery<Quiz[]>({
     queryKey: ["/api/quizzes", selectedCategory],
     queryFn: async () => {
-      // Use /api/quizzes for "All" quizzes from "quizzes" collection
-      // Use /api/manage/category/:categoryName for category-specific quizzes from "manage" collection
       const url = selectedCategory === "All" 
         ? "/api/quizzes"
         : `/api/manage/category/${encodeURIComponent(selectedCategory)}`;
@@ -120,120 +140,36 @@ export default function DiscoverScreen() {
       if (!response.ok) throw new Error("Failed to fetch quizzes");
       return response.json();
     },
-    staleTime: 1000 * 30, // 30 seconds - refresh more frequently
-    refetchInterval: 1000 * 60, // Auto-refresh every 60 seconds
-    refetchOnWindowFocus: true,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+    enabled: !isOfferTab
   });
 
   const filteredQuizzes = useMemo(() => {
     if (!quizzes || !Array.isArray(quizzes)) return [];
-    
     let filtered = quizzes;
-    
-    // Only filter by search query now (category is handled by API)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (quiz) =>
-          quiz.title?.toLowerCase().includes(query) ||
-          quiz.category?.toLowerCase().includes(query) ||
-          quiz.creator_name?.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter(q => q.title?.toLowerCase().includes(query) || q.category?.toLowerCase().includes(query));
     }
-    
-    // Sort by creation time - newest first
-    return [...filtered].sort((a, b) => {
-      const timeA = getQuizCreatedTime(a.created_at || a.timestamp);
-      const timeB = getQuizCreatedTime(b.created_at || b.timestamp);
-      return timeB - timeA;
-    });
+    return [...filtered].sort((a, b) => getQuizCreatedTime(b.created_at || b.timestamp) - getQuizCreatedTime(a.created_at || a.timestamp));
   }, [quizzes, searchQuery]);
 
   const handleQuizPress = useCallback((quizId: string, isPremiumLocked: boolean) => {
-    if (isPremiumLocked && !isUserPremium) {
-      setPremiumModalVisible(true);
-    } else {
-      navigation.navigate("QuizDetails", { quizId });
-    }
+    if (isPremiumLocked && !isUserPremium) setPremiumModalVisible(true);
+    else navigation.navigate("QuizDetails", { quizId });
   }, [navigation, isUserPremium]);
 
-  const handleJoinRoom = useCallback(() => {
-    navigation.navigate("JoinRoom");
-  }, [navigation]);
-
-  const handlePremiumSubscribe = useCallback((plan: "monthly" | "yearly") => {
-    console.log(`User selected ${plan} plan`);
-    // TODO: Implement actual payment processing
-    setPremiumModalVisible(false);
-  }, []);
-
   const renderQuizCard = useCallback(({ item, index }: { item: Quiz; index: number }) => {
-    // First 5 quizzes are free for all users, rest require premium
     const isFreeQuiz = index < 5;
     const isPremiumLocked = !isFreeQuiz;
-    
-    return (
-      <QuizCard
-        quiz={item}
-        onPress={() => handleQuizPress(item._id, isPremiumLocked)}
-        isPremiumLocked={isPremiumLocked}
-        isUserPremium={isUserPremium}
-      />
-    );
+    return <QuizCard quiz={item} onPress={() => handleQuizPress(item._id, isPremiumLocked)} isPremiumLocked={isPremiumLocked} isUserPremium={isUserPremium} />;
   }, [handleQuizPress, isUserPremium]);
 
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-  }, []);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery("");
-    searchInputRef.current?.focus();
-  }, []);
-
   const renderEmpty = () => {
-    if (isLoading) {
-      return (
-        <View style={styles.skeletonGrid}>
-          {[1, 2, 3, 4].map((i) => (
-            <SkeletonCard key={i} style={{ marginLeft: i % 2 === 0 ? Spacing.md : 0 }} />
-          ))}
-        </View>
-      );
-    }
-
-    if (isError) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Feather name="wifi-off" size={48} color={theme.textSecondary} />
-          <ThemedText type="h4" style={styles.emptyTitle}>Unable to load quizzes</ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: "center" }}>
-            {error instanceof Error ? error.message : "Please check your connection and try again"}
-          </ThemedText>
-          <Pressable 
-            style={[styles.retryButton, { backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary }]}
-            onPress={() => refetch()}
-          >
-            <Feather name="refresh-cw" size={16} color="#FFFFFF" />
-            <ThemedText type="body" style={{ color: "#FFFFFF", marginLeft: Spacing.xs }}>
-              Retry
-            </ThemedText>
-          </Pressable>
-        </View>
-      );
-    }
-
+    if (isLoading) return <View style={styles.skeletonGrid}>{[1, 2, 3, 4].map(i => <SkeletonCard key={i} style={{ marginLeft: i % 2 === 0 ? Spacing.md : 0 }} />)}</View>;
     return (
       <View style={styles.emptyContainer}>
         <Feather name="search" size={48} color={theme.textSecondary} />
-        <ThemedText type="h4" style={styles.emptyTitle}>No quizzes found</ThemedText>
-        <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: "center" }}>
-          {searchQuery || selectedCategory !== "All" 
-            ? "Try adjusting your search or category filter"
-            : "Quizzes will appear here once loaded"}
-        </ThemedText>
+        <ThemedText type="h4" style={styles.emptyTitle}>No content found</ThemedText>
       </View>
     );
   };
@@ -244,124 +180,60 @@ export default function DiscoverScreen() {
         <View style={styles.appNameRow}>
           <View style={styles.logoContainer}>
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
-            <ThemedText type="h3">QuizzyEdu</ThemedText>
+            <ThemedText type="h3">{isOfferTab ? "Special Offers" : "QuizzyEdu"}</ThemedText>
           </View>
         </View>
 
-        <View style={styles.controlsRow}>
-          <Pressable
-            onPress={() => {
-              if (!isUserPremium) {
-                setPremiumModalVisible(true);
-              } else {
-                navigation.navigate("CreateQuiz");
-              }
-            }}
-            style={({ pressed }) => [
-              styles.joinRoomButton,
-              { 
-                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Feather name="plus" size={16} color="#FFFFFF" />
-            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              Create Quiz
-            </ThemedText>
-          </Pressable>
+        {!isOfferTab && (
+          <>
+            <View style={styles.controlsRow}>
+              <Pressable onPress={() => isUserPremium ? navigation.navigate("CreateQuiz") : setPremiumModalVisible(true)} style={[styles.joinRoomButton, { backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary }]}>
+                <Feather name="plus" size={16} color="#FFFFFF" />
+                <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>Create Quiz</ThemedText>
+              </Pressable>
+              <Pressable onPress={() => navigation.navigate("JoinRoom")} style={[styles.joinRoomButton, { backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary }]}>
+                <Feather name="users" size={16} color="#FFFFFF" />
+                <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>Join Room</ThemedText>
+              </Pressable>
+            </View>
 
-          <Pressable
-            onPress={handleJoinRoom}
-            style={({ pressed }) => [
-              styles.joinRoomButton,
-              { 
-                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Feather name="users" size={16} color="#FFFFFF" />
-            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-              Join Room
-            </ThemedText>
-          </Pressable>
-        </View>
+            <View style={[styles.searchContainer, { backgroundColor: theme.backgroundDefault }]}>
+              <Feather name="search" size={20} color={theme.textSecondary} />
+              <TextInput ref={searchInputRef} style={[styles.searchInput, { color: theme.text, outlineStyle: "none" } as any]} placeholder="Search quizzes..." value={searchQuery} onChangeText={setSearchQuery} />
+            </View>
+          </>
+        )}
 
-        <View style={[styles.searchContainer, { backgroundColor: theme.backgroundDefault }]}>
-          <Feather name="search" size={20} color={theme.textSecondary} />
-          <TextInput
-            ref={searchInputRef}
-            style={[styles.searchInput, { color: theme.text, outlineStyle: "none" } as any]}
-            placeholder="Search quizzes..."
-            placeholderTextColor={theme.textSecondary}
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-            autoCorrect={false}
-            autoCapitalize="none"
-            returnKeyType="search"
-            blurOnSubmit={false}
-            underlineColorAndroid="transparent"
-          />
-          {searchQuery.length > 0 ? (
-            <Pressable onPress={handleClearSearch} hitSlop={10}>
-              <Feather name="x" size={20} color={theme.textSecondary} />
-            </Pressable>
-          ) : null}
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContainer}
-          keyboardShouldPersistTaps="always"
-        >
-          {CATEGORIES.map((item) => (
-            <CategoryChip
-              key={item}
-              label={item}
-              isSelected={selectedCategory === item}
-              onPress={() => setSelectedCategory(item)}
-            />
-          ))}
-        </ScrollView>
-
-        <View style={styles.resultsRow}>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {filteredQuizzes.length} quizzes found
-          </ThemedText>
-        </View>
+        {!isOfferTab && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesContainer}>
+            {CATEGORIES.map(item => <CategoryChip key={item} label={item} isSelected={selectedCategory === item} onPress={() => setSelectedCategory(item)} />)}
+          </ScrollView>
+        )}
       </View>
 
-      <FlatList
-        data={filteredQuizzes}
-        keyExtractor={(item) => item._id}
-        renderItem={renderQuizCard}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={[
-          styles.listContent,
-          {
-            paddingBottom: tabBarHeight + Spacing.xl + 80,
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="always"
-        keyboardDismissMode="none"
-        removeClippedSubviews={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={theme.primary}
-          />
-        }
-      />
+      <ScrollView contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight + Spacing.xl + 80 }]} showsVerticalScrollIndicator={false}>
+        {isOfferTab ? (
+          <View>
+            <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Ongoing Batches</ThemedText>
+            {batchesLoading ? <ActivityIndicator size="large" color={theme.primary} /> : (
+              <FlatList data={batches} keyExtractor={item => item._id} renderItem={renderBatchItem} scrollEnabled={false} />
+            )}
+          </View>
+        ) : (
+          <>
+            {selectedCategory === "All" && batches && batches.length > 0 && (
+              <View style={{ marginBottom: Spacing.xl }}>
+                <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
+                <FlatList horizontal data={batches} keyExtractor={item => item._id} renderItem={renderBatchItem} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }} />
+              </View>
+            )}
+            <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>{selectedCategory === "All" ? "Recent Quizzes" : `${selectedCategory} Quizzes`}</ThemedText>
+            <FlatList data={filteredQuizzes} keyExtractor={item => item._id} renderItem={renderQuizCard} ListEmptyComponent={renderEmpty} scrollEnabled={false} />
+          </>
+        )}
+      </ScrollView>
 
-      <PremiumModal
-        visible={premiumModalVisible}
-        onClose={() => setPremiumModalVisible(false)}
-        onSubscribe={handlePremiumSubscribe}
-      />
+      <PremiumModal visible={premiumModalVisible} onClose={() => setPremiumModalVisible(false)} onSubscribe={() => setPremiumModalVisible(false)} />
     </ThemedView>
   );
 }
@@ -390,9 +262,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  appTitle: {
-    marginLeft: Spacing.xs,
-  },
   joinRoomButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -420,10 +289,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.lg,
   },
-  resultsRow: {
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.md,
-  },
   skeletonGrid: {
     gap: Spacing.md,
   },
@@ -435,12 +300,17 @@ const styles = StyleSheet.create({
   emptyTitle: {
     marginTop: Spacing.md,
   },
-  retryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+  batchCard: {
     borderRadius: BorderRadius.md,
-    marginTop: Spacing.md,
+    overflow: 'hidden',
+    padding: Spacing.sm,
+  },
+  batchThumbnail: {
+    width: '100%',
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.sm,
+  },
+  batchInfo: {
+    gap: Spacing.xs,
   },
 });
