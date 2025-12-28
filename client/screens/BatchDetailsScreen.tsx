@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: { 
-    height: 180, 
+    height: 220, 
     position: "relative",
     padding: Spacing.md,
   },
