@@ -413,13 +413,16 @@ export default function ProfileScreen() {
             >
               <LinearGradient
                 colors={["#FF6B9D", "#FF1493"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
                 style={styles.premiumGradient}
               >
                 <View style={styles.premiumContent}>
-                  <Feather name="gift" size={24} color="#FFFFFF" style={{ marginRight: 12 }} />
-                  <ThemedText style={[styles.premiumTitle, { color: '#FFFFFF' }]}>Get premium</ThemedText>
+                  <View style={{ flex: 1 }} />
+                  <ThemedText style={styles.premiumTitle}>Get premium</ThemedText>
+                  <View style={styles.premiumIconContainer}>
+                    <Feather name="chevron-right" size={24} color="rgba(255,255,255,0.8)" />
+                  </View>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -920,7 +923,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     borderRadius: 40,
     overflow: 'hidden',
-    height: 64,
+    height: 120,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
