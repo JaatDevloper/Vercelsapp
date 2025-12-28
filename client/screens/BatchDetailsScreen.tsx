@@ -113,7 +113,14 @@ export default function BatchDetailsScreen() {
     <ThemedView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Image source={{ uri: batch.thumbnail }} style={styles.banner} />
+          {batch.thumbnail ? (
+            <Image source={{ uri: batch.thumbnail }} style={styles.banner} />
+          ) : (
+            <LinearGradient
+              colors={["#4facfe", "#00f2fe"]}
+              style={styles.banner}
+            />
+          )}
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.8)"]}
             style={styles.bannerOverlay}
