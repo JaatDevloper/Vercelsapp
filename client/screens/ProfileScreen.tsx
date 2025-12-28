@@ -974,9 +974,8 @@ const styles = StyleSheet.create({
     borderRadius: 22.5,
   },
   premiumWaterIcon: {
-    width: '70%',
-    height: '70%',
-    tintColor: '#FFFFFF',
+    width: '100%',
+    height: '100%',
   },
   quickActionsRow: {
     flexDirection: "row",
