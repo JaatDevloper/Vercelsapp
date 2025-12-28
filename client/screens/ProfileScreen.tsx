@@ -409,22 +409,26 @@ export default function ProfileScreen() {
               onPress={() => setPremiumModalVisible(true)}
               style={({ pressed }) => [
                 styles.premiumBanner,
-                { opacity: pressed ? 0.9 : 1 }
+                { opacity: pressed ? 0.95 : 1 }
               ]}
             >
               <LinearGradient
-                colors={["#27ae60", "#2ecc71"]}
+                colors={["#48bb78", "#38a169"]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                end={{ x: 1, y: 0.5 }}
                 style={styles.premiumGradient}
               >
                 <View style={styles.premiumContent}>
-                  <View>
+                  <View style={styles.premiumTextContainer}>
                     <ThemedText style={styles.premiumTitle}>Get Premium</ThemedText>
                     <ThemedText style={styles.premiumSubtitle}>Enjoy all the benefits of the app</ThemedText>
                   </View>
                   <View style={styles.premiumIconContainer}>
-                    <Feather name="star" size={32} color="rgba(255,255,255,0.8)" />
+                    <Image 
+                      source={require("@/assets/images/sparkle.png")} 
+                      style={styles.premiumWaterIcon}
+                      contentFit="contain"
+                    />
                   </View>
                 </View>
               </LinearGradient>
@@ -924,41 +928,52 @@ const styles = StyleSheet.create({
   premiumBanner: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
-    borderRadius: 16,
+    borderRadius: 24,
     overflow: 'hidden',
-    // Premium Soft Shadow
-    shadowColor: "#27ae60",
+    // Ultra Soft Shadow
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 15,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 25,
+    elevation: 8,
   },
   premiumGradient: {
-    padding: Spacing.lg,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
   },
   premiumContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  premiumTextContainer: {
+    flex: 1,
+  },
   premiumTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   premiumSubtitle: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 13,
-    marginTop: 2,
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 14,
+    marginTop: 4,
+    fontWeight: '500',
   },
   premiumIconContainer: {
-    width: 48,
-    height: 48,
+    width: 60,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  premiumWaterIcon: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.9,
   },
   quickActionsRow: {
     flexDirection: "row",
