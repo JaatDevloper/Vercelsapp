@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -38,6 +39,27 @@ export default function CreateBatchScreen() {
       .then(setQuizzes)
       .catch(console.error);
   }, []);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      setThumbnail(base64Image);
+    }
+  };
 
   const handleAddTopic = () => {
     if (!newTopicName.trim()) {
@@ -111,14 +133,39 @@ export default function CreateBatchScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <ThemedText type="body" style={styles.label}>Thumbnail URL</ThemedText>
-          <TextInput
-            style={[styles.input, { color: theme.text, borderColor: theme.border }]}
-            placeholder="Enter image URL"
-            placeholderTextColor={theme.textSecondary}
-            value={thumbnail}
-            onChangeText={setThumbnail}
-          />
+          <ThemedText type="body" style={styles.label}>Batch Thumbnail</ThemedText>
+          <View style={styles.thumbnailContainer}>
+            {thumbnail ? (
+              <View style={styles.thumbnailWrapper}>
+                <Image source={{ uri: thumbnail }} style={styles.thumbnailPreview} />
+                <Pressable 
+                  style={styles.removeThumbnailButton} 
+                  onPress={() => setThumbnail("")}
+                >
+                  <Feather name="x" size={16} color="#fff" />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable 
+                style={[styles.uploadButton, { borderColor: theme.border, backgroundColor: theme.backgroundSecondary }]} 
+                onPress={pickImage}
+              >
+                <Feather name="image" size={24} color={theme.textSecondary} />
+                <ThemedText style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>Upload Image</ThemedText>
+              </Pressable>
+            )}
+            
+            <View style={{ marginTop: Spacing.sm }}>
+              <ThemedText type="small" style={{ marginBottom: Spacing.xs, color: theme.textSecondary }}>Or paste image URL:</ThemedText>
+              <TextInput
+                style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+                placeholder="Enter image URL"
+                placeholderTextColor={theme.textSecondary}
+                value={thumbnail.startsWith('data:') ? '' : thumbnail}
+                onChangeText={setThumbnail}
+              />
+            </View>
+          </View>
         </View>
 
         <View style={styles.formGroup}>
@@ -215,6 +262,40 @@ const styles = StyleSheet.create({
   },
   addTopicButton: { height: 48 },
   topicCard: { padding: Spacing.md, borderRadius: BorderRadius.md, marginBottom: Spacing.sm },
+  thumbnailContainer: {
+    gap: Spacing.xs,
+  },
+  thumbnailWrapper: {
+    position: 'relative',
+    width: '100%',
+    height: 180,
+    borderRadius: BorderRadius.md,
+    overflow: 'hidden',
+  },
+  thumbnailPreview: {
+    width: '100%',
+    height: '100%',
+  },
+  removeThumbnailButton: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadButton: {
+    width: '100%',
+    height: 120,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   footer: { paddingHorizontal: Spacing.lg, paddingTop: Spacing.md },
   createButton: {
     height: 52,
