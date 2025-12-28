@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   Modal,
+  TouchableOpacity,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -405,17 +406,15 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.8}
               onPress={() => setPremiumModalVisible(true)}
-              style={({ pressed }) => [
-                styles.premiumBanner,
-                { opacity: pressed ? 0.95 : 1 }
-              ]}
+              style={styles.premiumBanner}
             >
               <LinearGradient
-                colors={["#48bb78", "#38a169"]}
+                colors={["#3FAF6C", "#6FD39A"]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0.5 }}
+                end={{ x: 1, y: 0 }}
                 style={styles.premiumGradient}
               >
                 <View style={styles.premiumContent}>
@@ -432,7 +431,7 @@ export default function ProfileScreen() {
                   </View>
                 </View>
               </LinearGradient>
-            </Pressable>
+            </TouchableOpacity>
 
             <View style={styles.quickActionsRow}>
               <QuickAction icon="trending-up" label="Stats" theme={theme} />
@@ -928,21 +927,23 @@ const styles = StyleSheet.create({
   premiumBanner: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
-    borderRadius: 20,
+    borderRadius: 28,
     overflow: 'hidden',
+    height: 80,
     // Ultra Soft Shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 12,
+      height: 8,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 5,
   },
   premiumGradient: {
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
   },
   premiumContent: {
     flexDirection: 'row',
@@ -954,26 +955,28 @@ const styles = StyleSheet.create({
   },
   premiumTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.4,
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   premiumSubtitle: {
-    color: 'rgba(255,255,255,0.95)',
-    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 15,
     marginTop: 2,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   premiumIconContainer: {
-    width: 50,
-    height: 50,
+    width: 45,
+    height: 45,
     justifyContent: 'center',
     alignItems: 'center',
+    // Soft highlight effect
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 22.5,
   },
   premiumWaterIcon: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.9,
+    width: '70%',
+    height: '70%',
+    tintColor: '#FFFFFF',
   },
   quickActionsRow: {
     flexDirection: "row",
