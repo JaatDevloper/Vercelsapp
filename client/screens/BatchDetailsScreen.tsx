@@ -80,6 +80,20 @@ export default function BatchDetailsScreen() {
     );
   };
 
+  const { data: quizzesData } = useQuery({
+    queryKey: ["/api/quizzes"],
+    queryFn: async () => {
+      const response = await fetch("/api/quizzes");
+      if (!response.ok) return [];
+      return response.json();
+    }
+  });
+
+  const getQuizTitle = (quizId: string) => {
+    const quiz = quizzesData?.find((q: any) => q._id === quizId || q.quiz_id === quizId);
+    return quiz?.title || "Untitled Quiz";
+  };
+
   if (isLoading || !batch) {
     return (
       <ThemedView style={styles.center}>
@@ -148,7 +162,7 @@ export default function BatchDetailsScreen() {
                   {quizzes.map((quiz: any, index: number) => (
                     <Pressable 
                       key={quiz.quizId + index}
-                      style={styles.quizItem}
+                      style={[styles.quizItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}
                       onPress={() => {
                         if (isBatchUnlocked) {
                           navigation.navigate("QuizDetails", { quizId: quiz.quizId });
@@ -157,9 +171,14 @@ export default function BatchDetailsScreen() {
                         }
                       }}
                     >
-                      <ThemedText type="small" style={{ flex: 1 }}>Quiz {index + 1}</ThemedText>
+                      <View style={styles.quizIconContainer}>
+                        <Feather name="file-text" size={16} color={theme.primary} />
+                      </View>
+                      <ThemedText type="small" style={styles.quizTitleText}>
+                        {getQuizTitle(quiz.quizId)}
+                      </ThemedText>
                       <Feather 
-                        name={isBatchUnlocked ? "play-circle" : "lock"} 
+                        name={isBatchUnlocked ? "chevron-right" : "lock"} 
                         size={18} 
                         color={isBatchUnlocked ? theme.primary : theme.textSecondary} 
                       />
@@ -225,8 +244,21 @@ const styles = StyleSheet.create({
   quizItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.05)",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.xs,
+  },
+  quizIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
+  },
+  quizTitleText: {
+    flex: 1,
+    fontWeight: "600",
   },
 });
