@@ -412,17 +412,16 @@ export default function ProfileScreen() {
               style={styles.premiumBanner}
             >
               <LinearGradient
-                colors={["#FF6B9D", "#FF1493"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
+                colors={["#BFFF00", "#A8FF00"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.premiumGradient}
               >
                 <View style={styles.premiumContent}>
-                  <View style={{ flex: 1 }} />
-                  <ThemedText style={styles.premiumTitle} numberOfLines={1}>Get premium</ThemedText>
                   <View style={styles.premiumIconContainer}>
-                    <Feather name="chevron-right" size={24} color="rgba(255,255,255,0.8)" />
+                    <Feather name="activity" size={24} color="#1a1a1a" />
                   </View>
+                  <ThemedText style={[styles.premiumTitle, { color: '#1a1a1a' }]}>Join movement</ThemedText>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -919,11 +918,11 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
   },
   premiumBanner: {
-    marginHorizontal: Spacing.lg,
+    marginHorizontal: Spacing.lg * 2,
     marginTop: Spacing.xl,
     borderRadius: 40,
     overflow: 'hidden',
-    height: 56,
+    height: 64,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
