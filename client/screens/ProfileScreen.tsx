@@ -33,6 +33,7 @@ import VerificationBadgesModal, {
   type VerificationBadge 
 } from "@/components/VerificationBadgesModal";
 import LogoutConfirmationModal from "@/components/LogoutConfirmationModal";
+import PremiumModal from "@/components/PremiumModal";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -143,6 +144,8 @@ export default function ProfileScreen() {
     }
   }, [profile?.selectedBadgeId]);
 
+  const [premiumModalVisible, setPremiumModalVisible] = useState(false);
+  
   const handleAbout = () => {
     setAboutModalVisible(true);
   };
@@ -164,7 +167,7 @@ export default function ProfileScreen() {
       await new Promise(resolve => setTimeout(resolve, 500));
       setLogoutModalVisible(false);
       // Navigate to home screen after logout to completely prevent auto-login
-      navigation.navigate("Discover");
+      navigation.navigate("Main", { screen: "Discover" } as any);
     } catch (error) {
       console.error("Logout error:", error);
       setIsLoggingOut(false);
@@ -403,7 +406,7 @@ export default function ProfileScreen() {
             </View>
 
             <Pressable
-              onPress={() => navigation.navigate("Premium" as any)}
+              onPress={() => setPremiumModalVisible(true)}
               style={({ pressed }) => [
                 styles.premiumBanner,
                 { opacity: pressed ? 0.9 : 1 }
@@ -421,7 +424,7 @@ export default function ProfileScreen() {
                     <ThemedText style={styles.premiumSubtitle}>Enjoy all the benefits of the app</ThemedText>
                   </View>
                   <View style={styles.premiumIconContainer}>
-                    <Feather name="sparkles" size={32} color="rgba(255,255,255,0.8)" />
+                    <Feather name="star" size={32} color="rgba(255,255,255,0.8)" />
                   </View>
                 </View>
               </LinearGradient>
@@ -515,6 +518,12 @@ export default function ProfileScreen() {
           </Animated.View>
         </View>
       </ScrollView>
+
+      <PremiumModal 
+        visible={premiumModalVisible} 
+        onClose={() => setPremiumModalVisible(false)} 
+        onSubscribe={() => setPremiumModalVisible(false)} 
+      />
 
       <LogoutConfirmationModal
         visible={logoutModalVisible}
