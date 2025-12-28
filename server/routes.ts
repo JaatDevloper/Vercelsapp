@@ -531,6 +531,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ BATCHES API ENDPOINTS ============
+  app.post("/api/admin/batches", async (req: Request, res: Response) => {
+    try {
+      const { title, description, thumbnail, topics } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("batches");
+      
+      const batchData = {
+        title,
+        description,
+        thumbnail,
+        topics,
+        createdAt: new Date().toISOString(),
+      };
+      
+      const result = await collection.insertOne(batchData);
+      res.status(201).json({ _id: result.insertedId, ...batchData });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create batch" });
+    }
+  });
+
+  app.get("/api/batches", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const batches = await db.collection("batches").find().sort({ createdAt: -1 }).toArray();
+      res.json(batches);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batches" });
+    }
+  });
+
   // ============ PROFILE API ENDPOINTS ============
 
   // Get profile by device ID or login with name/email

@@ -25,10 +25,27 @@ export default function CreateBatchScreen() {
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [topics, setTopics] = useState<{ id: string; name: string; quizId: string }[]>([]);
+  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [showQuizModal, setShowQuizModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [newTopicName, setNewTopicName] = useState("");
+
+  React.useEffect(() => {
+    fetch("/api/quizzes").then(res => res.json()).then(setQuizzes).catch(console.error);
+  }, []);
 
   const handleAddTopic = () => {
-    Alert.alert("Add Topic", "Feature to select quiz from collection coming soon");
+    if (!newTopicName.trim()) {
+      Alert.alert("Error", "Please enter a topic name");
+      return;
+    }
+    setShowQuizModal(true);
+  };
+
+  const selectQuizForTopic = (quiz: any) => {
+    setTopics([...topics, { id: Date.now().toString(), name: newTopicName, quizId: quiz._id }]);
+    setNewTopicName("");
+    setShowQuizModal(false);
   };
 
   const handleCreateBatch = async () => {
@@ -37,12 +54,21 @@ export default function CreateBatchScreen() {
       return;
     }
     setLoading(true);
-    // Logic to save batch
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/admin/batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, thumbnail, topics }),
+      });
+      if (response.ok) {
+        Alert.alert("Success", "Batch created successfully");
+        navigation.goBack();
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to create batch");
+    } finally {
       setLoading(false);
-      Alert.alert("Success", "Batch created successfully");
-      navigation.goBack();
-    }, 1000);
+    }
   };
 
   return (
@@ -90,20 +116,56 @@ export default function CreateBatchScreen() {
           />
         </View>
 
+        <View style={styles.formGroup}>
+          <ThemedText type="body" style={styles.label}>Topic Name</ThemedText>
+          <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+            <TextInput
+              style={[styles.input, { flex: 1, color: theme.text, borderColor: theme.border }]}
+              placeholder="e.g. Rajasthan History"
+              placeholderTextColor={theme.textSecondary}
+              value={newTopicName}
+              onChangeText={setNewTopicName}
+            />
+            <Pressable onPress={handleAddTopic} style={[styles.addTopicButton, { backgroundColor: Colors.light.primary, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.md, justifyContent: 'center' }]}>
+              <ThemedText type="body" style={{ color: '#fff' }}>Add</ThemedText>
+            </Pressable>
+          </View>
+        </View>
+
         <View style={styles.sectionHeader}>
-          <ThemedText type="h2">Topics & Quizzes</ThemedText>
-          <Pressable onPress={handleAddTopic} style={styles.addTopicButton}>
-            <Feather name="plus" size={20} color={Colors.light.primary} />
-            <ThemedText type="body" style={{ color: Colors.light.primary, marginLeft: Spacing.xs }}>Add Topic</ThemedText>
-          </Pressable>
+          <ThemedText type="h2">Topics Added</ThemedText>
         </View>
 
         {topics.map((topic) => (
-          <View key={topic.id} style={[styles.topicCard, { backgroundColor: theme.backgroundSecondary }]}>
+          <View key={topic.id} style={[styles.topicCard, { backgroundColor: theme.backgroundSecondary, flexDirection: 'row', justifyContent: 'space-between' }]}>
             <ThemedText type="body">{topic.name}</ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>Quiz ID: {topic.quizId.slice(-4)}</ThemedText>
           </View>
         ))}
       </ScrollView>
+
+      <Modal visible={showQuizModal} animationType="slide">
+        <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.lg }}>
+            <ThemedText type="h2">Select Quiz for {newTopicName}</ThemedText>
+            <Pressable onPress={() => setShowQuizModal(false)}>
+              <Feather name="x" size={24} color={theme.text} />
+            </Pressable>
+          </View>
+          <ScrollView>
+            {quizzes.map((quiz) => (
+              <Pressable 
+                key={quiz._id} 
+                onPress={() => selectQuizForTopic(quiz)}
+                style={{ padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: theme.border }}
+              >
+                <ThemedText type="body">{quiz.title}</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>{quiz.category}</ThemedText>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </ThemedView>
+      </Modal>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
         <Pressable
