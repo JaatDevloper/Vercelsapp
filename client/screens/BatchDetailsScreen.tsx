@@ -219,11 +219,18 @@ const styles = StyleSheet.create({
   },
   bannerContainer: {
     flex: 1,
-    borderRadius: BorderRadius.md,
-    ...Shadows.card,
-    elevation: 8,
-    overflow: 'hidden',
+    borderRadius: 24,
     backgroundColor: '#000',
+    overflow: 'hidden',
+    // Premium Soft Shadow
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 20,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 32,
+    elevation: 20,
   },
   banner: { 
     width: "100%", 
