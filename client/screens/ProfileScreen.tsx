@@ -928,20 +928,20 @@ const styles = StyleSheet.create({
   premiumBanner: {
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
     // Ultra Soft Shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 15,
+      height: 12,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 25,
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 6,
   },
   premiumGradient: {
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
   },
   premiumContent: {
@@ -954,19 +954,19 @@ const styles = StyleSheet.create({
   },
   premiumTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: -0.5,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.4,
   },
   premiumSubtitle: {
     color: 'rgba(255,255,255,0.95)',
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: 13,
+    marginTop: 2,
     fontWeight: '500',
   },
   premiumIconContainer: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
