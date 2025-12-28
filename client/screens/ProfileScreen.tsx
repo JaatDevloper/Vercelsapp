@@ -412,16 +412,14 @@ export default function ProfileScreen() {
               style={styles.premiumBanner}
             >
               <LinearGradient
-                colors={["#BFFF00", "#A8FF00"]}
+                colors={["#FF6B9D", "#FF1493"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.premiumGradient}
               >
                 <View style={styles.premiumContent}>
-                  <View style={styles.premiumIconContainer}>
-                    <Feather name="activity" size={24} color="#1a1a1a" />
-                  </View>
-                  <ThemedText style={[styles.premiumTitle, { color: '#1a1a1a' }]}>Join movement</ThemedText>
+                  <Feather name="gift" size={24} color="#FFFFFF" style={{ marginRight: 12 }} />
+                  <ThemedText style={[styles.premiumTitle, { color: '#FFFFFF' }]}>Get premium</ThemedText>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
