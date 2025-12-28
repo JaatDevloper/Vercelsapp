@@ -123,7 +123,7 @@ export default function BatchDetailsScreen() {
               />
             )}
             <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.9)"]}
+              colors={["transparent", "transparent", "rgba(0,0,0,0.5)"]}
               style={styles.bannerOverlay}
             />
           </View>
