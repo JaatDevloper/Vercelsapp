@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   },
   bannerContainer: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 12,
     backgroundColor: '#000',
     overflow: 'hidden',
     // Premium Soft Shadow
