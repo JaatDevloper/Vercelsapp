@@ -224,11 +224,23 @@ export default function DiscoverScreen() {
             {selectedCategory === "All" && batches && batches.length > 0 && (
               <View style={{ marginBottom: Spacing.xl }}>
                 <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
-                <FlatList horizontal data={batches} keyExtractor={item => item._id} renderItem={renderBatchItem} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }} />
+                <FlatList 
+                  horizontal 
+                  data={batches} 
+                  keyExtractor={item => item._id} 
+                  renderItem={renderBatchItem} 
+                  showsHorizontalScrollIndicator={false} 
+                  contentContainerStyle={{ gap: Spacing.md }} 
+                />
               </View>
             )}
-            <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>{selectedCategory === "All" ? "Recent Quizzes" : `${selectedCategory} Quizzes`}</ThemedText>
-            <FlatList data={filteredQuizzes} keyExtractor={item => item._id} renderItem={renderQuizCard} ListEmptyComponent={renderEmpty} scrollEnabled={false} />
+            <FlatList 
+              data={filteredQuizzes} 
+              keyExtractor={item => item._id} 
+              renderItem={renderQuizCard} 
+              ListEmptyComponent={renderEmpty} 
+              scrollEnabled={false} 
+            />
           </>
         )}
       </ScrollView>
