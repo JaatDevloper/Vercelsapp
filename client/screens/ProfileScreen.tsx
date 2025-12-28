@@ -412,32 +412,16 @@ export default function ProfileScreen() {
               style={styles.premiumBanner}
             >
               <LinearGradient
-                colors={["#3FAF6C", "#6FD39A"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                colors={["#00A8FF", "#00E096"]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
                 style={styles.premiumGradient}
               >
-                {/* Advanced Minimalist Illustrations */}
-                <View style={styles.premiumIllustrationContainer}>
-                  <View style={[styles.premiumCircle, { top: -30, right: -20, width: 120, height: 120, opacity: 0.1 }]} />
-                  <View style={[styles.premiumCircle, { bottom: -40, left: -10, width: 90, height: 90, opacity: 0.05 }]} />
-                  <View style={[styles.premiumRing, { top: 10, left: 60, width: 40, height: 40, opacity: 0.08 }]} />
-                </View>
-
                 <View style={styles.premiumContent}>
-                  <View style={styles.premiumTextContainer}>
-                    <ThemedText style={styles.premiumTitle}>Get Premium</ThemedText>
-                    <ThemedText style={styles.premiumSubtitle}>Unlock exclusive features & insights</ThemedText>
-                  </View>
-                  <View style={styles.premiumIconOuter}>
-                    <View style={styles.premiumIconGlow} />
-                    <View style={styles.premiumIconInner}>
-                      <Image 
-                        source={require("@/assets/images/sparkle.png")} 
-                        style={styles.premiumWaterIcon}
-                        contentFit="contain"
-                      />
-                    </View>
+                  <View style={{ flex: 1 }} />
+                  <ThemedText style={styles.premiumTitle}>GET PREMIUM</ThemedText>
+                  <View style={styles.premiumIconContainer}>
+                    <Feather name="chevron-right" size={24} color="rgba(255,255,255,0.8)" />
                   </View>
                 </View>
               </LinearGradient>
@@ -935,91 +919,41 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
   },
   premiumBanner: {
-    marginHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
-    borderRadius: 28,
+    marginHorizontal: Spacing.lg * 2,
+    marginTop: Spacing.xl,
+    borderRadius: 40,
     overflow: 'hidden',
-    height: 85,
-    // Advanced Premium Shadow
-    shadowColor: "#3FAF6C",
+    height: 64,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 12,
+      height: 10,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
   premiumGradient: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     justifyContent: 'center',
-    position: 'relative',
-  },
-  premiumIllustrationContainer: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-  },
-  premiumCircle: {
-    position: 'absolute',
-    borderRadius: 100,
-    backgroundColor: '#FFFFFF',
-  },
-  premiumRing: {
-    position: 'absolute',
-    borderRadius: 100,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
   premiumContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    zIndex: 1,
-  },
-  premiumTextContainer: {
-    flex: 1,
+    justifyContent: 'center',
   },
   premiumTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    flex: 2,
   },
-  premiumSubtitle: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  premiumIconOuter: {
-    width: 52,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  premiumIconGlow: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 26,
-    transform: [{ scale: 1.2 }],
-  },
-  premiumIconInner: {
-    width: 48,
-    height: 48,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  premiumWaterIcon: {
-    width: '65%',
-    height: '65%',
+  premiumIconContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   quickActionsRow: {
     flexDirection: "row",
