@@ -565,6 +565,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/batches/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { title, description, thumbnail, topics } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("batches");
+      
+      const result = await collection.updateOne(
+        { _id: ObjectId.isValid(id) ? new ObjectId(id) : id as any },
+        { $set: { title, description, thumbnail, topics, updatedAt: new Date().toISOString() } }
+      );
+      
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+      
+      res.json({ message: "Batch updated successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update batch" });
+    }
+  });
+
+  app.delete("/api/admin/batches/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const collection = db.collection("batches");
+      
+      const result = await collection.deleteOne({ 
+        _id: ObjectId.isValid(id) ? new ObjectId(id) : id as any 
+      });
+      
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+      
+      res.json({ message: "Batch deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete batch" });
+    }
+  });
+
   // ============ PROFILE API ENDPOINTS ============
 
   // Get profile by device ID or login with name/email

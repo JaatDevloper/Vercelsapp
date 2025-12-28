@@ -471,8 +471,8 @@ export default function AdminDashboardScreen() {
           />
           <ActionButton
             icon="layers"
-            label="Batches"
-            onPress={() => navigation.navigate("CreateBatch" as any)}
+            label="Manage Batches"
+            onPress={() => navigation.navigate("ManageBatches" as any)}
             theme={theme}
             color="#4ECDC4"
           />
