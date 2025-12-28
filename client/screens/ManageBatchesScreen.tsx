@@ -122,7 +122,7 @@ export default function ManageBatchesScreen() {
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={theme.primary} />
-        </ThemedView>
+        </View>
       ) : (
         <FlatList
           data={batches}
