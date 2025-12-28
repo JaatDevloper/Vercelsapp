@@ -337,21 +337,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 0,
     width: 200,
-    // Premium Soft Shadow
+    // Soft White Shadow Effect
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 20,
+      height: 10,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 32,
-    elevation: 10,
-    overflow: 'visible', // Allow shadow to show
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 4,
+    overflow: 'visible',
   },
   batchThumbnailContainer: {
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   batchThumbnail: {
     width: '100%',
