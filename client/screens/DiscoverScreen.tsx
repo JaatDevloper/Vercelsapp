@@ -341,11 +341,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 20,
     },
     shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowRadius: 32,
+    elevation: 10,
     overflow: 'visible', // Allow shadow to show
   },
   batchThumbnailContainer: {
