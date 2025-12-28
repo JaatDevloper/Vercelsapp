@@ -113,18 +113,20 @@ export default function BatchDetailsScreen() {
     <ThemedView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          {batch.thumbnail ? (
-            <Image source={{ uri: batch.thumbnail }} style={styles.banner} />
-          ) : (
+          <View style={styles.bannerContainer}>
+            {batch.thumbnail ? (
+              <Image source={{ uri: batch.thumbnail }} style={styles.banner} />
+            ) : (
+              <LinearGradient
+                colors={["#4facfe", "#00f2fe"]}
+                style={styles.banner}
+              />
+            )}
             <LinearGradient
-              colors={["#4facfe", "#00f2fe"]}
-              style={styles.banner}
+              colors={["transparent", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.9)"]}
+              style={styles.bannerOverlay}
             />
-          )}
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.8)"]}
-            style={styles.bannerOverlay}
-          />
+          </View>
           <Pressable 
             onPress={() => navigation.goBack()} 
             style={[styles.backButton, { top: insets.top + Spacing.md }]}
@@ -210,9 +212,26 @@ export default function BatchDetailsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { height: 240, position: "relative" },
-  banner: { width: "100%", height: "100%" },
-  bannerOverlay: { ...StyleSheet.absoluteFillObject },
+  header: { 
+    height: 260, 
+    position: "relative",
+    padding: Spacing.md,
+  },
+  bannerContainer: {
+    flex: 1,
+    borderRadius: BorderRadius.md,
+    ...Shadows.card,
+    elevation: 8,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+  },
+  banner: { 
+    width: "100%", 
+    height: "100%",
+  },
+  bannerOverlay: { 
+    ...StyleSheet.absoluteFillObject,
+  },
   backButton: {
     position: "absolute",
     left: Spacing.lg,
@@ -225,7 +244,7 @@ const styles = StyleSheet.create({
   },
   content: { 
     padding: Spacing.lg, 
-    marginTop: -30, 
+    marginTop: 0, 
     borderTopLeftRadius: 30, 
     borderTopRightRadius: 30, 
     backgroundColor: 'transparent' 
