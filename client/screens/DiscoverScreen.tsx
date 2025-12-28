@@ -69,15 +69,25 @@ export default function DiscoverScreen() {
   const renderBatchItem = ({ item }: { item: any }) => (
     <Pressable 
       onPress={() => handleBatchPress(item)}
-      style={[styles.batchCard, { backgroundColor: theme.backgroundSecondary, width: isOfferTab ? '100%' : 200, marginBottom: isOfferTab ? Spacing.md : 0, marginRight: isOfferTab ? 0 : Spacing.md }]}
+      style={[
+        styles.batchCard, 
+        { 
+          backgroundColor: isDark ? theme.backgroundSecondary : '#fff', 
+          width: isOfferTab ? '100%' : 200, 
+          marginBottom: isOfferTab ? Spacing.lg : 0, 
+          marginRight: isOfferTab ? 0 : Spacing.md 
+        }
+      ]}
     >
-      <Image 
-        source={{ uri: item.thumbnail || "https://via.placeholder.com/150" }} 
-        style={[styles.batchThumbnail, { height: isOfferTab ? 180 : 120 }]} 
-      />
+      <View style={styles.batchThumbnailContainer}>
+        <Image 
+          source={{ uri: item.thumbnail || "https://via.placeholder.com/150" }} 
+          style={[styles.batchThumbnail, { height: isOfferTab ? 180 : 120 }]} 
+        />
+      </View>
       <View style={styles.batchInfo}>
         <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.title}</ThemedText>
-        <ThemedText type="small" numberOfLines={2}>{item.description}</ThemedText>
+        <ThemedText type="small" numberOfLines={1}>{item.description}</ThemedText>
       </View>
     </Pressable>
   );
@@ -323,17 +333,32 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   batchCard: {
-    borderRadius: BorderRadius.md,
-    overflow: 'hidden',
-    padding: Spacing.sm,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    padding: 0,
     width: 200,
+    // Premium Soft Shadow
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: 'visible', // Allow shadow to show
+  },
+  batchThumbnailContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#000',
   },
   batchThumbnail: {
     width: '100%',
-    borderRadius: BorderRadius.sm,
-    marginBottom: Spacing.sm,
+    height: 120,
   },
   batchInfo: {
+    padding: Spacing.sm,
     gap: Spacing.xs,
   },
 });
