@@ -169,7 +169,13 @@ export default function BatchDetailsScreen() {
                   {quizzes.map((quiz: any, index: number) => (
                     <Pressable 
                       key={quiz.quizId + index}
-                      style={[styles.quizItem, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}
+                      style={[
+                        styles.quizItem, 
+                        { 
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff',
+                          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                        }
+                      ]}
                       onPress={() => {
                         if (isBatchUnlocked) {
                           navigation.navigate("QuizDetails", { quizId: quiz.quizId });
@@ -217,9 +223,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  content: { padding: Spacing.lg, marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20, backgroundColor: 'transparent' },
-  title: { marginBottom: Spacing.sm },
-  description: { marginBottom: Spacing.xl, lineHeight: 20 },
+  content: { 
+    padding: Spacing.lg, 
+    marginTop: -30, 
+    borderTopLeftRadius: 30, 
+    borderTopRightRadius: 30, 
+    backgroundColor: 'transparent' 
+  },
+  title: { 
+    marginBottom: Spacing.xs,
+    fontSize: 26,
+    fontWeight: "900",
+  },
+  description: { 
+    marginBottom: Spacing.xl, 
+    lineHeight: 22,
+    fontSize: 15,
+  },
   purchaseCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -241,31 +261,45 @@ const styles = StyleSheet.create({
   topicsSection: { marginTop: Spacing.md },
   sectionTitle: { marginBottom: Spacing.md },
   topicFolder: {
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    ...Shadows.card,
   },
-  folderHeader: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.md, gap: Spacing.sm },
-  folderName: { fontWeight: "700" },
-  quizList: { gap: Spacing.sm },
+  folderHeader: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    marginBottom: Spacing.md, 
+    gap: Spacing.md 
+  },
+  folderName: { 
+    fontWeight: "800",
+    fontSize: 18,
+    letterSpacing: 0.5,
+  },
+  quizList: { 
+    gap: Spacing.md 
+  },
   quizItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
     marginBottom: Spacing.xs,
+    borderWidth: 1,
   },
   quizIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: 'rgba(52, 152, 219, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.sm,
+    marginRight: Spacing.md,
   },
   quizTitleText: {
     flex: 1,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 15,
   },
 });
