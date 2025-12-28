@@ -147,24 +147,39 @@ export default function PremiumModal({
           contentContainerStyle={styles.content}
         >
           {/* Header Section */}
+          <View style={styles.illustrationContainer}>
+            <View style={styles.badgeWrapper}>
+              <LinearGradient
+                colors={["#FF6B9D", "#C44569"]}
+                style={styles.illustrationBadge}
+              >
+                <Feather name="crown" size={40} color="#FFFFFF" />
+              </LinearGradient>
+              <View style={styles.badgeRing} />
+            </View>
+            <View style={styles.illustrationText}>
+              <ThemedText type="h2" style={styles.premiumText}>PREMIUM</ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary, letterSpacing: 2 }}>REQUIRED</ThemedText>
+            </View>
+          </View>
+
           <LinearGradient
             colors={["#FF6B9D", "#C44569", "#6B2E5F"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerSection}
           >
-            <Feather name="crown" size={48} color="#FFFFFF" />
             <ThemedText
               type="h2"
               style={[styles.headerTitle, { color: "#FFFFFF" }]}
             >
-              Unlock Premium
+              Unlock Everything
             </ThemedText>
             <ThemedText
               type="body"
               style={[styles.headerSubtitle, { color: "rgba(255,255,255,0.9)" }]}
             >
-              Get unlimited access to all features
+              Create quizzes, host rooms, and access all content
             </ThemedText>
           </LinearGradient>
 
@@ -364,8 +379,49 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     padding: Spacing.xl,
     alignItems: "center",
-    marginVertical: Spacing.lg,
+    marginBottom: Spacing.lg,
     gap: Spacing.md,
+  },
+  illustrationContainer: {
+    alignItems: "center",
+    marginVertical: Spacing.xl,
+    gap: Spacing.lg,
+  },
+  badgeWrapper: {
+    width: 100,
+    height: 100,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  illustrationBadge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2,
+    elevation: 5,
+    shadowColor: "#FF6B9D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  badgeRing: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "#FF6B9D",
+    opacity: 0.2,
+  },
+  illustrationText: {
+    alignItems: "center",
+  },
+  premiumText: {
+    fontWeight: "900",
+    letterSpacing: 1,
   },
   headerTitle: {
     color: "#FFFFFF",

@@ -250,7 +250,13 @@ export default function DiscoverScreen() {
 
         <View style={styles.controlsRow}>
           <Pressable
-            onPress={() => navigation.navigate("CreateQuiz")}
+            onPress={() => {
+              if (!isUserPremium) {
+                setPremiumModalVisible(true);
+              } else {
+                navigation.navigate("CreateQuiz");
+              }
+            }}
             style={({ pressed }) => [
               styles.joinRoomButton,
               { 
