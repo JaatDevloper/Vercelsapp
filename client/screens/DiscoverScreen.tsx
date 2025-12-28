@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     overflow: 'hidden',
     padding: Spacing.sm,
+    width: 200,
   },
   batchThumbnail: {
     width: '100%',
