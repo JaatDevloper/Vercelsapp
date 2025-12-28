@@ -412,9 +412,9 @@ export default function ProfileScreen() {
               style={styles.premiumBanner}
             >
               <LinearGradient
-                colors={["#BFFF00", "#A8FF00"]}
+                colors={["#B7FF2A", "#8DEB00"]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                end={{ x: 0, y: 1 }}
                 style={styles.premiumGradient}
               >
                 <View style={styles.premiumContent}>
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     borderRadius: 40,
     overflow: 'hidden',
-    height: 54,
+    height: 48,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
