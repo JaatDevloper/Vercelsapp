@@ -402,6 +402,31 @@ export default function ProfileScreen() {
               </View>
             </View>
 
+            <Pressable
+              onPress={() => navigation.navigate("Premium" as any)}
+              style={({ pressed }) => [
+                styles.premiumBanner,
+                { opacity: pressed ? 0.9 : 1 }
+              ]}
+            >
+              <LinearGradient
+                colors={["#27ae60", "#2ecc71"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.premiumGradient}
+              >
+                <View style={styles.premiumContent}>
+                  <View>
+                    <ThemedText style={styles.premiumTitle}>Get Premium</ThemedText>
+                    <ThemedText style={styles.premiumSubtitle}>Enjoy all the benefits of the app</ThemedText>
+                  </View>
+                  <View style={styles.premiumIconContainer}>
+                    <Feather name="sparkles" size={32} color="rgba(255,255,255,0.8)" />
+                  </View>
+                </View>
+              </LinearGradient>
+            </Pressable>
+
             <View style={styles.quickActionsRow}>
               <QuickAction icon="trending-up" label="Stats" theme={theme} />
               <QuickAction icon="award" label="Badges" theme={theme} onPress={handleBadgesQuickAction} />
@@ -886,6 +911,45 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: "rgba(0, 0, 0, 0.1)",
     marginHorizontal: Spacing.lg,
+  },
+  premiumBanner: {
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+    borderRadius: 16,
+    overflow: 'hidden',
+    // Premium Soft Shadow
+    shadowColor: "#27ae60",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 5,
+  },
+  premiumGradient: {
+    padding: Spacing.lg,
+  },
+  premiumContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  premiumTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  premiumSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  premiumIconContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   quickActionsRow: {
     flexDirection: "row",
