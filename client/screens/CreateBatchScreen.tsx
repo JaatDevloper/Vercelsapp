@@ -70,9 +70,16 @@ export default function CreateBatchScreen() {
   };
 
   const selectQuizForTopic = (quiz: any) => {
-    setTopics([...topics, { id: Date.now().toString(), name: newTopicName, quizId: quiz._id }]);
-    setNewTopicName("");
-    setShowQuizModal(false);
+    const isAlreadySelected = topics.some(t => t.name === newTopicName && t.quizId === quiz._id);
+    if (isAlreadySelected) {
+      setTopics(topics.filter(t => !(t.name === newTopicName && t.quizId === quiz._id)));
+    } else {
+      setTopics([...topics, { id: Date.now().toString() + Math.random(), name: newTopicName, quizId: quiz._id }]);
+    }
+  };
+
+  const isQuizSelectedForCurrentTopic = (quizId: string) => {
+    return topics.some(t => t.name === newTopicName && t.quizId === quizId);
   };
 
   const handleCreateBatch = async () => {
@@ -205,17 +212,42 @@ export default function CreateBatchScreen() {
             </Pressable>
           </View>
           <ScrollView>
-            {quizzes.map((quiz) => (
-              <Pressable 
-                key={quiz._id} 
-                onPress={() => selectQuizForTopic(quiz)}
-                style={{ padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: theme.border }}
-              >
-                <ThemedText type="body">{quiz.title}</ThemedText>
-                <ThemedText type="small" style={{ color: theme.textSecondary }}>{quiz.category}</ThemedText>
-              </Pressable>
-            ))}
+            {quizzes.map((quiz) => {
+              const isSelected = isQuizSelectedForCurrentTopic(quiz._id);
+              return (
+                <Pressable 
+                  key={quiz._id} 
+                  onPress={() => selectQuizForTopic(quiz)}
+                  style={{ 
+                    padding: Spacing.md, 
+                    borderBottomWidth: 1, 
+                    borderBottomColor: theme.border,
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.1)' : 'transparent'
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <ThemedText type="body">{quiz.title}</ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary }}>{quiz.category}</ThemedText>
+                  </View>
+                  {isSelected && <Feather name="check-circle" size={20} color="#10B981" />}
+                </Pressable>
+              );
+            })}
           </ScrollView>
+          <View style={{ marginTop: Spacing.lg }}>
+            <Pressable 
+              onPress={() => {
+                setNewTopicName("");
+                setShowQuizModal(false);
+              }}
+              style={[styles.createButton, { backgroundColor: Colors.light.primary }]}
+            >
+              <ThemedText type="body" style={styles.createButtonText}>Done</ThemedText>
+            </Pressable>
+          </View>
         </ThemedView>
       </Modal>
 
