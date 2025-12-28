@@ -87,6 +87,21 @@ export default function DiscoverScreen() {
   const CATEGORIES = ["All", ...categories.map((c) => c.name)];
 
   const { 
+    data: profile 
+  } = useQuery({
+    queryKey: ["/api/profile"],
+    queryFn: async () => {
+      // In a real app, deviceId should be retrieved from storage/context
+      const deviceId = "web-mjopnu0j-fgwwt2fwwkq"; 
+      const response = await fetch(`/api/profile?deviceId=${deviceId}`);
+      if (!response.ok) return null;
+      return response.json();
+    }
+  });
+
+  const isUserPremium = profile?.isPremium === true;
+
+  const { 
     data: quizzes, 
     isLoading, 
     refetch, 
@@ -137,12 +152,12 @@ export default function DiscoverScreen() {
   }, [quizzes, searchQuery]);
 
   const handleQuizPress = useCallback((quizId: string, isPremiumLocked: boolean) => {
-    if (isPremiumLocked) {
+    if (isPremiumLocked && !isUserPremium) {
       setPremiumModalVisible(true);
     } else {
       navigation.navigate("QuizDetails", { quizId });
     }
-  }, [navigation]);
+  }, [navigation, isUserPremium]);
 
   const handleJoinRoom = useCallback(() => {
     navigation.navigate("JoinRoom");
@@ -164,10 +179,10 @@ export default function DiscoverScreen() {
         quiz={item}
         onPress={() => handleQuizPress(item._id, isPremiumLocked)}
         isPremiumLocked={isPremiumLocked}
-        isUserPremium={false} // TODO: Get from user context/API
+        isUserPremium={isUserPremium}
       />
     );
-  }, [handleQuizPress]);
+  }, [handleQuizPress, isUserPremium]);
 
   const handleSearchChange = useCallback((text: string) => {
     setSearchQuery(text);
