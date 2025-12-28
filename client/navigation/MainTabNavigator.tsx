@@ -18,6 +18,7 @@ import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 export type MainTabParamList = {
   Discover: undefined;
+  Offer: undefined;
   History: undefined;
   Leaderboard: undefined;
   Profile: undefined;
@@ -112,6 +113,16 @@ export default function MainTabNavigator() {
             title: "Discover",
             tabBarIcon: ({ color, size }) => (
               <Feather name="compass" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Offer"
+          component={DiscoverScreen}
+          options={{
+            title: "Offer",
+            tabBarIcon: ({ color, size }) => (
+              <Feather name="gift" size={size} color={color} />
             ),
           }}
         />

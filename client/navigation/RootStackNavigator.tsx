@@ -16,6 +16,7 @@ import BadgesScreen from "@/screens/BadgesScreen";
 import AdminDashboardScreen from "@/screens/AdminDashboardScreen";
 import ManageQuizzesScreen from "@/screens/ManageQuizzesScreen";
 import CreateQuizScreen from "@/screens/CreateQuizScreen";
+import CreateBatchScreen from "@/screens/CreateBatchScreen";
 import HelpSupportScreen from "@/screens/HelpSupportScreen";
 import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import TermsConditionsScreen from "@/screens/TermsConditionsScreen";
@@ -36,6 +37,7 @@ export type RootStackParamList = {
   OwnerLogin: undefined;
   Badges: undefined;
   HelpSupport: undefined;
+  CreateBatch: undefined;
   PrivacyPolicy: undefined;
   TermsConditions: undefined;
   ProfileSettings: undefined;
@@ -209,6 +211,14 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="CreateQuiz"
         component={CreateQuizScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="CreateBatch"
+        component={CreateBatchScreen}
         options={{
           presentation: "modal",
           headerShown: false,

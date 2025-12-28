@@ -470,6 +470,13 @@ export default function AdminDashboardScreen() {
             color="#FF6B6B"
           />
           <ActionButton
+            icon="layers"
+            label="Batches"
+            onPress={() => navigation.navigate("CreateBatch" as any)}
+            theme={theme}
+            color="#4ECDC4"
+          />
+          <ActionButton
             icon="gift"
             label="Premium Management"
             onPress={() => setPremiumModalVisible(true)}
