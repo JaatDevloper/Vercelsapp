@@ -726,6 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarUrl: profile?.avatarUrl || "",
         selectedBadgeId: profile?.selectedBadgeId || "",
         selectedFrameId: profile?.selectedFrameId || "",
+        isPremium: profile?.isPremium === true,
         income: profile?.income || 0,
         expense: profile?.expense || 0,
         currency: profile?.currency || "$",
