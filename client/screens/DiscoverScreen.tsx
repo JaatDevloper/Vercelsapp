@@ -196,6 +196,46 @@ export default function DiscoverScreen() {
     );
   };
 
+  // Combine quiz and batch data for a single FlatList
+  const getCombinedData = () => {
+    if (isOfferTab) return batches || [];
+    return [
+      ...(selectedCategory === "All" && batches && batches.length > 0 ? [{ type: "batches", data: batches }] : []),
+      ...(filteredQuizzes.length > 0 || isLoading ? [{ type: "quizzes", data: filteredQuizzes }] : [{ type: "empty" }])
+    ];
+  };
+
+  const combinedData = getCombinedData();
+
+  const renderCombinedItem = useCallback(({ item, index }: { item: any; index: number }) => {
+    if (isOfferTab) return renderBatchItem({ item, index });
+    
+    if (item.type === "batches") {
+      return (
+        <View style={{ marginBottom: Spacing.xl }}>
+          <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={{ gap: Spacing.md }}
+          >
+            {item.data.map((batch: any, idx: number) => renderBatchItem({ item: batch, index: idx }))}
+          </ScrollView>
+        </View>
+      );
+    }
+    
+    if (item.type === "quizzes") {
+      return (
+        <View>
+          {item.data.map((quiz: Quiz, idx: number) => renderQuizCard({ item: quiz, index: idx }))}
+        </View>
+      );
+    }
+    
+    return renderEmpty();
+  }, [isOfferTab, renderQuizCard, filteredQuizzes, isLoading]);
+
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.fixedHeader, { paddingTop: insets.top + Spacing.sm }]}>
@@ -234,38 +274,18 @@ export default function DiscoverScreen() {
       </View>
 
       <FlatList
-        data={isOfferTab ? batches : [1]} // Use a dummy single item to render header/footer in non-offer tab
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => {
-          if (isOfferTab) return renderBatchItem({ item, index });
-          
-          return (
-            <View>
-              {selectedCategory === "All" && batches && batches.length > 0 && (
-                <View style={{ marginBottom: Spacing.xl }}>
-                  <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
-                  <FlatList 
-                    horizontal 
-                    data={batches} 
-                    keyExtractor={item => item._id} 
-                    renderItem={({ item, index }) => renderBatchItem({ item, index })} 
-                    showsHorizontalScrollIndicator={false} 
-                    contentContainerStyle={{ gap: Spacing.md }} 
-                  />
-                </View>
-              )}
-              <FlatList 
-                data={filteredQuizzes} 
-                keyExtractor={item => item._id} 
-                renderItem={renderQuizCard} 
-                ListEmptyComponent={renderEmpty} 
-                scrollEnabled={false} 
-              />
-            </View>
-          );
+        data={combinedData}
+        keyExtractor={(item, index) => {
+          if (item.type === "batches") return "batches";
+          if (item.type === "quizzes") return "quizzes";
+          if (item.type === "empty") return "empty";
+          return item._id || index.toString();
         }}
+        renderItem={renderCombinedItem}
         contentContainerStyle={[styles.listContent, { paddingBottom: tabBarHeight + Spacing.xl + 80 }]}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+        removeClippedSubviews={false}
         refreshControl={
           !isOfferTab ? (
             <RefreshControl
