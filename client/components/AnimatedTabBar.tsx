@@ -8,15 +8,22 @@ import Animated, {
   Extrapolate
 } from 'react-native-reanimated';
 import { useTheme } from '@/hooks/useTheme';
-import { Colors, Spacing, Shadows, Typography } from '@/constants/theme';
+import { Colors, Spacing, Shadows } from '@/constants/theme';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { ThemedText } from './ThemedText';
 
 const { width } = Dimensions.get('window');
 
+const TAB_COLORS = {
+  Discover: '#10B981', // Green
+  Offers: '#818CF8',   // Purple/Indigo
+  History: '#6366F1',  // Blue
+  Leaderboard: '#06B6D4', // Cyan
+  Profile: '#F472B6',  // Pink
+};
+
 export default function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { theme, isDark } = useTheme();
-  const TAB_WIDTH = width / state.routes.length;
   
   return (
     <View style={[styles.container, { backgroundColor: isDark ? theme.backgroundRoot : '#FFFFFF' }]}>
@@ -38,6 +45,7 @@ export default function AnimatedTabBar({ state, descriptors, navigation }: Botto
 
         const Icon = options.tabBarIcon;
         const label = options.title || route.name;
+        const activeColor = TAB_COLORS[route.name as keyof typeof TAB_COLORS] || theme.primary;
 
         return (
           <TabItem
@@ -48,6 +56,7 @@ export default function AnimatedTabBar({ state, descriptors, navigation }: Botto
             label={label}
             isDark={isDark}
             theme={theme}
+            activeColor={activeColor}
           />
         );
       })}
@@ -55,7 +64,7 @@ export default function AnimatedTabBar({ state, descriptors, navigation }: Botto
   );
 }
 
-function TabItem({ isFocused, onPress, Icon, label, isDark, theme }: any) {
+function TabItem({ isFocused, onPress, Icon, label, isDark, theme, activeColor }: any) {
   const animatedValue = useSharedValue(isFocused ? 1 : 0);
 
   useEffect(() => {
@@ -67,22 +76,20 @@ function TabItem({ isFocused, onPress, Icon, label, isDark, theme }: any) {
 
   const containerStyle = useAnimatedStyle(() => {
     return {
-      backgroundColor: isFocused 
-        ? (isDark ? Colors.dark.primary + '20' : Colors.light.primary + '20')
-        : 'transparent',
-      paddingHorizontal: interpolate(animatedValue.value, [0, 1], [0, 12], Extrapolate.CLAMP),
+      backgroundColor: isFocused ? `${activeColor}15` : 'transparent',
+      paddingHorizontal: interpolate(animatedValue.value, [0, 1], [10, 16], Extrapolate.CLAMP),
       borderRadius: 20,
       flexDirection: 'row',
       alignItems: 'center',
-      height: 40,
+      height: 42,
     };
   });
 
   const textStyle = useAnimatedStyle(() => {
     return {
       opacity: animatedValue.value,
-      width: interpolate(animatedValue.value, [0, 1], [0, 70], Extrapolate.CLAMP),
-      marginLeft: interpolate(animatedValue.value, [0, 1], [0, 6], Extrapolate.CLAMP),
+      maxWidth: interpolate(animatedValue.value, [0, 1], [0, 100], Extrapolate.CLAMP),
+      marginLeft: interpolate(animatedValue.value, [0, 1], [0, 8], Extrapolate.CLAMP),
     };
   });
 
@@ -91,17 +98,15 @@ function TabItem({ isFocused, onPress, Icon, label, isDark, theme }: any) {
       <Animated.View style={containerStyle}>
         {Icon && Icon({
           focused: isFocused,
-          color: isFocused 
-            ? (isDark ? Colors.dark.primary : Colors.light.primary) 
-            : theme.tabIconDefault,
+          color: isFocused ? activeColor : theme.tabIconDefault,
           size: 22
         })}
         <Animated.View style={[textStyle, { overflow: 'hidden' }]}>
           <ThemedText 
             numberOfLines={1}
             style={{ 
-              color: isFocused ? (isDark ? Colors.dark.primary : Colors.light.primary) : theme.tabIconDefault,
-              fontWeight: '600',
+              color: isFocused ? activeColor : theme.tabIconDefault,
+              fontWeight: '700',
               fontSize: 14
             }}
           >
@@ -116,18 +121,18 @@ function TabItem({ isFocused, onPress, Icon, label, isDark, theme }: any) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 70,
+    height: 75,
     borderTopWidth: 0,
     elevation: 20,
     ...Shadows.card,
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 20 : 10,
-    left: 20,
-    right: 20,
-    borderRadius: 35,
-    paddingHorizontal: 10,
+    bottom: Platform.OS === 'ios' ? 30 : 15,
+    left: 15,
+    right: 15,
+    borderRadius: 38,
+    paddingHorizontal: 12,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
   tabItem: {
     justifyContent: 'center',
