@@ -1135,6 +1135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userName = profile.name || "";
       const userEmail = profile.email || "";
       const profileId = profile._id?.toString() || "";
+      const userAvatarUrl = profile.avatarUrl || "";
 
       const historyItem = {
         deviceId,
@@ -1147,6 +1148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userName,
         userEmail,
         profileId,
+        userAvatarUrl,
       };
 
       const result = await historyCollection.insertOne(historyItem);
