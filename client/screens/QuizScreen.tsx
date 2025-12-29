@@ -27,6 +27,7 @@ import ConfettiCelebration from "@/components/ConfettiCelebration";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useProfile } from "@/hooks/useProfile";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
@@ -60,6 +61,8 @@ export default function QuizScreen() {
     queryKey: ["/api/quizzes"],
     enabled: isRandom,
   });
+  
+  useSilentAutoRefresh(["/api/quizzes"], 10000, { enabled: isRandom });
 
   React.useEffect(() => {
     if (isRandom && quizzes && quizzes.length > 0 && !randomQuizId) {
@@ -74,6 +77,8 @@ export default function QuizScreen() {
     queryKey: ["/api/quizzes", actualQuizId],
     enabled: !!actualQuizId,
   });
+  
+  useSilentAutoRefresh(["/api/quizzes", actualQuizId], 10000, { enabled: !!actualQuizId });
 
   const questions = quiz?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];

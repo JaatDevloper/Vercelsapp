@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import { getDeviceId } from "@/lib/deviceId";
 
@@ -96,6 +97,8 @@ export default function BatchDetailsScreen() {
       return response.json();
     }
   });
+  
+  useSilentAutoRefresh(["/api/quizzes"], 10000, { enabled: true });
 
   const getQuizTitle = (quizId: string) => {
     const quiz = quizzesData?.find((q: any) => q._id === quizId || q.quiz_id === quizId);

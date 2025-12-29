@@ -19,6 +19,7 @@ import { ThemedView } from "@/components/ThemedView";
 import ProgressBar from "@/components/ProgressBar";
 import AnswerOption from "@/components/AnswerOption";
 import { useTheme } from "@/hooks/useTheme";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz, Question } from "@/types/quiz";
@@ -84,6 +85,8 @@ export default function MultiplayerQuizScreen() {
     queryKey: ["/api/quizzes", quizId],
     enabled: !!quizId,
   });
+  
+  useSilentAutoRefresh(["/api/quizzes", quizId], 10000, { enabled: !!quizId });
 
   const questions = quiz?.questions || [];
   const currentQuestion = questions[currentQuestionIndex];

@@ -18,6 +18,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
@@ -39,6 +40,8 @@ export default function QuizDetailsScreen() {
     queryKey: ["/api/quizzes", quizId],
     enabled: !!quizId,
   });
+  
+  useSilentAutoRefresh(["/api/quizzes", quizId], 10000, { enabled: !!quizId });
 
   const totalQuestions = quiz?.questions?.length || 0;
   const estimatedTimeMinutes = Math.ceil((totalQuestions * TIME_PER_QUESTION) / 60);
