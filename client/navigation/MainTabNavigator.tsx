@@ -12,6 +12,7 @@ import HistoryScreen from "@/screens/HistoryScreen";
 import LeaderboardScreen from "@/screens/LeaderboardScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
 import DayNightToggle from "@/components/DayNightToggle";
+import AnimatedTabBar from "@/components/AnimatedTabBar";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -83,6 +84,7 @@ export default function MainTabNavigator() {
     <View style={styles.container}>
       <Tab.Navigator
         initialRouteName="Discover"
+        tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
           tabBarActiveTintColor: theme.tabIconSelected,
           tabBarInactiveTintColor: theme.tabIconDefault,
