@@ -40,25 +40,37 @@ export function useSilentAutoRefresh(
       if (!queryState) return;
 
       const oldData = queryState.data;
+      
+      // CRITICAL: Don't refresh if no data exists yet (prevents dummy profile creation)
+      if (!oldData) return;
+
       const queryCache = queryClient.getQueryCache();
       const query = queryCache.find(queryKey);
 
       if (!query || !query.options.queryFn) return;
 
-      // Fetch data WITHOUT triggering loading state (no isFetching updates)
-      const newData = await query.options.queryFn({ queryKey } as any);
+      // Use fetchQuery - properly handles the queryFn closure without triggering isFetching
+      const newData = await queryClient.fetchQuery({
+        queryKey,
+        queryFn: query.options.queryFn as any,
+      });
 
-      // Silent update: Only update cache if data actually changed
+      // Silent update: Only update cache if data actually changed AND is valid
       if (newData !== undefined && newData !== null) {
         const dataChanged = oldData !== newData && 
           JSON.stringify(oldData) !== JSON.stringify(newData);
         
-        if (dataChanged || !compareData) {
+        if (dataChanged) {
           queryClient.setQueryData(queryKey, newData);
         }
       }
     } catch (error) {
-      // Silently catch errors - no UI notifications
+      // Silently catch errors - restore old data if refresh fails
+      const queryState = queryClient.getQueryState(queryKey);
+      if (queryState?.data === undefined) {
+        // If data was cleared by error, restore it
+        queryClient.setQueryData(queryKey, lastDataRef.current);
+      }
       console.debug("[Silent Refresh] Background fetch error:", error);
     }
   }, [queryKey, queryClient, enabled, compareData]);

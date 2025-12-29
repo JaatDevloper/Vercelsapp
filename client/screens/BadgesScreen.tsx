@@ -499,7 +499,8 @@ export default function BadgesScreen() {
   const { profile, updateFrame, deviceId, authEnabled } = useProfile();
   const stats = getStats();
   
-  useSilentAutoRefresh(["profile", deviceId], 10000, { enabled: authEnabled });
+  // ✅ Profile is NOT silently refreshed - profile data is sensitive and changes only when user updates it
+  // Stats are computed from history, not separately synced in background
 
   const [selectedFrame, setSelectedFrame] = useState<ProfileFrame>(
     profile?.selectedFrameId 

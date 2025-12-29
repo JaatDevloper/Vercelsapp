@@ -101,10 +101,8 @@ export default function ProfileScreen() {
   const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge, updateFrame, deviceId, authEnabled } = useProfile();
   const { ownerProfile } = useOwnerProfile();
   
-  // Enable silent auto-refresh every 10 seconds (only when logged in)
-  // ✅ No loading spinners, UI flickers, screen jumps, or refresh indicators
-  // ✅ Data updates quietly in background
-  useSilentAutoRefresh(["profile", deviceId], 10000, { enabled: authEnabled });
+  // ✅ Profile is NOT silently refreshed - profile data is sensitive and changes only when user updates it
+  // Users can manually refresh by pulling down (if swipe-to-refresh is added) or profile auto-syncs on mutations only
 
   const stats = getStats();
   const [aboutModalVisible, setAboutModalVisible] = useState(false);
