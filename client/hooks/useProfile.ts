@@ -333,5 +333,6 @@ export function useProfile() {
 
     deviceId,
     logout,
+    authEnabled,
   };
 }

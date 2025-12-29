@@ -68,10 +68,10 @@ export default function HistoryScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { history, clearHistory } = useQuizHistory();
-  const { profile, isLoading: isProfileLoading, deviceId } = useProfile();
+  const { profile, isLoading: isProfileLoading, deviceId, authEnabled } = useProfile();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
-  useSilentAutoRefresh(["quiz-history", deviceId], 10000);
+  useSilentAutoRefresh(["quiz-history", deviceId], 10000, { enabled: authEnabled });
 
   useFocusEffect(
     useCallback(() => {

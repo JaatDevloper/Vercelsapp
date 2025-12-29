@@ -98,13 +98,13 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { getStats } = useQuizHistory();
-  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge, updateFrame, deviceId } = useProfile();
+  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge, updateFrame, deviceId, authEnabled } = useProfile();
   const { ownerProfile } = useOwnerProfile();
   
-  // Enable silent auto-refresh every 10 seconds
+  // Enable silent auto-refresh every 10 seconds (only when logged in)
   // ✅ No loading spinners, UI flickers, screen jumps, or refresh indicators
   // ✅ Data updates quietly in background
-  useSilentAutoRefresh(["profile", deviceId], 10000);
+  useSilentAutoRefresh(["profile", deviceId], 10000, { enabled: authEnabled });
 
   const stats = getStats();
   const [aboutModalVisible, setAboutModalVisible] = useState(false);

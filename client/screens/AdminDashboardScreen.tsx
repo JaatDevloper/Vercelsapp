@@ -172,7 +172,7 @@ export default function AdminDashboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { data: statsData, isLoading: statsLoading } = useDashboardStats();
   
-  useSilentAutoRefresh(["admin-stats"], 10000);
+  useSilentAutoRefresh(["admin-stats"], 10000, { enabled: isOwnerLoggedIn });
 
   // Redirect if not owner
   React.useEffect(() => {

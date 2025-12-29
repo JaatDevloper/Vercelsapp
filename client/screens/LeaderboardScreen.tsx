@@ -502,7 +502,7 @@ export default function LeaderboardScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>("allTime");
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { profileExists, isLoading: profileLoading } = useProfile();
+  const { profileExists, isLoading: profileLoading, authEnabled } = useProfile();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const hasShownModalRef = useRef(false);
 
@@ -525,7 +525,7 @@ export default function LeaderboardScreen() {
     staleTime: 30000,
   });
   
-  useSilentAutoRefresh(["leaderboard", activeFilter], 10000);
+  useSilentAutoRefresh(["leaderboard", activeFilter], 10000, { enabled: authEnabled });
 
   const topThree = leaderboardData.filter(u => u.rank <= 3);
   const others = leaderboardData.filter(u => u.rank > 3);

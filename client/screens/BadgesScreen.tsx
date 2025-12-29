@@ -496,10 +496,10 @@ export default function BadgesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { getStats } = useQuizHistory();
-  const { profile, updateFrame, deviceId } = useProfile();
+  const { profile, updateFrame, deviceId, authEnabled } = useProfile();
   const stats = getStats();
   
-  useSilentAutoRefresh(["profile", deviceId], 10000);
+  useSilentAutoRefresh(["profile", deviceId], 10000, { enabled: authEnabled });
 
   const [selectedFrame, setSelectedFrame] = useState<ProfileFrame>(
     profile?.selectedFrameId 

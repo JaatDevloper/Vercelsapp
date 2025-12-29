@@ -71,7 +71,7 @@ export default function DiscoverScreen() {
     enabled: true
   });
   
-  useSilentAutoRefresh(["/api/batches"], 10000);
+  useSilentAutoRefresh(["/api/batches"], 10000, { enabled: true });
 
   const handleBatchPress = (batch: any) => {
     navigation.navigate("BatchDetails" as any, { batchId: batch._id });
