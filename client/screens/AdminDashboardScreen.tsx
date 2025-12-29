@@ -641,7 +641,7 @@ export default function AdminDashboardScreen() {
           </View>
 
           {pricingTab === "users" ? (
-            <>
+            <View style={{ flex: 1 }}>
               <View style={[styles.searchBox, { backgroundColor: theme.backgroundSecondary }]}>
                 <Feather name="search" size={20} color={theme.textSecondary} />
                 <TextInput
@@ -754,7 +754,7 @@ export default function AdminDashboardScreen() {
                   }
                 />
               )}
-            </>
+            </View>
           ) : (
             <ScrollView
               contentContainerStyle={styles.usersList}
