@@ -25,6 +25,7 @@ import CategoryChip from "@/components/CategoryChip";
 import SkeletonCard from "@/components/SkeletonCard";
 import PremiumModal from "@/components/PremiumModal";
 import { useTheme } from "@/hooks/useTheme";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
@@ -69,6 +70,8 @@ export default function DiscoverScreen() {
     },
     enabled: true
   });
+  
+  useSilentAutoRefresh(["/api/batches"], 10000);
 
   const handleBatchPress = (batch: any) => {
     navigation.navigate("BatchDetails" as any, { batchId: batch._id });

@@ -32,6 +32,7 @@ import HistoryCard from "@/components/HistoryCard";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useProfile } from "@/hooks/useProfile";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -67,8 +68,10 @@ export default function HistoryScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { history, clearHistory } = useQuizHistory();
-  const { profile, isLoading: isProfileLoading } = useProfile();
+  const { profile, isLoading: isProfileLoading, deviceId } = useProfile();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  
+  useSilentAutoRefresh(["quiz-history", deviceId], 10000);
 
   useFocusEffect(
     useCallback(() => {

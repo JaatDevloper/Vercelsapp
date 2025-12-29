@@ -17,6 +17,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useProfile } from "@/hooks/useProfile";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -495,8 +496,10 @@ export default function BadgesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { getStats } = useQuizHistory();
-  const { profile, updateFrame } = useProfile();
+  const { profile, updateFrame, deviceId } = useProfile();
   const stats = getStats();
+  
+  useSilentAutoRefresh(["profile", deviceId], 10000);
 
   const [selectedFrame, setSelectedFrame] = useState<ProfileFrame>(
     profile?.selectedFrameId 

@@ -22,6 +22,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useProfile } from "@/hooks/useProfile";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -523,6 +524,8 @@ export default function LeaderboardScreen() {
     queryFn: () => fetchLeaderboard(activeFilter),
     staleTime: 30000,
   });
+  
+  useSilentAutoRefresh(["leaderboard", activeFilter], 10000);
 
   const topThree = leaderboardData.filter(u => u.rank <= 3);
   const others = leaderboardData.filter(u => u.rank > 3);

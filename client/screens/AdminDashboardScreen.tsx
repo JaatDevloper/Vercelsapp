@@ -23,6 +23,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { useOwnerAuth } from "@/hooks/useOwnerAuth";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -170,6 +171,8 @@ export default function AdminDashboardScreen() {
   const { isOwnerLoggedIn, ownerEmail, ownerLogout } = useOwnerAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { data: statsData, isLoading: statsLoading } = useDashboardStats();
+  
+  useSilentAutoRefresh(["admin-stats"], 10000);
 
   // Redirect if not owner
   React.useEffect(() => {
