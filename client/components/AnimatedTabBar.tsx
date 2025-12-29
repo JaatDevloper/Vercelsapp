@@ -16,7 +16,7 @@ const { width } = Dimensions.get('window');
 
 const TAB_COLORS = {
   Discover: '#10B981', // Green
-  Offers: '#818CF8',   // Purple/Indigo
+  Offers: '#F59E0B',   // Orange/Amber (Changed from Indigo)
   History: '#6366F1',  // Blue
   Leaderboard: '#06B6D4', // Cyan
   Profile: '#F472B6',  // Pink
