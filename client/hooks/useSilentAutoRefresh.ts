@@ -36,36 +36,29 @@ export function useSilentAutoRefresh(
     if (!enabled) return;
 
     try {
-      // Get the current query state
       const queryState = queryClient.getQueryState(queryKey);
-      
       if (!queryState) return;
 
-      // Store old data before refetch
       const oldData = queryState.data;
-      lastDataRef.current = oldData;
+      const queryCache = queryClient.getQueryCache();
+      const query = queryCache.find(queryKey);
 
-      // Refetch in the background silently (no UI updates unless data changed)
-      const result = await queryClient.refetchQueries(
-        { queryKey, type: "active" },
-        {
-          throwOnError: false, // Don't throw errors
+      if (!query || !query.options.queryFn) return;
+
+      // Fetch data WITHOUT triggering loading state (no isFetching updates)
+      const newData = await query.options.queryFn({ queryKey } as any);
+
+      // Silent update: Only update cache if data actually changed
+      if (newData !== undefined && newData !== null) {
+        const dataChanged = oldData !== newData && 
+          JSON.stringify(oldData) !== JSON.stringify(newData);
+        
+        if (dataChanged || !compareData) {
+          queryClient.setQueryData(queryKey, newData);
         }
-      );
-
-      // Check if data actually changed
-      if (result.length > 0 && compareData) {
-        const newState = queryClient.getQueryState(queryKey);
-        const newData = newState?.data;
-
-        // Only update UI if data changed according to custom compare function
-        if (oldData && newData && !compareData(oldData, newData)) {
-          // Data changed - query cache will auto-update components
-        }
-        // If compareData returns true (data is same), React Query won't trigger re-renders
       }
     } catch (error) {
-      // Silently catch errors - don't show UI errors
+      // Silently catch errors - no UI notifications
       console.debug("[Silent Refresh] Background fetch error:", error);
     }
   }, [queryKey, queryClient, enabled, compareData]);
