@@ -88,11 +88,11 @@ export default function PremiumModal({
     "yearly"
   );
   const [pricingData, setPricingData] = useState<PricingData>({
-    monthlyPrice: 2.99,
-    yearlyPrice: 19.99,
+    monthlyPrice: 99,
+    yearlyPrice: 699,
     eventName: "",
     eventActive: false,
-    currency: "USD",
+    currency: "INR",
   });
   const [loading, setLoading] = useState(false);
   const monthlyScale = useSharedValue(1);
@@ -259,7 +259,7 @@ export default function PremiumModal({
                   ]}
                 >
                   <ThemedText type="h4" style={styles.planLabel}>
-                    Monthly
+                    Basic Pass
                   </ThemedText>
 
                   <View style={styles.priceContainer}>
@@ -284,7 +284,7 @@ export default function PremiumModal({
                         { color: theme.textSecondary },
                       ]}
                     >
-                      /month
+                      /month Only
                     </ThemedText>
                   </View>
 
@@ -334,7 +334,7 @@ export default function PremiumModal({
                   </LinearGradient>
 
                   <ThemedText type="h4" style={styles.planLabel}>
-                    Yearly
+                    Pro Pass
                   </ThemedText>
 
                   <View style={styles.priceContainer}>
@@ -359,12 +359,12 @@ export default function PremiumModal({
                         { color: theme.textSecondary },
                       ]}
                     >
-                      /year
+                      /year Only
                     </ThemedText>
                   </View>
 
                   <ThemedText style={styles.savings}>
-                    Best savings
+                    Best Value - Save More
                   </ThemedText>
 
                   <View
