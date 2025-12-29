@@ -57,6 +57,20 @@ export default function DiscoverScreen() {
   useEffect(() => {
     getDeviceId().then(setDeviceId);
   }, []);
+  
+  // Fetch profile silently to check premium status
+  const { data: profile } = useQuery({
+    queryKey: ["/api/profile", deviceId],
+    queryFn: async () => {
+      if (!deviceId) return null;
+      const response = await fetch(`/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!deviceId
+  });
+  
+  useSilentAutoRefresh(["/api/profile", deviceId], 10000, { enabled: !!deviceId });
 
   const { 
     data: batches,

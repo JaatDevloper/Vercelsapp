@@ -56,6 +56,8 @@ export default function BatchDetailsScreen() {
     },
     enabled: !!deviceId
   });
+  
+  useSilentAutoRefresh(["/api/profile", deviceId], 10000, { enabled: !!deviceId });
 
   const isBatchUnlocked = profile?.unlockedBatches?.includes(batchId) || batch?.price === 0;
 
