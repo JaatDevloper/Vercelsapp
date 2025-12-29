@@ -2337,6 +2337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData: any = {
         ...fullQuizData, // Copy all fields from the full quiz
         category: category !== undefined ? category : fullQuizData.category || "General",
+        managedCategory: category || null, // Store the managed category
         updatedAt: new Date().toISOString(),
       };
 
@@ -2347,6 +2348,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (isDeleted !== undefined) {
         updateData.isDeleted = isDeleted;
+      }
+
+      // Update the original quiz in quizzes collection with managedCategory
+      const quizUpdateData: any = {};
+      if (category !== undefined) {
+        quizUpdateData.managedCategory = category || null;
+      }
+      if (isDeleted !== undefined) {
+        quizUpdateData.isDeleted = isDeleted;
+      }
+
+      // Try updating by string _id first
+      let quizUpdateResult = await quizzesCollection.updateOne(
+        { _id: id as any },
+        { $set: quizUpdateData }
+      );
+
+      // Try by ObjectId if not found
+      if (quizUpdateResult.matchedCount === 0 && ObjectId.isValid(id)) {
+        try {
+          quizUpdateResult = await quizzesCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: quizUpdateData }
+          );
+        } catch (e) {
+          // Ignore ObjectId conversion errors
+        }
+      }
+
+      // Try by quiz_id field if still not found
+      if (quizUpdateResult.matchedCount === 0) {
+        quizUpdateResult = await quizzesCollection.updateOne(
+          { quiz_id: id },
+          { $set: quizUpdateData }
+        );
       }
 
       // Save the full quiz data to manage collection
