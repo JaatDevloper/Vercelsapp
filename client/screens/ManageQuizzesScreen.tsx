@@ -18,6 +18,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
+import { useNavigation } from "@react-navigation/native";
 import { Spacing, BorderRadius } from "@/constants/theme";
 
 interface ManagedQuiz {
@@ -42,6 +43,7 @@ export default function ManageQuizzesScreen() {
   const insets = useSafeAreaInsets();
   const themeObj = useTheme();
   const theme = themeObj.theme;
+  const navigation = useNavigation();
   const [quizzes, setQuizzes] = useState<ManagedQuiz[]>([]);
   const [categories, setCategories] = useState<QuizCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,7 @@ export default function ManageQuizzesScreen() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#95E1D3");
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     loadData();
@@ -128,8 +131,13 @@ export default function ManageQuizzesScreen() {
   };
 
   const getFilteredQuizzes = () => {
-    // Just return all quizzes since we already filtered them via the API
-    return quizzes;
+    // Filter by search query
+    if (searchQuery.trim() === "") {
+      return quizzes;
+    }
+    return quizzes.filter((quiz) =>
+      quiz.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   };
 
   const updateQuizCategory = async (quizId: string, category: string) => {
@@ -354,7 +362,12 @@ export default function ManageQuizzesScreen() {
   return (
     <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <ThemedText type="h2">Manage Quizzes</ThemedText>
+        <Pressable onPress={() => navigation.goBack()}>
+          <Feather name="arrow-left" size={24} color={theme.text} />
+        </Pressable>
+        <ThemedText type="h2" style={{ flex: 1, marginLeft: Spacing.md }}>
+          Manage Quizzes
+        </ThemedText>
         <Pressable
           onPress={() => setShowCategoryModal(true)}
           style={({ pressed }) => [
@@ -374,6 +387,23 @@ export default function ManageQuizzesScreen() {
             </ThemedText>
           </LinearGradient>
         </Pressable>
+      </View>
+
+      {/* Search Bar */}
+      <View style={[styles.searchBox, { backgroundColor: theme.backgroundSecondary, marginHorizontal: Spacing.md, marginVertical: Spacing.sm }]}>
+        <Feather name="search" size={20} color={theme.textSecondary} />
+        <TextInput
+          placeholder="Search quizzes..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor={theme.textSecondary}
+          style={[styles.searchInput, { color: theme.text, flex: 1, marginLeft: Spacing.sm }]}
+        />
+        {searchQuery !== "" && (
+          <Pressable onPress={() => setSearchQuery("")}>
+            <Feather name="x" size={20} color={theme.textSecondary} />
+          </Pressable>
+        )}
       </View>
 
       {/* Category Filter Chips */}
@@ -729,6 +759,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.lg,
     marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  searchInput: {
+    paddingVertical: Spacing.sm,
   },
   filterScroll: {
     marginBottom: Spacing.md,
