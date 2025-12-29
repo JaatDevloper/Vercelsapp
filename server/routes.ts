@@ -1284,7 +1284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use a lean projection immediately to reduce the data set
       const leaderboardData = await historyCollection.aggregate([
         { $match: dateFilter },
-        { $project: { deviceId: 1, score: 1, correctAnswers: 1, userName: 1, userEmail: 1 } },
+        { $project: { deviceId: 1, score: 1, correctAnswers: 1, userName: 1, userEmail: 1, userAvatarUrl: 1 } },
         {
           $group: {
             _id: "$deviceId",
@@ -1293,6 +1293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalCorrect: { $sum: "$correctAnswers" },
             userName: { $first: "$userName" },
             userEmail: { $first: "$userEmail" },
+            userAvatarUrl: { $first: "$userAvatarUrl" },
           },
         },
         { $sort: { totalPoints: -1 } },
@@ -1314,6 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalCorrect: 1,
             userName: 1,
             userEmail: 1,
+            userAvatarUrl: 1,
             profileName: "$profileData.name",
             profileEmail: "$profileData.email",
             profileAvatarUrl: "$profileData.avatarUrl"
@@ -1333,7 +1335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name,
           username: email ? email.split("@")[0] : "player",
           email,
-          avatarUrl: entry.profileAvatarUrl || "",
+          avatarUrl: entry.userAvatarUrl || entry.profileAvatarUrl || "",
           points: entry.totalPoints || 0,
           quizzesTaken: entry.totalQuizzes || 0,
           correctAnswers: entry.totalCorrect || 0,
