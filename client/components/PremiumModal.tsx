@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
@@ -13,6 +14,9 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withRepeat,
+  withSequence,
+  Easing,
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -66,23 +70,13 @@ const PREMIUM_FEATURES: PremiumFeature[] = [
   },
 ];
 
-const PRICING_PLANS = [
-  {
-    id: "monthly",
-    label: "Monthly",
-    price: "$2.99",
-    period: "/month",
-    popular: false,
-  },
-  {
-    id: "yearly",
-    label: "Yearly",
-    price: "$19.99",
-    period: "/year",
-    popular: true,
-    savings: "Save 45%",
-  },
-];
+interface PricingData {
+  monthlyPrice: number;
+  yearlyPrice: number;
+  eventName: string;
+  eventActive: boolean;
+  currency: string;
+}
 
 export default function PremiumModal({
   visible,
@@ -93,8 +87,32 @@ export default function PremiumModal({
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">(
     "yearly"
   );
+  const [pricingData, setPricingData] = useState<PricingData>({
+    monthlyPrice: 2.99,
+    yearlyPrice: 19.99,
+    eventName: "",
+    eventActive: false,
+    currency: "USD",
+  });
+  const [loading, setLoading] = useState(false);
   const monthlyScale = useSharedValue(1);
   const yearlyScale = useSharedValue(1.05);
+  const eventScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (visible) {
+      fetchPricing();
+      // Animate event badge
+      eventScale.value = withRepeat(
+        withSequence(
+          withSpring(1.1, { damping: 8 }),
+          withSpring(1, { damping: 8 })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [visible]);
 
   const handlePlanSelect = (plan: "monthly" | "yearly") => {
     setSelectedPlan(plan);
@@ -113,6 +131,36 @@ export default function PremiumModal({
 
   const yearlyAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: yearlyScale.value }],
+  }));
+
+  const fetchPricing = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/admin/premium/pricing", {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPricingData({
+          monthlyPrice: data.monthlyPrice,
+          yearlyPrice: data.yearlyPrice,
+          eventName: data.eventName,
+          eventActive: !!data.eventName,
+          currency: data.currency || "INR",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching pricing:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const eventAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: eventScale.value }],
   }));
 
   const handleSubscribe = () => {
@@ -189,39 +237,29 @@ export default function PremiumModal({
               Choose Your Plan
             </ThemedText>
 
-            <View style={styles.pricingPlans}>
-              {PRICING_PLANS.map((plan) => (
+            {loading ? (
+              <View style={{ alignItems: "center", paddingVertical: 20 }}>
+                <ActivityIndicator size="large" color="#FF6B9D" />
+              </View>
+            ) : (
+              <View style={styles.pricingPlans}>
                 <AnimatedPressable
-                  key={plan.id}
-                  onPress={() => handlePlanSelect(plan.id as "monthly" | "yearly")}
+                  onPress={() => handlePlanSelect("monthly")}
                   style={[
                     styles.planCard,
                     {
                       backgroundColor: theme.backgroundDefault,
                       borderColor:
-                        selectedPlan === plan.id
+                        selectedPlan === "monthly"
                           ? "#FF6B9D"
                           : theme.backgroundSecondary,
                       borderWidth: 2,
                     },
-                    plan.id === "yearly"
-                      ? yearlyAnimatedStyle
-                      : monthlyAnimatedStyle,
+                    monthlyAnimatedStyle,
                   ]}
                 >
-                  {plan.popular && (
-                    <LinearGradient
-                      colors={["#FF6B9D", "#C44569"]}
-                      style={styles.popularBadge}
-                    >
-                      <ThemedText style={styles.popularText}>
-                        BEST VALUE
-                      </ThemedText>
-                    </LinearGradient>
-                  )}
-
                   <ThemedText type="h4" style={styles.planLabel}>
-                    {plan.label}
+                    Monthly
                   </ThemedText>
 
                   <View style={styles.priceContainer}>
@@ -231,13 +269,13 @@ export default function PremiumModal({
                         styles.price,
                         {
                           color:
-                            selectedPlan === plan.id
+                            selectedPlan === "monthly"
                               ? "#FF6B9D"
                               : theme.text,
                         },
                       ]}
                     >
-                      {plan.price}
+                      {pricingData.currency === "INR" ? "₹" : "$"}{pricingData.monthlyPrice}
                     </ThemedText>
                     <ThemedText
                       type="small"
@@ -246,38 +284,120 @@ export default function PremiumModal({
                         { color: theme.textSecondary },
                       ]}
                     >
-                      {plan.period}
+                      /month
                     </ThemedText>
                   </View>
-
-                  {plan.savings && (
-                    <ThemedText style={styles.savings}>
-                      {plan.savings}
-                    </ThemedText>
-                  )}
 
                   <View
                     style={[
                       styles.checkmark,
                       {
                         backgroundColor:
-                          selectedPlan === plan.id
+                          selectedPlan === "monthly"
                             ? "#FF6B9D"
                             : "transparent",
                         borderColor:
-                          selectedPlan === plan.id
+                          selectedPlan === "monthly"
                             ? "#FF6B9D"
                             : theme.border,
                       },
                     ]}
                   >
-                    {selectedPlan === plan.id && (
+                    {selectedPlan === "monthly" && (
                       <Feather name="check" size={16} color="#FFFFFF" />
                     )}
                   </View>
                 </AnimatedPressable>
-              ))}
-            </View>
+
+                <AnimatedPressable
+                  onPress={() => handlePlanSelect("yearly")}
+                  style={[
+                    styles.planCard,
+                    {
+                      backgroundColor: theme.backgroundDefault,
+                      borderColor:
+                        selectedPlan === "yearly"
+                          ? "#FF6B9D"
+                          : theme.backgroundSecondary,
+                      borderWidth: 2,
+                    },
+                    yearlyAnimatedStyle,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={["#FF6B9D", "#C44569"]}
+                    style={styles.popularBadge}
+                  >
+                    <ThemedText style={styles.popularText}>
+                      BEST VALUE
+                    </ThemedText>
+                  </LinearGradient>
+
+                  <ThemedText type="h4" style={styles.planLabel}>
+                    Yearly
+                  </ThemedText>
+
+                  <View style={styles.priceContainer}>
+                    <ThemedText
+                      type="h2"
+                      style={[
+                        styles.price,
+                        {
+                          color:
+                            selectedPlan === "yearly"
+                              ? "#FF6B9D"
+                              : theme.text,
+                        },
+                      ]}
+                    >
+                      {pricingData.currency === "INR" ? "₹" : "$"}{pricingData.yearlyPrice}
+                    </ThemedText>
+                    <ThemedText
+                      type="small"
+                      style={[
+                        styles.period,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      /year
+                    </ThemedText>
+                  </View>
+
+                  <ThemedText style={styles.savings}>
+                    Best savings
+                  </ThemedText>
+
+                  <View
+                    style={[
+                      styles.checkmark,
+                      {
+                        backgroundColor:
+                          selectedPlan === "yearly"
+                            ? "#FF6B9D"
+                            : "transparent",
+                        borderColor:
+                          selectedPlan === "yearly"
+                            ? "#FF6B9D"
+                            : theme.border,
+                      },
+                    ]}
+                  >
+                    {selectedPlan === "yearly" && (
+                      <Feather name="check" size={16} color="#FFFFFF" />
+                    )}
+                  </View>
+                </AnimatedPressable>
+              </View>
+            )}
+
+            {pricingData.eventActive && pricingData.eventName && (
+              <Animated.View style={[styles.eventBadge, eventAnimatedStyle]}>
+                <Feather name="gift" size={20} color="#FF6B9D" />
+                <ThemedText type="body" style={{ color: "#FF6B9D", marginLeft: 8, fontWeight: "600" }}>
+                  {pricingData.eventName}
+                </ThemedText>
+              </Animated.View>
+            )}
           </View>
 
           {/* Features Section */}
@@ -532,5 +652,17 @@ const styles = StyleSheet.create({
   },
   footerText: {
     marginBottom: Spacing.lg,
+  },
+  eventBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(255, 107, 157, 0.1)",
+    marginTop: Spacing.lg,
+    borderWidth: 2,
+    borderColor: "#FF6B9D",
   },
 });

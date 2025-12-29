@@ -213,6 +213,11 @@ export default function AdminDashboardScreen() {
   const [premiumUsers, setPremiumUsers] = useState<AdminUser[]>([]);
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [premiumSearchQuery, setPremiumSearchQuery] = useState("");
+  const [pricingTab, setPricingTab] = useState<"users" | "pricing">("users");
+  const [monthlyPrice, setMonthlyPrice] = useState("99");
+  const [yearlyPrice, setYearlyPrice] = useState("699");
+  const [eventName, setEventName] = useState("");
+  const [pricingSaving, setPricingSaving] = useState(false);
 
   // Fetch users when modal opens
   useEffect(() => {
@@ -225,8 +230,60 @@ export default function AdminDashboardScreen() {
   useEffect(() => {
     if (premiumModalVisible) {
       fetchPremiumUsers();
+      fetchPremiumPricing();
     }
   }, [premiumModalVisible]);
+
+  const fetchPremiumPricing = async () => {
+    try {
+      const response = await fetch("/api/admin/premium/pricing", {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMonthlyPrice(data.monthlyPrice.toString());
+        setYearlyPrice(data.yearlyPrice.toString());
+        setEventName(data.eventName || "");
+      }
+    } catch (error) {
+      console.error("Error fetching pricing:", error);
+    }
+  };
+
+  const handleSavePricing = async () => {
+    if (!monthlyPrice || !yearlyPrice) {
+      Alert.alert("Error", "Please enter both prices");
+      return;
+    }
+
+    setPricingSaving(true);
+    try {
+      const response = await fetch("/api/admin/premium/pricing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          monthlyPrice: parseInt(monthlyPrice),
+          yearlyPrice: parseInt(yearlyPrice),
+          eventName: eventName.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        Alert.alert("Success", "Pricing updated successfully");
+        setPricingTab("users");
+      } else {
+        Alert.alert("Error", "Failed to update pricing");
+      }
+    } catch (error) {
+      console.error("Error saving pricing:", error);
+      Alert.alert("Error", "Something went wrong");
+    } finally {
+      setPricingSaving(false);
+    }
+  };
 
   const fetchPremiumUsers = async () => {
     setPremiumLoading(true);
@@ -540,130 +597,232 @@ export default function AdminDashboardScreen() {
         onRequestClose={() => {
           setPremiumModalVisible(false);
           setPremiumSearchQuery("");
+          setPricingTab("users");
         }}
       >
         <ThemedView style={styles.container}>
           <View
             style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}
           >
-            <Pressable onPress={() => setPremiumModalVisible(false)}>
+            <Pressable onPress={() => {
+              setPremiumModalVisible(false);
+              setPricingTab("users");
+            }}>
               <Feather name="x" size={24} color={theme.text} />
             </Pressable>
             <ThemedText type="h2">Manage Premium</ThemedText>
             <View style={{ width: 24 }} />
           </View>
 
-          <View style={[styles.searchBox, { backgroundColor: theme.backgroundSecondary }]}>
-            <Feather name="search" size={20} color={theme.textSecondary} />
-            <TextInput
-              placeholder="Search users..."
-              value={premiumSearchQuery}
-              onChangeText={setPremiumSearchQuery}
-              placeholderTextColor={theme.textSecondary}
-              style={[styles.searchInput, { color: theme.text }]}
-            />
+          {/* Tab Navigation */}
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: theme.backgroundSecondary }}>
+            <Pressable
+              onPress={() => setPricingTab("users")}
+              style={[
+                styles.tabButton,
+                { borderBottomWidth: pricingTab === "users" ? 3 : 0, borderBottomColor: pricingTab === "users" ? theme.primary : "transparent" }
+              ]}
+            >
+              <ThemedText type="body" style={{ color: pricingTab === "users" ? theme.primary : theme.textSecondary }}>
+                User Access
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => setPricingTab("pricing")}
+              style={[
+                styles.tabButton,
+                { borderBottomWidth: pricingTab === "pricing" ? 3 : 0, borderBottomColor: pricingTab === "pricing" ? theme.primary : "transparent" }
+              ]}
+            >
+              <ThemedText type="body" style={{ color: pricingTab === "pricing" ? theme.primary : theme.textSecondary }}>
+                Pricing & Events
+              </ThemedText>
+            </Pressable>
           </View>
 
-          {premiumLoading ? (
-            <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
-              <ActivityIndicator size="large" color={theme.primary} />
-              <ThemedText type="small" style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
-                Loading users...
-              </ThemedText>
-            </View>
-          ) : (
-            <FlatList
-              data={premiumUsers.filter((u) =>
-                u.username.toLowerCase().includes(premiumSearchQuery.toLowerCase())
-              )}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View
-                  style={[
-                    styles.userItem,
-                    { backgroundColor: theme.backgroundSecondary },
-                  ]}
-                >
-                  <View style={styles.userInfo}>
-                    <View style={[styles.userAvatar, { backgroundColor: "#FF6B9D25" }]}>
-                      <ThemedText type="small" style={{ color: "#FF6B9D" }}>
-                        {item.username.charAt(0).toUpperCase()}
-                      </ThemedText>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <ThemedText type="body">{item.username}</ThemedText>
-                      <ThemedText
-                        type="small"
-                        style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
-                      >
-                        {item.quizCount} quizzes • {item.attempts} attempts
-                      </ThemedText>
-                    </View>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: Spacing.sm }}>
-                    <Pressable
-                      onPress={async () => {
-                        try {
-                          const response = await fetch(`/api/admin/premium/grant`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ userId: item.id }),
-                          });
-                          if (response.ok) {
-                            Alert.alert("Success", `${item.username} is now premium`);
-                            setPremiumModalVisible(false);
-                          }
-                        } catch (error) {
-                          Alert.alert("Error", "Failed to grant premium");
-                        }
-                      }}
-                      style={[
-                        styles.premiumButton,
-                        { backgroundColor: "#FF6B9D" },
-                      ]}
-                    >
-                      <ThemedText type="small" style={{ color: "white" }}>
-                        Get Premium
-                      </ThemedText>
-                    </Pressable>
-                    <Pressable
-                      onPress={async () => {
-                        try {
-                          const response = await fetch(`/api/admin/premium/remove`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ userId: item.id }),
-                          });
-                          if (response.ok) {
-                            Alert.alert("Success", `Premium removed from ${item.username}`);
-                            setPremiumModalVisible(false);
-                          }
-                        } catch (error) {
-                          Alert.alert("Error", "Failed to remove premium");
-                        }
-                      }}
-                      style={[
-                        styles.premiumButton,
-                        { backgroundColor: "#999" },
-                      ]}
-                    >
-                      <ThemedText type="small" style={{ color: "white" }}>
-                        Remove
-                      </ThemedText>
-                    </Pressable>
-                  </View>
-                </View>
-              )}
-              contentContainerStyle={styles.usersList}
-              scrollEnabled={true}
-              ListEmptyComponent={
+          {pricingTab === "users" ? (
+            <>
+              <View style={[styles.searchBox, { backgroundColor: theme.backgroundSecondary }]}>
+                <Feather name="search" size={20} color={theme.textSecondary} />
+                <TextInput
+                  placeholder="Search users..."
+                  value={premiumSearchQuery}
+                  onChangeText={setPremiumSearchQuery}
+                  placeholderTextColor={theme.textSecondary}
+                  style={[styles.searchInput, { color: theme.text }]}
+                />
+              </View>
+
+              {premiumLoading ? (
                 <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
-                  <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                    No users found
+                  <ActivityIndicator size="large" color={theme.primary} />
+                  <ThemedText type="small" style={{ marginTop: Spacing.md, color: theme.textSecondary }}>
+                    Loading users...
                   </ThemedText>
                 </View>
-              }
-            />
+              ) : (
+                <FlatList
+                  data={premiumUsers.filter((u) =>
+                    u.username.toLowerCase().includes(premiumSearchQuery.toLowerCase())
+                  )}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <View
+                      style={[
+                        styles.userItem,
+                        { backgroundColor: theme.backgroundSecondary },
+                      ]}
+                    >
+                      <View style={styles.userInfo}>
+                        <View style={[styles.userAvatar, { backgroundColor: "#FF6B9D25" }]}>
+                          <ThemedText type="small" style={{ color: "#FF6B9D" }}>
+                            {item.username.charAt(0).toUpperCase()}
+                          </ThemedText>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <ThemedText type="body">{item.username}</ThemedText>
+                          <ThemedText
+                            type="small"
+                            style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
+                          >
+                            {item.quizCount} quizzes • {item.attempts} attempts
+                          </ThemedText>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: "row", gap: Spacing.sm }}>
+                        <Pressable
+                          onPress={async () => {
+                            try {
+                              const response = await fetch(`/api/admin/premium/grant`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ userId: item.id }),
+                              });
+                              if (response.ok) {
+                                Alert.alert("Success", `${item.username} is now premium`);
+                                setPremiumModalVisible(false);
+                              }
+                            } catch (error) {
+                              Alert.alert("Error", "Failed to grant premium");
+                            }
+                          }}
+                          style={[
+                            styles.premiumButton,
+                            { backgroundColor: "#FF6B9D" },
+                          ]}
+                        >
+                          <ThemedText type="small" style={{ color: "white" }}>
+                            Get Premium
+                          </ThemedText>
+                        </Pressable>
+                        <Pressable
+                          onPress={async () => {
+                            try {
+                              const response = await fetch(`/api/admin/premium/remove`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ userId: item.id }),
+                              });
+                              if (response.ok) {
+                                Alert.alert("Success", `Premium removed from ${item.username}`);
+                                setPremiumModalVisible(false);
+                              }
+                            } catch (error) {
+                              Alert.alert("Error", "Failed to remove premium");
+                            }
+                          }}
+                          style={[
+                            styles.premiumButton,
+                            { backgroundColor: "#999" },
+                          ]}
+                        >
+                          <ThemedText type="small" style={{ color: "white" }}>
+                            Remove
+                          </ThemedText>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                  contentContainerStyle={styles.usersList}
+                  scrollEnabled={true}
+                  ListEmptyComponent={
+                    <View style={{ alignItems: "center", paddingVertical: Spacing.lg }}>
+                      <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                        No users found
+                      </ThemedText>
+                    </View>
+                  }
+                />
+              )}
+            </>
+          ) : (
+            <ScrollView
+              contentContainerStyle={styles.usersList}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={{ gap: Spacing.lg }}>
+                <View>
+                  <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>
+                    Pricing Strategy
+                  </ThemedText>
+                  <View style={[styles.priceInputContainer, { backgroundColor: theme.backgroundSecondary }]}>
+                    <View style={{ gap: Spacing.md }}>
+                      <View>
+                        <ThemedText type="body" style={{ marginBottom: Spacing.sm }}>Monthly Price (₹)</ThemedText>
+                        <TextInput
+                          placeholder="99"
+                          value={monthlyPrice}
+                          onChangeText={setMonthlyPrice}
+                          placeholderTextColor={theme.textSecondary}
+                          keyboardType="number-pad"
+                          style={[styles.priceInput, { color: theme.text, backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}
+                        />
+                      </View>
+                      <View>
+                        <ThemedText type="body" style={{ marginBottom: Spacing.sm }}>Yearly Price (₹)</ThemedText>
+                        <TextInput
+                          placeholder="699"
+                          value={yearlyPrice}
+                          onChangeText={setYearlyPrice}
+                          placeholderTextColor={theme.textSecondary}
+                          keyboardType="number-pad"
+                          style={[styles.priceInput, { color: theme.text, backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                <View>
+                  <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>
+                    Event / Offer
+                  </ThemedText>
+                  <TextInput
+                    placeholder="e.g., Diwali Offer, Holi Sale"
+                    value={eventName}
+                    onChangeText={setEventName}
+                    placeholderTextColor={theme.textSecondary}
+                    style={[styles.eventInput, { color: theme.text, backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}
+                  />
+                  <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.sm }}>
+                    Leave empty to deactivate event
+                  </ThemedText>
+                </View>
+
+                <Pressable
+                  onPress={handleSavePricing}
+                  disabled={pricingSaving}
+                  style={({ pressed }) => [
+                    styles.saveButton,
+                    { backgroundColor: theme.primary, opacity: pressed || pricingSaving ? 0.7 : 1 }
+                  ]}
+                >
+                  <ThemedText type="body" style={{ color: "white", fontWeight: "600" }}>
+                    {pricingSaving ? "Saving..." : "Save All Changes"}
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </ScrollView>
           )}
         </ThemedView>
       </Modal>
@@ -1207,5 +1366,34 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     justifyContent: "center",
     alignItems: "center",
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+  },
+  priceInputContainer: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+  },
+  priceInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    fontSize: 16,
+  },
+  eventInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    fontSize: 16,
+  },
+  saveButton: {
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

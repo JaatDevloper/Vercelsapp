@@ -2658,6 +2658,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get premium pricing and events
+  app.get("/api/admin/premium/pricing", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const pricingCollection = db.collection("PremiumPricing");
+
+      const pricing = await pricingCollection.findOne({ _id: "default" });
+      if (!pricing) {
+        return res.json({
+          monthlyPrice: 99,
+          yearlyPrice: 699,
+          currency: "INR",
+          eventName: "",
+          eventActive: false,
+        });
+      }
+
+      res.json(pricing);
+    } catch (error) {
+      console.error("Error fetching pricing:", error);
+      res.status(500).json({ error: "Failed to fetch pricing" });
+    }
+  });
+
+  // Update premium pricing and events
+  app.post("/api/admin/premium/pricing", async (req: Request, res: Response) => {
+    try {
+      const { monthlyPrice, yearlyPrice, eventName } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const pricingCollection = db.collection("PremiumPricing");
+
+      if (!monthlyPrice || !yearlyPrice) {
+        return res.status(400).json({ error: "Missing pricing data" });
+      }
+
+      await pricingCollection.updateOne(
+        { _id: "default" },
+        {
+          $set: {
+            monthlyPrice: parseInt(monthlyPrice),
+            yearlyPrice: parseInt(yearlyPrice),
+            currency: "INR",
+            eventName: eventName || "",
+            eventActive: !!eventName,
+            updatedAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+
+      res.json({ message: "Pricing updated successfully" });
+    } catch (error) {
+      console.error("Error updating pricing:", error);
+      res.status(500).json({ error: "Failed to update pricing" });
+    }
+  });
+
   // Create quiz (user-generated)
   app.post("/api/user/create-quiz", async (req: Request, res: Response) => {
     try {
