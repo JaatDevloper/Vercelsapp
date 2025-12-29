@@ -77,6 +77,7 @@ function formatQuiz(quiz: any) {
     quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
     title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
     category: quiz.category || "General",
+    managedCategory: quiz.managedCategory || null,
     timer: quiz.timer || 15,
     negative_marking: quiz.negative_marking || 0,
     type: quiz.type || "free",
@@ -85,6 +86,7 @@ function formatQuiz(quiz: any) {
     created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
     timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
     questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
+    isDeleted: quiz.isDeleted || false,
     questions: Array.isArray(quiz.questions)
       ? quiz.questions.map((q: any, index: number) => ({
           _id: q._id?.toString() || `q-${index}`,
@@ -110,6 +112,7 @@ function formatQuizForList(quiz: any) {
     quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
     title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
     category: quiz.category || "General",
+    managedCategory: quiz.managedCategory || null,
     timer: quiz.timer || 15,
     negative_marking: quiz.negative_marking || 0,
     type: quiz.type || "free",
@@ -118,6 +121,7 @@ function formatQuizForList(quiz: any) {
     created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
     timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
     questionCount: Array.isArray(quiz.questions) ? quiz.questions.length : 0,
+    isDeleted: quiz.isDeleted || false,
   };
 }
 
@@ -150,6 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quiz_name: 1,
           name: 1,
           category: 1,
+          managedCategory: 1,
           timer: 1,
           negative_marking: 1,
           type: 1,
@@ -171,6 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         quiz_id: quiz.quiz_id || quiz._id?.toString() || "",
         title: quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz",
         category: quiz.category || "General",
+        managedCategory: quiz.managedCategory || null,
         timer: quiz.timer || 15,
         negative_marking: quiz.negative_marking || 0,
         type: quiz.type || "free",
@@ -179,6 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         created_at: quiz.created_at || quiz.timestamp || new Date().toISOString(),
         timestamp: quiz.timestamp || quiz.created_at || new Date().toISOString(),
         questionCount: quiz.questionCount || 0,
+        isDeleted: quiz.isDeleted || false,
       }));
 
       // Set cache headers for better performance
