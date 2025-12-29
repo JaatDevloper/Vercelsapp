@@ -18,7 +18,7 @@ import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 export type MainTabParamList = {
   Discover: undefined;
-  Offer: undefined;
+  Offers: undefined;
   History: undefined;
   Leaderboard: undefined;
   Profile: undefined;
@@ -117,10 +117,10 @@ export default function MainTabNavigator() {
           }}
         />
         <Tab.Screen
-          name="Offer"
+          name="Offers"
           component={DiscoverScreen}
           options={{
-            title: "Offer",
+            title: "Offers",
             tabBarIcon: ({ color, size }) => (
               <Feather name="gift" size={size} color={color} />
             ),

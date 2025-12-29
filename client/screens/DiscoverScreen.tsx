@@ -29,6 +29,8 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
 
+import Animated, { FadeInUp } from "react-native-reanimated";
+
 interface Category {
   name: string;
   color: string;
@@ -41,7 +43,7 @@ export default function DiscoverScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const isOfferTab = route.name === "Offer";
+  const isOfferTab = route.name === "Offers";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -66,30 +68,32 @@ export default function DiscoverScreen() {
     navigation.navigate("BatchDetails" as any, { batchId: batch._id });
   };
 
-  const renderBatchItem = ({ item }: { item: any }) => (
-    <Pressable 
-      onPress={() => handleBatchPress(item)}
-      style={[
-        styles.batchCard, 
-        { 
-          backgroundColor: isDark ? theme.backgroundSecondary : '#fff', 
-          width: isOfferTab ? '100%' : 200, 
-          marginBottom: isOfferTab ? Spacing.lg : 0, 
-          marginRight: isOfferTab ? 0 : Spacing.md 
-        }
-      ]}
-    >
-      <View style={styles.batchThumbnailContainer}>
-        <Image 
-          source={{ uri: item.thumbnail || "https://via.placeholder.com/150" }} 
-          style={[styles.batchThumbnail, { height: isOfferTab ? 180 : 120 }]} 
-        />
-      </View>
-      <View style={styles.batchInfo}>
-        <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.title}</ThemedText>
-        <ThemedText type="small" numberOfLines={1}>{item.description}</ThemedText>
-      </View>
-    </Pressable>
+  const renderBatchItem = ({ item, index }: { item: any; index: number }) => (
+    <Animated.View entering={FadeInUp.delay(index * 100).duration(500)}>
+      <Pressable 
+        onPress={() => handleBatchPress(item)}
+        style={[
+          styles.batchCard, 
+          { 
+            backgroundColor: isDark ? theme.backgroundSecondary : '#fff', 
+            width: isOfferTab ? '100%' : 200, 
+            marginBottom: isOfferTab ? Spacing.lg : 0, 
+            marginRight: isOfferTab ? 0 : Spacing.md 
+          }
+        ]}
+      >
+        <View style={styles.batchThumbnailContainer}>
+          <Image 
+            source={{ uri: item.thumbnail || "https://via.placeholder.com/150" }} 
+            style={[styles.batchThumbnail, { height: isOfferTab ? 180 : 120 }]} 
+          />
+        </View>
+        <View style={styles.batchInfo}>
+          <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.title}</ThemedText>
+          <ThemedText type="small" numberOfLines={1}>{item.description}</ThemedText>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 
   React.useEffect(() => {
@@ -224,8 +228,8 @@ export default function DiscoverScreen() {
       <FlatList
         data={isOfferTab ? batches : [1]} // Use a dummy single item to render header/footer in non-offer tab
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => {
-          if (isOfferTab) return renderBatchItem({ item });
+        renderItem={({ item, index }) => {
+          if (isOfferTab) return renderBatchItem({ item, index });
           
           return (
             <View>
@@ -236,7 +240,7 @@ export default function DiscoverScreen() {
                     horizontal 
                     data={batches} 
                     keyExtractor={item => item._id} 
-                    renderItem={renderBatchItem} 
+                    renderItem={({ item, index }) => renderBatchItem({ item, index })} 
                     showsHorizontalScrollIndicator={false} 
                     contentContainerStyle={{ gap: Spacing.md }} 
                   />
