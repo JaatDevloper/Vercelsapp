@@ -270,7 +270,7 @@ export default function ManageQuizzesScreen() {
     >
       <View style={styles.quizHeader}>
         <View style={styles.quizInfo}>
-          <ThemedText type="body" numberOfLines={1}>
+          <ThemedText type="body">
             {quiz.title}
           </ThemedText>
           <ThemedText
