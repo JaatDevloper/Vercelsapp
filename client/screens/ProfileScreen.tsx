@@ -26,6 +26,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useQuizHistory } from "@/hooks/useQuizHistory";
 import { useProfile } from "@/hooks/useProfile";
 import { useOwnerProfile } from "@/hooks/useOwnerProfile";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import VerificationBadgesModal, { 
@@ -97,8 +98,13 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { getStats } = useQuizHistory();
-  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge, updateFrame } = useProfile();
+  const { profile, isLoading, profileNotFound, refetch, updatePhoto, isUpdatingPhoto, logout, updateBadge, updateFrame, deviceId } = useProfile();
   const { ownerProfile } = useOwnerProfile();
+  
+  // Enable silent auto-refresh every 10 seconds
+  // ✅ No loading spinners, UI flickers, screen jumps, or refresh indicators
+  // ✅ Data updates quietly in background
+  useSilentAutoRefresh(["profile", deviceId], 10000);
 
   const stats = getStats();
   const [aboutModalVisible, setAboutModalVisible] = useState(false);
