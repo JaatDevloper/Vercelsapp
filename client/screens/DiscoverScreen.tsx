@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -28,6 +28,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
+import { getDeviceId } from "@/lib/deviceId";
 
 import Animated, { FadeInUp } from "react-native-reanimated";
 
@@ -50,6 +51,11 @@ export default function DiscoverScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const searchInputRef = useRef<TextInput>(null);
   const [premiumModalVisible, setPremiumModalVisible] = useState(false);
+  const [deviceId, setDeviceId] = useState<string>("");
+
+  useEffect(() => {
+    getDeviceId().then(setDeviceId);
+  }, []);
 
   const { 
     data: batches,
@@ -134,12 +140,14 @@ export default function DiscoverScreen() {
   const CATEGORIES = ["All", ...categories.map((c) => c.name)];
 
   const { data: profile } = useQuery({
-    queryKey: ["/api/profile"],
+    queryKey: ["/api/profile", deviceId],
     queryFn: async () => {
-      const response = await fetch(`/api/profile?deviceId=unknown`);
+      if (!deviceId) return null;
+      const response = await fetch(`/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
       if (!response.ok) return null;
       return response.json();
-    }
+    },
+    enabled: !!deviceId
   });
 
   const isUserPremium = profile?.isPremium === true;

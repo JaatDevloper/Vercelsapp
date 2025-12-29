@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as DocumentPicker from "expo-document-picker";
+import { getDeviceId } from "@/lib/deviceId";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -53,6 +54,11 @@ export default function CreateQuizScreen() {
   const [showNegativeModal, setShowNegativeModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [categories, setCategories] = useState<{name: string, color: string, icon: string}[]>([]);
+  const [deviceId, setDeviceId] = useState<string>("");
+
+  useEffect(() => {
+    getDeviceId().then(setDeviceId);
+  }, []);
 
   const [quizData, setQuizData] = useState<CreateQuizData>({
     title: "",
@@ -266,9 +272,11 @@ export default function CreateQuizScreen() {
       // Get profile info if available
       let profileData = null;
       try {
-        const profileResponse = await fetch("/api/profile?deviceId=unknown"); // We should ideally use the actual deviceId
-        if (profileResponse.ok) {
-          profileData = await profileResponse.json();
+        if (deviceId) {
+          const profileResponse = await fetch(`/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
+          if (profileResponse.ok) {
+            profileData = await profileResponse.json();
+          }
         }
       } catch (e) {
         console.warn("Could not fetch profile for creator info");
@@ -276,7 +284,7 @@ export default function CreateQuizScreen() {
 
       const payload = {
         ...quizData,
-        creator_id: profileData?.deviceId || "anonymous",
+        creator_id: profileData?.deviceId || deviceId || "anonymous",
         creator_name: profileData?.name || "User",
       };
 

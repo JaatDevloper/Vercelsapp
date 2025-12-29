@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -18,6 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
+import { getDeviceId } from "@/lib/deviceId";
 
 const { width } = Dimensions.get("window");
 
@@ -28,6 +29,11 @@ export default function BatchDetailsScreen() {
   const route = useRoute();
   const queryClient = useQueryClient();
   const { batchId } = route.params as { batchId: string };
+  const [deviceId, setDeviceId] = useState<string>("");
+
+  useEffect(() => {
+    getDeviceId().then(setDeviceId);
+  }, []);
 
   const { data: batch, isLoading } = useQuery({
     queryKey: ["/api/batches", batchId],
@@ -40,12 +46,14 @@ export default function BatchDetailsScreen() {
   });
 
   const { data: profile } = useQuery({
-    queryKey: ["/api/profile"],
+    queryKey: ["/api/profile", deviceId],
     queryFn: async () => {
-      const response = await fetch(`/api/profile?deviceId=unknown`);
+      if (!deviceId) return null;
+      const response = await fetch(`/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
       if (!response.ok) return null;
       return response.json();
-    }
+    },
+    enabled: !!deviceId
   });
 
   const isBatchUnlocked = profile?.unlockedBatches?.includes(batchId) || batch?.price === 0;
@@ -65,7 +73,7 @@ export default function BatchDetailsScreen() {
               const response = await fetch("/api/batches/purchase", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ deviceId: "unknown", batchId }),
+                body: JSON.stringify({ deviceId, batchId }),
               });
               if (response.ok) {
                 queryClient.invalidateQueries({ queryKey: ["/api/profile"] });

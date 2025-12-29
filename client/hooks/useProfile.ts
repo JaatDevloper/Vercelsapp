@@ -12,6 +12,7 @@ export interface Profile {
   avatarUrl: string;
   selectedBadgeId: string;
   selectedFrameId: string;
+  isPremium?: boolean;
   income: number;
   expense: number;
   currency: string;
