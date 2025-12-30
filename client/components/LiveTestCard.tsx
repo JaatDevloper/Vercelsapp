@@ -2,21 +2,22 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
   withTiming, 
   withRepeat, 
   withSequence,
+  interpolate,
+  useDerivedValue,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
-  const { isDark } = useTheme();
+  const { theme, isDark } = useTheme();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -83,181 +84,182 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   if (loading || !liveData) return null;
 
   return (
-    <LinearGradient
-      colors={["#f8fafc", "#eef2ff"]}
-      style={styles.backgroundGradient}
-    >
-      <View style={styles.cardWrapper}>
-        <BlurView intensity={80} tint="light" style={styles.blurContainer}>
-          <LinearGradient
-            colors={["rgba(255, 255, 255, 0.25)", "rgba(255, 255, 255, 0.05)"]}
-            style={styles.card}
+    <View style={styles.cardWrapper}>
+      <LinearGradient
+        colors={["rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.05)"]}
+        style={styles.card}
+      >
+        <View style={styles.glassOverlay} />
+        <View style={styles.header}>
+          <ThemedText style={styles.liveTitleText}>
+            {liveData.liveTitle || "तृतीय श्रेणी अध्यापक परीक्षा"}
+          </ThemedText>
+          <View style={styles.liveIndicatorContainer}>
+            <Animated.View style={[styles.liveDot, liveDotStyle]} />
+            <ThemedText style={styles.liveNowText}>Live Now</ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Feather name="clock" size={16} color="#6B7280" />
+            <ThemedText style={styles.statText}>{liveData.duration || 80} mins</ThemedText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Feather name="file-text" size={16} color="#6B7280" />
+            <ThemedText style={styles.statText}>{liveData.questionCount || 80} Qns</ThemedText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Feather name="users" size={16} color="#6B7280" />
+            <ThemedText style={styles.statText}>{liveData.maxParticipants || 50}</ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.topicContainer}>
+          <ThemedText style={styles.topicText}>
+            {liveData.quizTitle || " राजस्थान के प्रमुख लोकनृत्य (REET SPECIAL)"}
+          </ThemedText>
+        </View>
+
+        <View style={styles.participantsRow}>
+          <View style={styles.avatarStack}>
+            <View style={[styles.avatar, { backgroundColor: "#6366F1", zIndex: 3 }]} />
+            <View style={[styles.avatar, { backgroundColor: "#818CF8", zIndex: 2, marginLeft: -12 }]} />
+            <View style={[styles.avatar, { backgroundColor: "#4F46E5", zIndex: 1, marginLeft: -12 }]} />
+            <View style={[styles.avatar, { backgroundColor: "#10B981", zIndex: 0, marginLeft: -12 }]} />
+          </View>
+          <ThemedText style={styles.joinedTotalText}>
+            {liveData.joinedCount || 0}/{liveData.maxParticipants || 50}
+          </ThemedText>
+        </View>
+
+        <View style={styles.progressBarBackground}>
+          <View 
+            style={[
+              styles.progressBarFill, 
+              { width: `${Math.min(((liveData.joinedCount || 0) / (liveData.maxParticipants || 50)) * 100, 100)}%` }
+            ]} 
+          />
+        </View>
+
+        <Animated.View style={[styles.ctaContainer, buttonAnimatedStyle]}>
+          <Pressable 
+            onPress={onStart}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={styles.startButton}
           >
-            <View style={styles.header}>
-              <ThemedText style={styles.liveTitleText}>
-                {liveData.liveTitle || "तृतीय श्रेणी अध्यापक परीक्षा"}
-              </ThemedText>
-              <View style={styles.liveIndicatorContainer}>
-                <Animated.View style={[styles.liveDot, liveDotStyle]} />
-                <ThemedText style={styles.liveNowText}>Live Now</ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statPill}>
-                <Feather name="clock" size={14} color="#475569" />
-                <ThemedText style={styles.statText}>{liveData.duration || 80} mins</ThemedText>
-              </View>
-              <View style={styles.statPill}>
-                <Feather name="file-text" size={14} color="#475569" />
-                <ThemedText style={styles.statText}>{liveData.questionCount || 80} Qns</ThemedText>
-              </View>
-              <View style={styles.statPill}>
-                <Feather name="users" size={14} color="#475569" />
-                <ThemedText style={styles.statText}>{liveData.maxParticipants || 50}</ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.topicContainer}>
-              <ThemedText style={styles.topicText}>
-                {liveData.quizTitle || " राजस्थान के प्रमुख लोकनृत्य (REET SPECIAL)"}
-              </ThemedText>
-            </View>
-
-            <View style={styles.participantsRow}>
-              <View style={styles.avatarStack}>
-                <View style={[styles.avatar, { backgroundColor: "#6366f1", zIndex: 3 }]} />
-                <View style={[styles.avatar, { backgroundColor: "#818cf8", zIndex: 2, marginLeft: -12 }]} />
-                <View style={[styles.avatar, { backgroundColor: "#a5b4fc", zIndex: 1, marginLeft: -12 }]} />
-                <View style={[styles.avatar, { backgroundColor: "#c7d2fe", zIndex: 0, marginLeft: -12 }]} />
-              </View>
-              <ThemedText style={styles.joinedTotalText}>
-                {liveData.joinedCount || 0}/{liveData.maxParticipants || 50}
-              </ThemedText>
-            </View>
-
-            <View style={styles.progressBarBackground}>
-              <View 
-                style={[
-                  styles.progressBarFill, 
-                  { width: `${Math.min(((liveData.joinedCount || 0) / (liveData.maxParticipants || 50)) * 100, 100)}%` }
-                ]} 
-              />
-            </View>
-
-            <Animated.View style={[styles.ctaContainer, buttonAnimatedStyle]}>
-              <Pressable 
-                onPress={onStart}
-                onPressIn={handlePressIn}
-                onPressOut={handlePressOut}
-                style={styles.startButton}
-              >
-                <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
-              </Pressable>
-            </Animated.View>
-          </LinearGradient>
-        </BlurView>
-      </View>
-    </LinearGradient>
+            <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
+          </Pressable>
+        </Animated.View>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundGradient: {
-    paddingVertical: Spacing.lg,
-  },
   cardWrapper: {
     width: "94%",
     alignSelf: "center",
+    marginVertical: Spacing.md,
     borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowRadius: 35,
+    elevation: 12,
     overflow: "hidden",
   },
-  blurContainer: {
-    borderRadius: 28,
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    opacity: 0.5,
   },
   card: {
     padding: 24,
     borderRadius: 28,
+    width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255, 255, 255, 0.5)",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  headerLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "500",
   },
   liveTitleText: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#0f172a",
+    color: "#111827",
     flex: 1,
-    marginRight: 8,
+    marginRight: 10,
   },
   liveIndicatorContainer: {
     flexDirection: "row",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: "rgba(99, 102, 241, 0.1)",
+    backgroundColor: "white",
     alignItems: "center",
+    justifyContent: "center",
     gap: 6,
-    borderWidth: 1,
-    borderColor: "rgba(99, 102, 241, 0.2)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   liveNowText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700",
-    color: "#6366f1",
+    color: "#6366F1",
   },
   liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#6366f1",
-    shadowColor: "#6366f1",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#6366F1",
   },
   statsContainer: {
     flexDirection: "row",
-    marginBottom: 16,
-    gap: 8,
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 12,
   },
-  statPill: {
+  statItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    gap: 6,
   },
   statText: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#475569",
+    color: "#1F2937",
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: "#D1D5DB",
   },
   topicContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
+    backgroundColor: "rgba(0,0,0,0.05)",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 20,
   },
   topicText: {
-    fontSize: 13,
-    color: "#334155",
+    fontSize: 14,
+    color: "#374151",
     fontWeight: "500",
     textAlign: "center",
   },
@@ -265,34 +267,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   avatarStack: {
     flexDirection: "row",
     alignItems: "center",
   },
   avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "rgba(255, 255, 255, 0.8)",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "white",
   },
   joinedTotalText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#1F2937",
   },
   progressBarBackground: {
     height: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    backgroundColor: "#E5E7EB",
     borderRadius: 3,
-    marginBottom: 20,
+    marginBottom: 24,
+    width: "100%",
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#10b981",
+    backgroundColor: "#10B981",
     borderRadius: 3,
   },
   ctaContainer: {
@@ -300,20 +303,20 @@ const styles = StyleSheet.create({
   },
   startButton: {
     backgroundColor: "#000000",
-    height: 52,
-    borderRadius: 26,
+    height: 56,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
     elevation: 4,
   },
   startButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 });
 
