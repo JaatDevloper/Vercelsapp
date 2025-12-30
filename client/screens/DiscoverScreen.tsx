@@ -156,17 +156,6 @@ export default function DiscoverScreen() {
 
   const CATEGORIES = ["All", ...categories.map((c) => c.name)];
 
-  const { data: profile } = useQuery({
-    queryKey: ["/api/profile", deviceId],
-    queryFn: async () => {
-      if (!deviceId) return null;
-      const response = await fetch(`/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
-      if (!response.ok) return null;
-      return response.json();
-    },
-    enabled: !!deviceId
-  });
-
   const isUserPremium = profile?.isPremium === true;
 
   const { data: quizzes, isLoading, refetch, isRefetching } = useQuery<Quiz[]>({
