@@ -1,25 +1,67 @@
-import React from "react";
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, Pressable, ScrollView, Linking, Share } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { getDeviceId } from "@/lib/deviceId";
 
 export default function QuizResultSummaryScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { score, totalQuestions, correctAnswers, incorrectAnswers, duration } = route.params;
+  const { quizId, score, totalQuestions, correctAnswers, incorrectAnswers, duration, answers } = route.params;
 
+  const [rank, setRank] = useState<number | null>(null);
   const accuracy = Math.round((correctAnswers / totalQuestions) * 100) || 0;
 
+  useEffect(() => {
+    const submitAndFetchRank = async () => {
+      try {
+        const deviceId = await getDeviceId();
+        const response = await fetch("/api/livequiz/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quizId,
+            score,
+            correctAnswers,
+            incorrectAnswers,
+            deviceId,
+            userName: "Student" // Replace with actual profile name if available
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setRank(data.rank);
+        }
+      } catch (e) {
+        console.error("Error submitting result:", e);
+      }
+    };
+
+    submitAndFetchRank();
+  }, []);
+
+  const handleShareWhatsApp = () => {
+    const text = `I scored ${score} in the QuizzyEdu Live Test! Accuracy: ${accuracy}%. Join me on QuizzyEdu!`;
+    Linking.openURL(`whatsapp://send?text=${encodeURIComponent(text)}`);
+  };
+
+  const handleShareGeneric = async () => {
+    try {
+      await Share.share({
+        message: `I scored ${score} in the QuizzyEdu Live Test! Accuracy: ${accuracy}%. Join me on QuizzyEdu!`,
+      });
+    } catch (e) {}
+  };
+
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={[styles.container, { backgroundColor: theme.backgroundDefault }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.congratsCard}>
+        <View style={[styles.congratsCard, { backgroundColor: theme.backgroundSecondary }]}>
           <View style={styles.medalContainer}>
              <Feather name="award" size={80} color="#FBBF24" />
           </View>
@@ -29,7 +71,7 @@ export default function QuizResultSummaryScreen() {
           
           <View style={styles.rankBadge}>
             <Feather name="star" size={20} color="white" />
-            <ThemedText style={styles.rankText}>Topic Rank - #983</ThemedText>
+            <ThemedText style={styles.rankText}>Topic Rank - #{rank || "..."}</ThemedText>
           </View>
 
           <View style={styles.statsGrid}>
@@ -56,22 +98,26 @@ export default function QuizResultSummaryScreen() {
             <ThemedText style={styles.footerText}>Incorrect: {incorrectAnswers}</ThemedText>
           </View>
 
-          <ThemedText style={styles.copyright}>© 2025 Testline. All right reserved!</ThemedText>
+          <ThemedText style={styles.copyright}>© 2025 QuizzyEdu. All right reserved!</ThemedText>
         </View>
 
         <Pressable 
-            onPress={() => navigation.navigate("Home")}
-            style={styles.solutionButton}
+            onPress={() => navigation.navigate("Results", { 
+              quizId, score, totalQuestions, correctCount: correctAnswers, 
+              incorrectCount: incorrectAnswers, unansweredCount: totalQuestions - (correctAnswers + incorrectAnswers),
+              negativeMarking: 0.66, finalScore: score, answers, timeTaken: 0 
+            })}
+            style={[styles.solutionButton, { borderColor: theme.primary }]}
         >
-          <ThemedText style={styles.solutionText}>Detailed Solution</ThemedText>
+          <ThemedText style={[styles.solutionText, { color: theme.primary }]}>Detailed Solution</ThemedText>
         </Pressable>
 
         <View style={styles.socialRow}>
-          <Pressable style={styles.whatsappButton}>
+          <Pressable onPress={handleShareWhatsApp} style={styles.whatsappButton}>
             <Feather name="message-circle" size={20} color="#10B981" />
             <ThemedText style={styles.whatsappText}>Whatsapp status लगाने के लिए click करें...!</ThemedText>
           </Pressable>
-          <Pressable style={styles.shareButton}>
+          <Pressable onPress={handleShareGeneric} style={styles.shareButton}>
             <Feather name="share-2" size={24} color="white" />
           </Pressable>
         </View>

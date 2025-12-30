@@ -583,6 +583,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/livequiz/submit", async (req: Request, res: Response) => {
+    try {
+      const { quizId, score, correctAnswers, incorrectAnswers, deviceId, userName } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      
+      const resultData = {
+        quizId,
+        score,
+        correctAnswers,
+        incorrectAnswers,
+        deviceId,
+        userName,
+        submittedAt: new Date().toISOString()
+      };
+      
+      await db.collection("livequiz_results").insertOne(resultData);
+      
+      // Calculate rank based on score for the current quizId
+      const countHigher = await db.collection("livequiz_results").countDocuments({
+        quizId,
+        score: { $gt: score }
+      });
+      
+      res.json({ rank: countHigher + 1 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to submit live result" });
+    }
+  });
+
   // ============ BATCHES API ENDPOINTS ============
   app.post("/api/batches/purchase", async (req: Request, res: Response) => {
     try {
