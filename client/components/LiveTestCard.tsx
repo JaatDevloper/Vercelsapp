@@ -2,16 +2,27 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Pressable, Dimensions } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 import { ThemedText } from "./ThemedText";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
+  const { theme } = useTheme();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const dotOpacity = useSharedValue(1);
+
   useEffect(() => {
+    dotOpacity.value = withRepeat(
+      withSequence(withTiming(0.3, { duration: 500 }), withTiming(1, { duration: 500 })),
+      -1,
+      true
+    );
+
     const fetchLiveData = async () => {
       try {
         const response = await fetch("/api/livequiz/active");
@@ -29,145 +40,261 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     return () => clearInterval(interval);
   }, []);
 
+  const dotStyle = useAnimatedStyle(() => ({
+    opacity: dotOpacity.value,
+  }));
+
   if (loading || !liveData) return null;
 
   const progress = liveData.joinedCount / liveData.maxParticipants;
 
   return (
     <LinearGradient
-      colors={["#D946EF", "#7C3AED"]}
+      colors={["#1F3A52", "#2B4A62"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
     >
-      {/* Top Right Icon Button */}
-      <View style={styles.topRightIcon}>
-        <View style={styles.iconCircle}>
-          <Feather name="grid" size={20} color="white" />
+      {/* Live Badge */}
+      <View style={styles.badgeContainer}>
+        <View style={styles.liveBadge}>
+          <Animated.View style={[styles.dot, dotStyle]} />
+          <ThemedText style={styles.liveText}>Live Now</ThemedText>
         </View>
       </View>
 
-      {/* Main Content */}
-      <View style={styles.contentArea}>
-        <ThemedText style={styles.mainTitle}>{liveData.liveTitle}</ThemedText>
+      {/* Title */}
+      <ThemedText style={styles.title}>{liveData.liveTitle}</ThemedText>
+
+      {/* Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Feather name="clock" size={18} color="white" />
+          <ThemedText style={styles.statText}>{liveData.duration} mins</ThemedText>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.statItem}>
+          <Feather name="file-text" size={18} color="white" />
+          <ThemedText style={styles.statText}>80 Qns</ThemedText>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.statItem}>
+          <Feather name="users" size={18} color="white" />
+          <ThemedText style={styles.statText}>{liveData.maxParticipants}</ThemedText>
+        </View>
       </View>
 
-      {/* Bottom Section */}
-      <View style={styles.bottomSection}>
-        <View style={styles.buttonRow}>
-          <Pressable style={styles.addButton}>
-            <ThemedText style={styles.addButtonText}>+ Add subtask</ThemedText>
-          </Pressable>
-          <Pressable onPress={onStart} style={styles.doneButton}>
-            <Feather name="check" size={16} color="white" />
-            <ThemedText style={styles.doneButtonText}>Done</ThemedText>
-          </Pressable>
+      {/* Topic Tag */}
+      <View style={styles.topicContainer}>
+        <View style={styles.topicTag}>
+          <ThemedText style={styles.topicBadgeText}>Topic ▶</ThemedText>
+          <ThemedText style={styles.topicText}>{liveData.quizTitle}</ThemedText>
         </View>
-        <ThemedText style={styles.progressText}>
-          <ThemedText style={{ fontWeight: '600' }}>{liveData.joinedCount}</ThemedText>/{liveData.maxParticipants} participants
+      </View>
+
+      {/* Participants Section */}
+      <View style={styles.participationContainer}>
+        <View style={styles.avatarStack}>
+          {[1, 2, 3].map((i) => (
+            <View
+              key={i}
+              style={[
+                styles.avatar,
+                {
+                  left: i * 16,
+                  zIndex: 10 - i,
+                  backgroundColor: i === 3 ? "#10B981" : `hsl(${220 - i * 30}, 70%, 60%)`,
+                },
+              ]}
+            />
+          ))}
+          <View
+            style={[
+              styles.avatar,
+              {
+                left: 4 * 16,
+                zIndex: 5,
+                backgroundColor: "#10B981",
+              },
+            ]}
+          >
+            <Feather name="user" size={12} color="white" />
+          </View>
+        </View>
+        <ThemedText style={styles.participantCount}>
+          /{liveData.maxParticipants}
         </ThemedText>
       </View>
+
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+      </View>
+
+      {/* Start Button */}
+      <Pressable onPress={onStart} style={styles.startButton}>
+        <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
+      </Pressable>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    width: SCREEN_WIDTH - 32,
-    paddingHorizontal: Spacing['2xl'],
-    paddingTop: Spacing['2xl'],
-    paddingBottom: Spacing.xl,
+    padding: Spacing['2xl'],
     borderRadius: BorderRadius['2xl'],
     marginBottom: Spacing.xl,
+    marginHorizontal: Spacing.lg,
     overflow: 'hidden',
-    position: 'relative',
-    shadowColor: "#D946EF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 5,
   },
-  topRightIcon: {
-    position: 'absolute',
-    top: Spacing.lg,
-    right: Spacing.lg,
+  badgeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: Spacing['2xl'],
   },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
+  liveBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 4,
     elevation: 2,
   },
-  contentArea: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingRight: Spacing['2xl'],
-    marginBottom: Spacing.xl,
-    minHeight: 120,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#3B82F6',
+    marginRight: 6,
   },
-  mainTitle: {
-    color: 'white',
-    fontSize: 32,
-    fontWeight: '700',
-    lineHeight: 40,
-    letterSpacing: -0.5,
-  },
-  bottomSection: {
-    marginTop: Spacing.lg,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  addButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 14,
+  liveText: {
+    color: '#3B82F6',
     fontWeight: '600',
-  },
-  doneButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.full,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  doneButtonText: {
-    color: '#D946EF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  progressText: {
-    color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 13,
-    fontWeight: '400',
-    textAlign: 'center',
+  },
+  title: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: Spacing.xl,
+    lineHeight: 34,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    gap: Spacing.md,
+  },
+  statItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  divider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  topicContainer: {
+    marginBottom: Spacing.xl,
+  },
+  topicTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(60, 80, 110, 0.6)',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+  },
+  topicBadgeText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  topicText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+  participationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  avatarStack: {
+    flexDirection: 'row',
+    position: 'relative',
+    width: 100,
+    height: 32,
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    position: 'absolute',
+    borderWidth: 2.5,
+    borderColor: '#1F3A52',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  participantCount: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: Spacing.sm,
+  },
+  progressContainer: {
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: Spacing.xl,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 4,
+  },
+  startButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    borderRadius: BorderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  startButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
