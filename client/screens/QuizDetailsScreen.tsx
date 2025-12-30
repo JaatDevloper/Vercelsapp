@@ -18,6 +18,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
+import { useProfile } from "@/hooks/useProfile";
 import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -34,6 +35,7 @@ export default function QuizDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<QuizDetailsRouteProp>();
 
+  const { deviceId } = useProfile();
   const { quizId } = route.params;
 
   const { data: quiz, isLoading } = useQuery<Quiz>({
@@ -43,9 +45,21 @@ export default function QuizDetailsScreen() {
   
   useSilentAutoRefresh(["/api/quizzes", quizId], 10000, { enabled: !!quizId });
 
-  const totalQuestions = quiz?.questions?.length || 0;
-  const estimatedTimeMinutes = Math.ceil((totalQuestions * TIME_PER_QUESTION) / 60);
-  const negativeMarking = quiz?.negative_marking ?? NEGATIVE_MARKING;
+  const { data: profile } = useQuery({
+    queryKey: ["profile", deviceId],
+    queryFn: async () => {
+      if (!deviceId) return null;
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const response = await fetch(`${baseUrl}/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!deviceId
+  });
+
+  useSilentAutoRefresh(["profile", deviceId], 5000, { enabled: !!deviceId });
+
+  const isUserPremium = profile?.isPremium === true;
 
   const handleBack = () => {
     navigation.goBack();

@@ -60,17 +60,18 @@ export default function DiscoverScreen() {
   
   // Fetch profile silently to check premium status
   const { data: profile } = useQuery({
-    queryKey: ["/api/profile", deviceId],
+    queryKey: ["profile", deviceId],
     queryFn: async () => {
       if (!deviceId) return null;
-      const response = await fetch(`/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const response = await fetch(`${baseUrl}/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
       if (!response.ok) return null;
       return response.json();
     },
     enabled: !!deviceId
   });
   
-  useSilentAutoRefresh(["/api/profile", deviceId], 10000, { enabled: !!deviceId });
+  useSilentAutoRefresh(["profile", deviceId], 5000, { enabled: !!deviceId });
 
   const { 
     data: batches,

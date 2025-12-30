@@ -55,14 +55,13 @@ export function useSilentAutoRefresh(
         queryFn: query.options.queryFn as any,
       });
 
-      // Silent update: Only update cache if data actually changed AND is valid
+      // Silent update: Force a fresh update if we have new data
       if (newData !== undefined && newData !== null) {
-        const dataChanged = oldData !== newData && 
-          JSON.stringify(oldData) !== JSON.stringify(newData);
+        // Use a more robust comparison or just always set if we're debugging
+        queryClient.setQueryData(queryKey, newData);
         
-        if (dataChanged) {
-          queryClient.setQueryData(queryKey, newData);
-        }
+        // Also invalidate to trigger UI updates in components using useQuery
+        queryClient.invalidateQueries({ queryKey });
       }
     } catch (error) {
       // Silently catch errors - restore old data if refresh fails
