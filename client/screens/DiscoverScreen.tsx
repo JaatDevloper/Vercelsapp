@@ -23,6 +23,7 @@ import { ThemedView } from "@/components/ThemedView";
 import QuizCard, { getQuizCreatedTime } from "@/components/QuizCard";
 import CategoryChip from "@/components/CategoryChip";
 import SkeletonCard from "@/components/SkeletonCard";
+import { BatchSkeleton } from "@/components/BatchSkeleton";
 import PremiumModal from "@/components/PremiumModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
@@ -218,6 +219,16 @@ export default function DiscoverScreen() {
     if (isOfferTab) return renderBatchItem({ item, index });
     
     if (item.type === "batches") {
+      if (batchesLoading) {
+        return (
+          <View style={{ marginBottom: Spacing.xl }}>
+            <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {[1, 2, 3].map(i => <BatchSkeleton key={i} />)}
+            </ScrollView>
+          </View>
+        );
+      }
       return (
         <View style={{ marginBottom: Spacing.xl }}>
           <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
