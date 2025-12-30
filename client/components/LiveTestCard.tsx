@@ -5,12 +5,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 import { ThemedText } from "./ThemedText";
 import { Spacing, BorderRadius } from "@/constants/theme";
-import { useTheme } from "@/hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
-  const { theme } = useTheme();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,91 +48,59 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
   return (
     <LinearGradient
-      colors={["#1B2F42", "#253B52"]}
+      colors={["#FFA366", "#FF9999", "#E799FF"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
     >
-      {/* Main Layout - Horizontal */}
-      <View style={styles.mainContainer}>
-        {/* Left Section - Content */}
-        <View style={styles.leftSection}>
-          {/* Live Badge */}
-          <View style={styles.liveBadge}>
-            <Animated.View style={[styles.dot, dotStyle]} />
-            <ThemedText style={styles.liveText}>Live Now</ThemedText>
-          </View>
-
-          {/* Title */}
-          <ThemedText style={styles.title} numberOfLines={2}>{liveData.liveTitle}</ThemedText>
-
-          {/* Stats Row - Compact */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Feather name="clock" size={14} color="rgba(255,255,255,0.8)" />
-              <ThemedText style={styles.statText}>{liveData.duration}m</ThemedText>
-            </View>
-            <View style={styles.statDot} />
-            <View style={styles.statItem}>
-              <Feather name="file-text" size={14} color="rgba(255,255,255,0.8)" />
-              <ThemedText style={styles.statText}>80</ThemedText>
-            </View>
-            <View style={styles.statDot} />
-            <View style={styles.statItem}>
-              <Feather name="users" size={14} color="rgba(255,255,255,0.8)" />
-              <ThemedText style={styles.statText}>{liveData.maxParticipants}</ThemedText>
-            </View>
-          </View>
-
-          {/* Topic Tag - Minimal */}
-          <View style={styles.topicTag}>
-            <ThemedText style={styles.topicText} numberOfLines={1}>{liveData.quizTitle}</ThemedText>
-          </View>
-
-          {/* Progress Section */}
-          <View style={styles.progressSection}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-            </View>
-            <View style={styles.participantStack}>
-              <View style={styles.avatarStack}>
-                {[1, 2, 3].map((i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.miniAvatar,
-                      {
-                        left: i * 8,
-                        zIndex: 10 - i,
-                        backgroundColor: i === 3 ? "#10B981" : `hsl(${220 - i * 30}, 70%, 60%)`,
-                      },
-                    ]}
-                  />
-                ))}
-                <View
-                  style={[
-                    styles.miniAvatar,
-                    {
-                      left: 4 * 8,
-                      zIndex: 5,
-                      backgroundColor: "#10B981",
-                    },
-                  ]}
-                />
-              </View>
-              <ThemedText style={styles.participantText}>
-                {liveData.joinedCount}/{liveData.maxParticipants}
-              </ThemedText>
-            </View>
-          </View>
+      {/* Live Badge */}
+      <View style={styles.badgeContainer}>
+        <View style={styles.liveBadge}>
+          <Animated.View style={[styles.dot, dotStyle]} />
+          <ThemedText style={styles.liveText}>Live Now</ThemedText>
         </View>
-
-        {/* Right Section - Button */}
-        <Pressable onPress={onStart} style={styles.startButton}>
-          <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
-          <Feather name="arrow-right" size={18} color="white" />
-        </Pressable>
       </View>
+
+      {/* Title */}
+      <ThemedText style={styles.title}>{liveData.liveTitle}</ThemedText>
+
+      {/* Info Row - Compact */}
+      <View style={styles.infoRow}>
+        <View style={styles.infoItem}>
+          <Feather name="clock" size={14} color="rgba(0,0,0,0.6)" />
+          <ThemedText style={styles.infoText}>{liveData.duration}m</ThemedText>
+        </View>
+        <ThemedText style={styles.infoDot}>•</ThemedText>
+        <View style={styles.infoItem}>
+          <Feather name="file-text" size={14} color="rgba(0,0,0,0.6)" />
+          <ThemedText style={styles.infoText}>80</ThemedText>
+        </View>
+        <ThemedText style={styles.infoDot}>•</ThemedText>
+        <View style={styles.infoItem}>
+          <Feather name="users" size={14} color="rgba(0,0,0,0.6)" />
+          <ThemedText style={styles.infoText}>{liveData.maxParticipants}</ThemedText>
+        </View>
+      </View>
+
+      {/* Topic */}
+      <ThemedText style={styles.topic} numberOfLines={1}>
+        {liveData.quizTitle}
+      </ThemedText>
+
+      {/* Progress & Participation */}
+      <View style={styles.progressRow}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+        </View>
+        <ThemedText style={styles.participantText}>
+          {liveData.joinedCount}/{liveData.maxParticipants}
+        </ThemedText>
+      </View>
+
+      {/* Start Button */}
+      <Pressable onPress={onStart} style={styles.startButton}>
+        <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
+      </Pressable>
     </LinearGradient>
   );
 }
@@ -142,152 +108,104 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.xl,
-    borderRadius: BorderRadius['2xl'],
+    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     overflow: 'hidden',
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing['2xl'],
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 3,
   },
-  mainContainer: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    justifyContent: 'space-between',
-    gap: Spacing.xl,
-  },
-  leftSection: {
-    flex: 1,
-    justifyContent: 'space-between',
+  badgeContainer: {
+    marginBottom: Spacing.sm,
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: BorderRadius.full,
     width: 'auto',
     alignSelf: 'flex-start',
-    marginBottom: Spacing.md,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: '#3B82F6',
-    marginRight: 6,
+    marginRight: 5,
   },
   liveText: {
     color: '#3B82F6',
     fontWeight: '600',
-    fontSize: 12,
-    letterSpacing: 0.2,
+    fontSize: 11,
   },
   title: {
-    color: 'white',
-    fontSize: 20,
+    color: '#333333',
+    fontSize: 18,
     fontWeight: '700',
-    marginBottom: Spacing.md,
-    lineHeight: 26,
-    letterSpacing: -0.3,
+    marginBottom: Spacing.sm,
+    lineHeight: 22,
   },
-  statsRow: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.md,
     gap: 6,
   },
-  statItem: {
+  infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
-  statText: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  statDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  topicTag: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  topicText: {
-    color: 'rgba(255, 255, 255, 0.8)',
+  infoText: {
+    color: 'rgba(0, 0, 0, 0.7)',
     fontSize: 12,
     fontWeight: '500',
   },
-  progressSection: {
+  infoDot: {
+    color: 'rgba(0, 0, 0, 0.3)',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  topic: {
+    color: 'rgba(0, 0, 0, 0.75)',
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: Spacing.md,
+  },
+  progressRow: {
     gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   progressBar: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#10B981',
-    borderRadius: 2,
-  },
-  participantStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  avatarStack: {
-    flexDirection: 'row',
-    position: 'relative',
-    width: 50,
-    height: 20,
-  },
-  miniAvatar: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    position: 'absolute',
-    borderWidth: 1.5,
-    borderColor: '#1B2F42',
+    borderRadius: 3,
   },
   participantText: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(0, 0, 0, 0.7)',
     fontSize: 11,
     fontWeight: '500',
   },
   startButton: {
-    backgroundColor: '#10B981',
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing['2xl'],
+    backgroundColor: 'white',
+    borderRadius: BorderRadius.lg,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: Spacing.sm,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-    minWidth: 100,
+    flexDirection: 'row',
+    gap: 6,
   },
   startButtonText: {
-    color: 'white',
-    fontSize: 15,
+    color: '#333333',
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.3,
   },
 });
