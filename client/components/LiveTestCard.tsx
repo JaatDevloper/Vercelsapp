@@ -50,7 +50,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
   return (
     <LinearGradient
-      colors={["#FF6B8A", "#FF8E8E", "#FFB366"]}
+      colors={["#2D1B4E", "#3D2A5C"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}
@@ -194,12 +194,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing['2xl'],
   },
   tag: { 
-    backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+    backgroundColor: 'rgba(79, 47, 120, 0.6)', 
     paddingHorizontal: 14, 
     paddingVertical: 8, 
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(147, 112, 219, 0.4)',
   },
   tagText: { 
     color: 'white', 
