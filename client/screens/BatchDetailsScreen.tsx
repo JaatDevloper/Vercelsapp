@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { useTheme } from "@/hooks/useTheme";
 import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius, Shadows } from "@/constants/theme";
@@ -110,7 +111,7 @@ export default function BatchDetailsScreen() {
   if (isLoading || !batch) {
     return (
       <ThemedView style={styles.center}>
-        <ThemedText>Loading...</ThemedText>
+        <LoadingIndicator message="Loading Batch Details..." color={isDark ? Colors.dark.primary : Colors.light.primary} />
       </ThemedView>
     );
   }
