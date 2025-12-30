@@ -90,7 +90,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
         style={styles.card}
       >
         <View style={styles.header}>
-          <ThemedText style={styles.liveTitleText}>
+          <ThemedText style={styles.liveTitleText} numberOfLines={1}>
             {liveData.liveTitle || "तृतीय श्रेणी अध्यापक परीक्षा"}
           </ThemedText>
           <View style={styles.liveIndicatorContainer}>
@@ -164,16 +164,19 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginVertical: Spacing.md,
     borderRadius: 28,
+    backgroundColor: "white",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.1,
+    shadowRadius: 35,
+    elevation: 12,
   },
   card: {
     padding: 24,
     borderRadius: 28,
     width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   header: {
     flexDirection: "row",
@@ -187,7 +190,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   liveTitleText: {
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: "800",
     color: "#111827",
     flex: 1,
