@@ -86,9 +86,10 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   return (
     <View style={styles.cardWrapper}>
       <LinearGradient
-        colors={["#F5F7FB", "#EEF2FF"]}
+        colors={["rgba(255, 255, 255, 0.2)", "rgba(255, 255, 255, 0.05)"]}
         style={styles.card}
       >
+        <View style={styles.glassOverlay} />
         <View style={styles.header}>
           <ThemedText style={styles.liveTitleText}>
             {liveData.liveTitle || "तृतीय श्रेणी अध्यापक परीक्षा"}
@@ -164,19 +165,25 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginVertical: Spacing.md,
     borderRadius: 28,
-    backgroundColor: "white",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 15 },
     shadowOpacity: 0.1,
     shadowRadius: 35,
     elevation: 12,
+    overflow: "hidden",
+  },
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    opacity: 0.5,
   },
   card: {
     padding: 24,
     borderRadius: 28,
     width: "100%",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.8)",
+    borderColor: "rgba(255, 255, 255, 0.5)",
   },
   header: {
     flexDirection: "row",
