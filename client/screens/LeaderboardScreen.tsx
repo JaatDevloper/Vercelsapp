@@ -543,6 +543,23 @@ export default function LeaderboardScreen() {
               { backgroundColor: theme.backgroundDefault }
             ]}
           >
+            <View style={[styles.modalActions, { borderBottomWidth: 1, borderBottomColor: "rgba(0, 0, 0, 0.1)", borderTopWidth: 0, paddingBottom: Spacing.xl }]}>
+              <Pressable
+                onPress={() => {
+                  navigation.navigate("Profile");
+                }}
+                style={[
+                  styles.createButton,
+                  { backgroundColor: primaryColor }
+                ]}
+              >
+                <Feather name="user-plus" size={18} color="white" />
+                <ThemedText style={{ color: "white", fontWeight: "600", marginLeft: Spacing.sm }}>
+                  Create Profile
+                </ThemedText>
+              </Pressable>
+            </View>
+
             <View style={[styles.modalHeader, { backgroundColor: theme.backgroundSecondary }]}>
               <Feather name="lock" size={32} color={primaryColor} />
               <ThemedText type="h2" style={{ marginTop: Spacing.md, textAlign: "center" }}>
@@ -562,7 +579,7 @@ export default function LeaderboardScreen() {
 
             <ScrollView 
               style={styles.modalPreview}
-              contentContainerStyle={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.lg }}
+              contentContainerStyle={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.lg, paddingBottom: tabBarHeight + Spacing.xl }}
             >
               <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
                 LEADERBOARD PREVIEW
@@ -592,23 +609,6 @@ export default function LeaderboardScreen() {
                 </View>
               ))}
             </ScrollView>
-
-            <View style={[styles.modalActions, { paddingBottom: tabBarHeight + Spacing.lg }]}>
-              <Pressable
-                onPress={() => {
-                  navigation.navigate("Profile");
-                }}
-                style={[
-                  styles.createButton,
-                  { backgroundColor: primaryColor }
-                ]}
-              >
-                <Feather name="user-plus" size={18} color="white" />
-                <ThemedText style={{ color: "white", fontWeight: "600", marginLeft: Spacing.sm }}>
-                  Create Profile
-                </ThemedText>
-              </Pressable>
-            </View>
           </Animated.View>
         </View>
       </ThemedView>
