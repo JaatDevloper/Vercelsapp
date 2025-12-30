@@ -90,21 +90,57 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
         style={styles.card}
       >
         <View style={styles.header}>
-          <ThemedText style={styles.headerLabel}>Live Quiz</ThemedText>
+          <ThemedText style={styles.liveTitleText}>
+            {liveData.liveTitle || "तृतीय श्रेणी अध्यापक परीक्षा"}
+          </ThemedText>
           <View style={styles.liveIndicatorContainer}>
             <Animated.View style={[styles.liveDot, liveDotStyle]} />
+            <ThemedText style={styles.liveNowText}>Live Now</ThemedText>
           </View>
         </View>
 
-        <View style={styles.titleSection}>
-          <ThemedText style={styles.quizTitle} numberOfLines={2}>
-            {liveData.liveTitle || "Daily Quiz Challenge"}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Feather name="clock" size={16} color="#6B7280" />
+            <ThemedText style={styles.statText}>{liveData.duration || 80} mins</ThemedText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Feather name="file-text" size={16} color="#6B7280" />
+            <ThemedText style={styles.statText}>{liveData.questionCount || 80} Qns</ThemedText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Feather name="users" size={16} color="#6B7280" />
+            <ThemedText style={styles.statText}>{liveData.maxParticipants || 50}</ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.topicContainer}>
+          <ThemedText style={styles.topicText} numberOfLines={1}>
+            {"\u24C9"}opic {"\u27A4"} {"\ud83d\udcd6"} {liveData.quizTitle || " राजस्थान के प्रमुख लोकनृत्य "} {"\ud83d\udcd6"} (REET SPECIAL)
           </ThemedText>
-          {liveData.quizTitle && (
-            <ThemedText style={styles.description}>
-              {liveData.quizTitle}
-            </ThemedText>
-          )}
+        </View>
+
+        <View style={styles.participantsRow}>
+          <View style={styles.avatarStack}>
+            <View style={[styles.avatar, { backgroundColor: "#6366F1", zIndex: 3 }]} />
+            <View style={[styles.avatar, { backgroundColor: "#818CF8", zIndex: 2, marginLeft: -12 }]} />
+            <View style={[styles.avatar, { backgroundColor: "#4F46E5", zIndex: 1, marginLeft: -12 }]} />
+            <View style={[styles.avatar, { backgroundColor: "#10B981", zIndex: 0, marginLeft: -12 }]} />
+          </View>
+          <ThemedText style={styles.joinedTotalText}>
+            {liveData.joinedCount || 0}/{liveData.maxParticipants || 50}
+          </ThemedText>
+        </View>
+
+        <View style={styles.progressBarBackground}>
+          <View 
+            style={[
+              styles.progressBarFill, 
+              { width: `${Math.min(((liveData.joinedCount || 0) / (liveData.maxParticipants || 50)) * 100, 100)}%` }
+            ]} 
+          />
         </View>
 
         <Animated.View style={[styles.ctaContainer, buttonAnimatedStyle]}>
@@ -114,12 +150,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
             onPressOut={handlePressOut}
             style={styles.startButton}
           >
-            <View style={styles.buttonContent}>
-              <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
-              <ThemedText style={styles.buttonSubtext}>
-                ⏱ {liveData.questionCount || 10} Questions • {liveData.joinedCount || 0}/{liveData.maxParticipants || 50} Joined
-              </ThemedText>
-            </View>
+            <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
           </Pressable>
         </Animated.View>
       </LinearGradient>
@@ -155,67 +186,121 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontWeight: "500",
   },
+  liveTitleText: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#111827",
+    flex: 1,
+    marginRight: 10,
+  },
   liveIndicatorContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
+    gap: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  liveNowText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6366F1",
   },
   liveDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EF4444",
+    backgroundColor: "#6366F1",
   },
-  titleSection: {
-    marginBottom: 24,
+  statsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 12,
   },
-  quizTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
-    textAlign: "left",
+  statItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  description: {
+  statText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: "#D1D5DB",
+  },
+  topicContainer: {
+    backgroundColor: "rgba(0,0,0,0.05)",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  topicText: {
     fontSize: 14,
-    color: "#6B7280",
-    lineHeight: 19.6,
-    textAlign: "left",
+    color: "#374151",
+    fontWeight: "500",
+  },
+  participantsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  avatarStack: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  joinedTotalText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 3,
+    marginBottom: 24,
+    width: "100%",
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#10B981",
+    borderRadius: 3,
   },
   ctaContainer: {
     width: "100%",
   },
   startButton: {
-    backgroundColor: "#000000",
+    backgroundColor: "#10B981",
     height: 56,
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 4,
-  },
-  buttonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    paddingHorizontal: 20,
   },
   startButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 8,
-  },
-  buttonSubtext: {
-    color: "#E5E7EB",
-    fontSize: 12,
+    fontSize: 18,
+    fontWeight: "700",
   },
 });
 
