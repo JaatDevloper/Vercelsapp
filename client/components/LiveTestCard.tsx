@@ -90,7 +90,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
         style={styles.card}
       >
         <View style={styles.header}>
-          <ThemedText style={styles.liveTitleText} numberOfLines={1}>
+          <ThemedText style={styles.liveTitleText}>
             {liveData.liveTitle || "तृतीय श्रेणी अध्यापक परीक्षा"}
           </ThemedText>
           <View style={styles.liveIndicatorContainer}>
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   liveTitleText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "800",
     color: "#111827",
     flex: 1,
