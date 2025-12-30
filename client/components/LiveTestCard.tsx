@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Pressable, ActivityIndicator, Dimensions } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence } from "react-native-reanimated";
 import { ThemedText } from "./ThemedText";
 import { Spacing, BorderRadius } from "@/constants/theme";
@@ -48,7 +49,12 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const progress = liveData.joinedCount / liveData.maxParticipants;
 
   return (
-    <View style={[styles.card, { backgroundColor: "#1E293B" }]}>
+    <LinearGradient
+      colors={["#FF6B8A", "#FF8E8E", "#FFB366"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.card}
+    >
       <View style={styles.badgeRow}>
         <View style={styles.liveBadge}>
           <Animated.View style={[styles.dot, dotStyle]} />
@@ -102,7 +108,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
       <Pressable onPress={onStart} style={styles.startButton}>
         <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
       </Pressable>
-    </View>
+    </LinearGradient>
   );
 }
 
