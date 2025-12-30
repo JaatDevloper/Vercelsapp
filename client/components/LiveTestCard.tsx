@@ -117,8 +117,8 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
         </View>
 
         <View style={styles.topicContainer}>
-          <ThemedText style={styles.topicText} numberOfLines={1}>
-            {"\u24C9"}opic {"\u27A4"} {"\ud83d\udcd6"} {liveData.quizTitle || " राजस्थान के प्रमुख लोकनृत्य "} {"\ud83d\udcd6"} (REET SPECIAL)
+          <ThemedText style={styles.topicText}>
+            {liveData.quizTitle || " राजस्थान के प्रमुख लोकनृत्य (REET SPECIAL)"}
           </ThemedText>
         </View>
 
@@ -150,7 +150,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
             onPressOut={handlePressOut}
             style={styles.startButton}
           >
-            <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
+            <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
           </Pressable>
         </Animated.View>
       </LinearGradient>
@@ -251,6 +251,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#374151",
     fontWeight: "500",
+    textAlign: "center",
   },
   participantsRow: {
     flexDirection: "row",
@@ -291,16 +292,21 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   startButton: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#000000",
     height: 56,
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 4,
   },
   startButtonText: {
     color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
