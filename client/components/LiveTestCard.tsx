@@ -79,7 +79,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const progress = liveData.joinedCount / liveData.maxParticipants;
 
   return (
-    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg }]}>
+    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, borderRadius: 24, overflow: 'hidden' }]}>
       <LinearGradient
         colors={["#F9C97C", "#F6D5E7", "#C77DFF"]}
         start={{ x: 0, y: 0 }}
@@ -104,18 +104,27 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
           {/* Test Meta Info */}
           <View style={styles.metaInfo}>
             <View style={styles.metaItem}>
-              <Feather name="clock" size={14} color="rgba(43, 43, 43, 0.5)" />
+              <Feather name="clock" size={14} color="rgba(43, 43, 43, 0.6)" />
               <ThemedText style={styles.metaText}>{liveData.duration}</ThemedText>
             </View>
+            <View style={styles.metaDivider} />
             <View style={styles.metaItem}>
-              <Feather name="help-circle" size={14} color="rgba(43, 43, 43, 0.5)" />
+              <Feather name="help-circle" size={14} color="rgba(43, 43, 43, 0.6)" />
               <ThemedText style={styles.metaText}>{liveData.maxParticipants}</ThemedText>
             </View>
+            <View style={styles.metaDivider} />
             <View style={styles.metaItem}>
-              <Feather name="users" size={14} color="rgba(43, 43, 43, 0.5)" />
-              <ThemedText style={styles.metaText}>{liveData.joinedCount} joined</ThemedText>
+              <Feather name="users" size={14} color="rgba(43, 43, 43, 0.6)" />
+              <ThemedText style={styles.metaText}>{liveData.joinedCount}</ThemedText>
             </View>
           </View>
+
+          {/* Quiz Topic/Title Section */}
+          {liveData.quizTitle && (
+            <View style={styles.topicContainer}>
+              <ThemedText style={styles.topicText}>{liveData.quizTitle}</ThemedText>
+            </View>
+          )}
 
           {/* Hidden Stats - kept for backend data but not displayed */}
           <View style={{ display: 'none' }}>
@@ -129,7 +138,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
           {/* Button Section */}
           <Pressable onPress={onStart} style={styles.startButton}>
             <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
-            <Feather name="arrow-right" size={16} color="#2B2B2B" />
+            <Feather name="arrow-right" size={16} color="#FFFFFF" />
           </Pressable>
         </View>
       </LinearGradient>
@@ -187,24 +196,41 @@ const styles = StyleSheet.create({
   },
   metaInfo: {
     flexDirection: 'row',
-    gap: 16,
-    marginVertical: 8,
+    alignItems: 'center',
+    gap: 8,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
+  metaDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: 'rgba(43, 43, 43, 0.2)',
+  },
   metaText: {
     color: 'rgba(43, 43, 43, 0.7)',
     fontSize: 12,
     fontWeight: '500',
   },
+  topicContainer: {
+    backgroundColor: 'rgba(43, 43, 43, 0.08)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+  },
+  topicText: {
+    color: '#2B2B2B',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+  },
   startButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -212,14 +238,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.12,
     shadowRadius: 12,
-    elevation: 3,
+    elevation: 4,
   },
   startButtonText: {
     color: '#2B2B2B',
     fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.2,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
