@@ -30,7 +30,7 @@ export default function QuizResultSummaryScreen() {
             correctAnswers,
             incorrectAnswers,
             deviceId,
-            userName: "Student" // Replace with actual profile name if available
+            userName: "Student"
           })
         });
         if (response.ok) {
@@ -61,44 +61,55 @@ export default function QuizResultSummaryScreen() {
   return (
     <ThemedView style={[styles.container, { backgroundColor: theme.backgroundDefault }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={[styles.congratsCard, { backgroundColor: theme.backgroundSecondary }]}>
+        <View style={[styles.congratsCard, { backgroundColor: theme.backgroundSecondary, shadowColor: theme.text }]}>
           <View style={styles.medalContainer}>
-             <Feather name="award" size={80} color="#FBBF24" />
+             <Feather name="award" size={100} color="#FBBF24" />
           </View>
           
-          <ThemedText type="h1" style={styles.title}>Congratulations!</ThemedText>
-          <ThemedText style={styles.subtitle}>You are doing better than 70% students</ThemedText>
+          <ThemedText type="h1" style={[styles.title, { color: theme.text }]}>Congratulations!</ThemedText>
+          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>You are doing better than 70% students</ThemedText>
           
-          <View style={styles.rankBadge}>
+          <View style={[styles.rankBadge, { backgroundColor: theme.primary }]}>
             <Feather name="star" size={20} color="white" />
             <ThemedText style={styles.rankText}>Topic Rank - #{rank || "..."}</ThemedText>
           </View>
 
           <View style={styles.statsGrid}>
             <View style={[styles.statBox, { backgroundColor: '#8B5CF6' }]}>
-               <Feather name="target" size={24} color="white" />
-               <ThemedText style={styles.statValue}>{accuracy} %</ThemedText>
+               <Feather name="target" size={28} color="white" />
+               <ThemedText style={styles.statValue}>{accuracy}%</ThemedText>
                <ThemedText style={styles.statLabel}>Accuracy</ThemedText>
             </View>
             <View style={[styles.statBox, { backgroundColor: '#10B981' }]}>
-               <Feather name="send" size={24} color="white" />
+               <Feather name="zap" size={28} color="white" />
                <ThemedText style={styles.statValue}>100</ThemedText>
                <ThemedText style={styles.statLabel}>Speed</ThemedText>
             </View>
-            <View style={[styles.statBox, { backgroundColor: '#EF4444' }]}>
-               <Feather name="bar-chart-2" size={24} color="white" />
+            <View style={[styles.statBox, { backgroundColor: '#F43F5E' }]}>
+               <Feather name="trending-up" size={28} color="white" />
                <ThemedText style={styles.statValue}>{score}</ThemedText>
-               <ThemedText style={styles.statLabel}>Total Score</ThemedText>
+               <ThemedText style={styles.statLabel}>Score</ThemedText>
             </View>
           </View>
 
+          <View style={styles.dividerLine} />
+
           <View style={styles.footerRow}>
-            <ThemedText style={styles.footerText}>Questions: {totalQuestions}</ThemedText>
-            <ThemedText style={styles.footerText}>Correct: {correctAnswers}</ThemedText>
-            <ThemedText style={styles.footerText}>Incorrect: {incorrectAnswers}</ThemedText>
+            <View style={styles.footerStat}>
+                <ThemedText style={[styles.footerValue, { color: theme.text }]}>{totalQuestions}</ThemedText>
+                <ThemedText style={[styles.footerLabel, { color: theme.textSecondary }]}>Questions</ThemedText>
+            </View>
+            <View style={styles.footerStat}>
+                <ThemedText style={[styles.footerValue, { color: '#10B981' }]}>{correctAnswers}</ThemedText>
+                <ThemedText style={[styles.footerLabel, { color: theme.textSecondary }]}>Correct</ThemedText>
+            </View>
+            <View style={styles.footerStat}>
+                <ThemedText style={[styles.footerValue, { color: '#F43F5E' }]}>{incorrectAnswers}</ThemedText>
+                <ThemedText style={[styles.footerLabel, { color: theme.textSecondary }]}>Incorrect</ThemedText>
+            </View>
           </View>
 
-          <ThemedText style={styles.copyright}>© 2025 QuizzyEdu. All right reserved!</ThemedText>
+          <ThemedText style={[styles.copyright, { color: theme.textSecondary }]}>© 2025 QuizzyEdu. All right reserved!</ThemedText>
         </View>
 
         <Pressable 
@@ -107,18 +118,18 @@ export default function QuizResultSummaryScreen() {
               incorrectCount: incorrectAnswers, unansweredCount: totalQuestions - (correctAnswers + incorrectAnswers),
               negativeMarking: 0.66, finalScore: score, answers, timeTaken: 0 
             })}
-            style={[styles.solutionButton, { borderColor: theme.primary }]}
+            style={[styles.solutionButton, { backgroundColor: theme.primary }]}
         >
-          <ThemedText style={[styles.solutionText, { color: theme.primary }]}>Detailed Solution</ThemedText>
+          <ThemedText style={styles.solutionText}>Detailed Solution</ThemedText>
         </Pressable>
 
         <View style={styles.socialRow}>
-          <Pressable onPress={handleShareWhatsApp} style={styles.whatsappButton}>
-            <Feather name="message-circle" size={20} color="#10B981" />
-            <ThemedText style={styles.whatsappText}>Whatsapp status लगाने के लिए click करें...!</ThemedText>
+          <Pressable onPress={handleShareWhatsApp} style={[styles.whatsappButton, { backgroundColor: '#DCF8C6' }]}>
+            <Feather name="message-circle" size={20} color="#075E54" />
+            <ThemedText style={styles.whatsappText}>Whatsapp Status</ThemedText>
           </Pressable>
-          <Pressable onPress={handleShareGeneric} style={styles.shareButton}>
-            <Feather name="share-2" size={24} color="white" />
+          <Pressable onPress={handleShareGeneric} style={[styles.shareButton, { backgroundColor: theme.backgroundSecondary }]}>
+            <Feather name="share-2" size={24} color={theme.text} />
           </Pressable>
         </View>
       </ScrollView>
@@ -127,67 +138,71 @@ export default function QuizResultSummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
-  scroll: { padding: Spacing.lg },
+  container: { flex: 1 },
+  scroll: { padding: Spacing.lg, paddingTop: 60 },
   congratsCard: {
-    backgroundColor: '#1E293B',
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
     alignItems: 'center',
     marginBottom: Spacing.xl,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   medalContainer: { marginBottom: Spacing.md },
-  title: { color: 'white', marginBottom: Spacing.xs },
-  subtitle: { color: 'rgba(255,255,255,0.7)', textAlign: 'center', marginBottom: Spacing.lg },
+  title: { fontSize: 28, fontWeight: '800', marginBottom: Spacing.xs },
+  subtitle: { fontSize: 16, textAlign: 'center', marginBottom: Spacing.xl },
   rankBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 30,
     marginBottom: Spacing.xl,
   },
-  rankText: { color: 'white', marginLeft: 8, fontWeight: 'bold' },
+  rankText: { color: 'white', marginLeft: 8, fontWeight: '700', fontSize: 18 },
   statsGrid: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.xl },
   statBox: {
     flex: 1,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    borderRadius: 20,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
-  statValue: { color: 'white', fontWeight: 'bold', fontSize: 18 },
-  statLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
-  footerRow: { flexDirection: 'row', gap: Spacing.lg, marginBottom: Spacing.xl },
-  footerText: { color: 'rgba(255,255,255,0.6)', fontSize: 14 },
-  copyright: { color: 'rgba(255,255,255,0.4)', fontSize: 12 },
+  statValue: { color: 'white', fontWeight: '800', fontSize: 22 },
+  statLabel: { color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '600' },
+  dividerLine: { width: '100%', height: 1, backgroundColor: 'rgba(0,0,0,0.05)', marginBottom: Spacing.xl },
+  footerRow: { flexDirection: 'row', width: '100%', justifyContent: 'space-around', marginBottom: Spacing.xl },
+  footerStat: { alignItems: 'center' },
+  footerValue: { fontSize: 20, fontWeight: '800' },
+  footerLabel: { fontSize: 12, marginTop: 4 },
+  copyright: { fontSize: 12, opacity: 0.5 },
   solutionButton: {
-    borderWidth: 2,
-    borderColor: '#10B981',
-    borderRadius: 30,
-    paddingVertical: 14,
+    paddingVertical: 18,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: Spacing.lg,
+    elevation: 2,
   },
-  solutionText: { color: '#10B981', fontWeight: 'bold', fontSize: 16 },
+  solutionText: { color: 'white', fontWeight: '800', fontSize: 18 },
   socialRow: { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
   whatsappButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 20,
     gap: 8,
   },
-  whatsappText: { color: '#10B981', fontSize: 12 },
+  whatsappText: { color: '#075E54', fontWeight: '700', fontSize: 14 },
   shareButton: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 1,
   }
 });
