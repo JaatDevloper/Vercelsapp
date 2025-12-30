@@ -117,7 +117,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
             <View style={styles.buttonContent}>
               <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
               <ThemedText style={styles.buttonSubtext}>
-                ⏱ 10 Questions • Live
+                ⏱ {liveData.questionCount || 10} Questions • {liveData.joinedCount || 0}/{liveData.maxParticipants || 50} Joined
               </ThemedText>
             </View>
           </Pressable>
