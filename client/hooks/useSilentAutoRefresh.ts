@@ -45,7 +45,7 @@ export function useSilentAutoRefresh(
       if (!oldData) return;
 
       const queryCache = queryClient.getQueryCache();
-      const query = queryCache.find(queryKey);
+      const query = queryCache.find({ queryKey });
 
       if (!query || !query.options.queryFn) return;
 

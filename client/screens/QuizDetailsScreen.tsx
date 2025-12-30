@@ -43,8 +43,6 @@ export default function QuizDetailsScreen() {
     enabled: !!quizId,
   });
   
-  useSilentAutoRefresh(["/api/quizzes", quizId], 10000, { enabled: !!quizId });
-
   const { data: profile } = useQuery({
     queryKey: ["profile", deviceId],
     queryFn: async () => {
@@ -59,6 +57,9 @@ export default function QuizDetailsScreen() {
 
   useSilentAutoRefresh(["profile", deviceId], 5000, { enabled: !!deviceId });
 
+  const totalQuestions = quiz?.questions?.length || 0;
+  const estimatedTimeMinutes = Math.ceil((totalQuestions * TIME_PER_QUESTION) / 60);
+  const negativeMarking = quiz?.negative_marking ?? NEGATIVE_MARKING;
   const isUserPremium = profile?.isPremium === true;
 
   const handleBack = () => {
