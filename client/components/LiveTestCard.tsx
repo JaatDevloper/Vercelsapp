@@ -74,12 +74,12 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   if (loading || !liveData) return null;
 
   return (
-    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg }]}>
+    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, aspectRatio: 16 / 9 }]}>
       <LinearGradient
         colors={[theme.primary, theme.secondary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={[styles.card, { borderRadius: BorderRadius.lg }]}
+        style={[styles.card, { borderRadius: BorderRadius.lg, flex: 1 }]}
       >
         <View style={styles.contentRow}>
           {/* Quiz Info Section */}
@@ -144,98 +144,104 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
 const styles = StyleSheet.create({
   card: {
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
     overflow: 'hidden',
   },
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacing.md,
+    flex: 1,
   },
   infoSection: {
-    flex: 1,
+    flex: 1.2,
+    justifyContent: 'center',
   },
   titleContainer: {
     gap: Spacing.xs,
   },
   quizName: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
-    lineHeight: 20,
+    lineHeight: 18,
   },
   quizTopic: {
     color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.xs,
+    flex: 2,
+    justifyContent: 'space-around',
   },
   stat: {
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 2,
     flex: 1,
   },
   statValue: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
   },
   statLabel: {
     color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '500',
   },
   divider: {
     width: 1,
-    height: 24,
+    height: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: Spacing.xs,
   },
   actionSection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    flex: 0.8,
+    justifyContent: 'flex-end',
   },
   liveBadge: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.sm,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 6,
   },
   liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: '#10B981',
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   liveText: {
     color: 'white',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   startButton: {
     backgroundColor: 'white',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
+    paddingVertical: 6,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
+    gap: 4,
   },
   startButtonText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
 });
