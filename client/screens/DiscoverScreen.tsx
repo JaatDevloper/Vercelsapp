@@ -222,7 +222,7 @@ export default function DiscoverScreen() {
       return (
         <View style={{ marginBottom: Spacing.xl }}>
           <Animated.View entering={PinwheelIn.duration(1000)}>
-            <LiveTestCard onStart={() => navigation.navigate("QuizScreen", { quizId: "live" })} />
+            <LiveTestCard onStart={() => navigation.navigate("Quiz", { quizId: "live" })} />
           </Animated.View>
           <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
           <ScrollView 

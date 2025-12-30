@@ -77,16 +77,17 @@ export default function QuizScreen() {
     queryKey: ["/api/quizzes", actualQuizId],
     queryFn: async () => {
       const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
-      const url = actualQuizId === "live" ? `${baseUrl}/api/livequiz/active` : `${baseUrl}/api/quizzes/${actualQuizId}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch quiz");
-      const data = await response.json();
-      if (actualQuizId === "live") {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch quiz");
+    const data = await response.json();
+    if (!data) throw new Error("Quiz data is null");
+
+    if (actualQuizId === "live") {
         const fullQuizRes = await fetch(`${baseUrl}/api/quizzes/${data.quizId}`);
         if (!fullQuizRes.ok) throw new Error("Failed to fetch full quiz");
         const fullQuiz = await fullQuizRes.json();
-        return { ...fullQuiz, liveTitle: data.liveTitle, duration: data.duration };
-      }
+        return { ...fullQuiz, _id: "live", liveTitle: data.liveTitle, duration: data.duration };
+    }
       return data;
     },
     enabled: !!actualQuizId,
