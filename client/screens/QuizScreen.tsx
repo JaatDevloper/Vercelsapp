@@ -75,6 +75,20 @@ export default function QuizScreen() {
 
   const { data: quiz, isLoading: loadingQuiz } = useQuery<Quiz>({
     queryKey: ["/api/quizzes", actualQuizId],
+    queryFn: async () => {
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const url = actualQuizId === "live" ? `${baseUrl}/api/livequiz/active` : `${baseUrl}/api/quizzes/${actualQuizId}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch quiz");
+      const data = await response.json();
+      if (actualQuizId === "live") {
+        const fullQuizRes = await fetch(`${baseUrl}/api/quizzes/${data.quizId}`);
+        if (!fullQuizRes.ok) throw new Error("Failed to fetch full quiz");
+        const fullQuiz = await fullQuizRes.json();
+        return { ...fullQuiz, liveTitle: data.liveTitle, duration: data.duration };
+      }
+      return data;
+    },
     enabled: !!actualQuizId,
   });
   
@@ -192,10 +206,12 @@ export default function QuizScreen() {
       ...(profile?.email ? { userEmail: profile.email } : {}),
     });
 
-    navigation.replace("Results", {
+    navigation.replace(actualQuizId === "live" ? "QuizResultSummary" : "Results", {
       quizId: quiz._id,
       score,
       totalQuestions,
+      correctAnswers: correctCount,
+      incorrectAnswers: incorrectCount,
       correctCount,
       incorrectCount,
       unansweredCount,
@@ -203,7 +219,8 @@ export default function QuizScreen() {
       finalScore,
       answers: answersArray,
       timeTaken,
-    });
+      duration: quiz.duration || 0,
+    } as any);
   }, [quiz, questions, selectedAnswers, totalQuestions, startTime, navigation, addHistory, negativeMarking, profile]);
 
   const handleClose = useCallback(() => {
