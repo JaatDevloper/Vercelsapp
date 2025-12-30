@@ -194,7 +194,15 @@ export default function DiscoverScreen() {
   }, [handleQuizPress, isUserPremium]);
 
   const renderEmpty = () => {
-    if (isLoading) return <View style={styles.skeletonGrid}>{[1, 2, 3, 4].map(i => <SkeletonCard key={i} style={{ marginLeft: i % 2 === 0 ? Spacing.md : 0 }} />)}</View>;
+    if (isLoading || batchesLoading) {
+      return (
+        <View style={styles.skeletonGrid}>
+          {[1, 2, 3, 4].map(i => (
+            <SkeletonCard key={i} style={{ marginLeft: i % 2 === 0 ? Spacing.md : 0 }} />
+          ))}
+        </View>
+      );
+    }
     return (
       <View style={styles.emptyContainer}>
         <Feather name="search" size={48} color={theme.textSecondary} />
@@ -203,11 +211,28 @@ export default function DiscoverScreen() {
     );
   };
 
+  const renderBatchSkeletons = () => (
+    <View style={{ flexDirection: 'row', gap: Spacing.md }}>
+      {[1, 2, 3].map(i => (
+        <View key={i} style={[styles.batchCard, { backgroundColor: theme.backgroundSecondary, width: 200 }]}>
+          <View style={[styles.batchThumbnail, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]} />
+          <View style={{ padding: Spacing.sm, gap: Spacing.xs }}>
+            <View style={{ height: 16, width: '80%', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: 4 }} />
+            <View style={{ height: 12, width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: 4 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+
   // Combine quiz and batch data for a single FlatList
   const getCombinedData = () => {
-    if (isOfferTab) return batches || [];
+    if (isOfferTab) {
+      if (batchesLoading) return [{ type: "loading_batches" }];
+      return batches || [];
+    }
     return [
-      ...(selectedCategory === "All" && batches && batches.length > 0 ? [{ type: "batches", data: batches }] : []),
+      ...(selectedCategory === "All" ? [{ type: "batches_section" }] : []),
       ...(filteredQuizzes.length > 0 || isLoading ? [{ type: "quizzes", data: filteredQuizzes }] : [{ type: "empty" }])
     ];
   };
@@ -215,19 +240,26 @@ export default function DiscoverScreen() {
   const combinedData = getCombinedData();
 
   const renderCombinedItem = useCallback(({ item, index }: { item: any; index: number }) => {
-    if (isOfferTab) return renderBatchItem({ item, index });
+    if (isOfferTab) {
+      if (item.type === "loading_batches") return renderBatchSkeletons();
+      return renderBatchItem({ item, index });
+    }
     
-    if (item.type === "batches") {
+    if (item.type === "batches_section") {
       return (
         <View style={{ marginBottom: Spacing.xl }}>
           <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            contentContainerStyle={{ gap: Spacing.md }}
-          >
-            {item.data.map((batch: any, idx: number) => renderBatchItem({ item: batch, index: idx }))}
-          </ScrollView>
+          {batchesLoading ? (
+            renderBatchSkeletons()
+          ) : (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ gap: Spacing.md }}
+            >
+              {batches?.map((batch: any, idx: number) => renderBatchItem({ item: batch, index: idx }))}
+            </ScrollView>
+          )}
         </View>
       );
     }
