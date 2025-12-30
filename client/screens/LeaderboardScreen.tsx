@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
   modalActions: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.xl,
-    paddingBottom: Spacing.xl + 20,
+    paddingBottom: Spacing.xl + 60,
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.1)",
   },
