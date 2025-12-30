@@ -26,6 +26,9 @@ import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
 import ManageBatchesScreen from "@/screens/ManageBatchesScreen";
 import EditBatchScreen from "@/screens/EditBatchScreen";
 import BatchDetailsScreen from "@/screens/BatchDetailsScreen";
+import LiveQuizSelectionScreen from "@/screens/LiveQuizSelectionScreen";
+import CreateLiveQuizScreen from "@/screens/CreateLiveQuizScreen";
+import QuizResultSummaryScreen from "@/screens/QuizResultSummaryScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -50,6 +53,15 @@ export type RootStackParamList = {
   ChangePassword: undefined;
   ForgotPassword: undefined;
   CreateRoom: { quizId: string; quizTitle: string };
+  LiveQuizSelection: undefined;
+  CreateLiveQuiz: { quizId: string; quizTitle: string };
+  QuizResultSummary: {
+    score: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    incorrectAnswers: number;
+    duration: number;
+  };
   JoinRoom: undefined;
   Lobby: { roomCode: string; odId: string; quizId: string; isHost: boolean; playerName: string };
   MultiplayerQuiz: { roomCode: string; odId: string; quizId: string; playerName: string };
@@ -295,6 +307,30 @@ export default function RootStackNavigator() {
         name="ForgotPassword"
         component={ForgotPasswordScreen}
         options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="LiveQuizSelection"
+        component={LiveQuizSelectionScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Select Quiz for Live Test",
+        }}
+      />
+      <Stack.Screen
+        name="CreateLiveQuiz"
+        component={CreateLiveQuizScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Launch Live Quiz",
+        }}
+      />
+      <Stack.Screen
+        name="QuizResultSummary"
+        component={QuizResultSummaryScreen}
+        options={{
+          presentation: "fullScreenModal",
           headerShown: false,
         }}
       />

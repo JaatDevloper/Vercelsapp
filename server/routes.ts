@@ -538,6 +538,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ LIVE QUIZ API ENDPOINTS ============
+  app.post("/api/admin/livequiz", async (req: Request, res: Response) => {
+    try {
+      const { quizId, quizTitle, liveTitle, duration, maxParticipants } = req.body;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      
+      const liveQuizData = {
+        quizId,
+        quizTitle,
+        liveTitle,
+        duration,
+        maxParticipants,
+        status: "live",
+        joinedCount: Math.floor(Math.random() * 500) + 1500, // Mock initial joined for demo
+        startTime: new Date().toISOString(),
+      };
+      
+      const result = await db.collection("livequiz").insertOne(liveQuizData);
+      res.status(201).json({ _id: result.insertedId, ...liveQuizData });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to launch live quiz" });
+    }
+  });
+
+  app.get("/api/livequiz/active", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const activeQuiz = await db.collection("livequiz").findOne({ status: "live" }, { sort: { startTime: -1 } });
+      
+      if (activeQuiz) {
+        // Increment joinedCount slightly for real-time feel
+        await db.collection("livequiz").updateOne(
+          { _id: activeQuiz._id },
+          { $inc: { joinedCount: Math.floor(Math.random() * 5) } }
+        );
+      }
+      
+      res.json(activeQuiz || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch active live quiz" });
+    }
+  });
+
   // ============ BATCHES API ENDPOINTS ============
   app.post("/api/batches/purchase", async (req: Request, res: Response) => {
     try {

@@ -31,7 +31,8 @@ import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
 import { getDeviceId } from "@/lib/deviceId";
 
-import Animated, { FadeInUp } from "react-native-reanimated";
+import Animated, { FadeInUp, PinwheelIn } from "react-native-reanimated";
+import LiveTestCard from "@/components/LiveTestCard";
 
 interface Category {
   name: string;
@@ -220,6 +221,9 @@ export default function DiscoverScreen() {
     if (item.type === "batches") {
       return (
         <View style={{ marginBottom: Spacing.xl }}>
+          <Animated.View entering={PinwheelIn.duration(1000)}>
+            <LiveTestCard onStart={() => navigation.navigate("QuizScreen", { quizId: "live" })} />
+          </Animated.View>
           <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
           <ScrollView 
             horizontal 
