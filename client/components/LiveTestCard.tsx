@@ -11,11 +11,13 @@ import Animated, {
   FadeInUp
 } from "react-native-reanimated";
 import { ThemedText } from "./ThemedText";
+import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
+  const { theme } = useTheme();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +30,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     liveDotScale.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 0 }),
-        withTiming(1.3, { duration: 600 }),
+        withTiming(1.4, { duration: 600 }),
         withTiming(1, { duration: 600 })
       ),
       -1,
@@ -38,7 +40,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     liveDotOpacity.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 0 }),
-        withTiming(0.4, { duration: 600 }),
+        withTiming(0.3, { duration: 600 }),
         withTiming(1, { duration: 600 })
       ),
       -1,
@@ -77,174 +79,222 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   if (loading || !liveData) return null;
 
   const progress = liveData.joinedCount / liveData.maxParticipants;
+  const participationPercentage = Math.round(progress * 100);
 
   return (
-    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, borderRadius: 24, overflow: 'hidden' }]}>
-      <LinearGradient
-        colors={["#F9C97C", "#F6D5E7", "#C77DFF"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.card}
-      >
-        {/* Main Content Container */}
-        <View style={styles.contentWrapper}>
-          {/* Header: Title + Live Dot */}
-          <View style={styles.headerRow}>
-            <View style={styles.titleSection}>
-              <ThemedText style={styles.mainTitle}>{liveData.liveTitle}</ThemedText>
+    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, borderRadius: BorderRadius.xl, overflow: 'hidden' }]}>
+      <View style={[styles.card, { backgroundColor: theme.backgroundSecondary }]}>
+        
+        {/* Premium Header with Live Indicator */}
+        <LinearGradient
+          colors={[theme.primary, theme.secondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.headerText}>
+              <ThemedText style={styles.quizName}>{liveData.liveTitle}</ThemedText>
+              <ThemedText style={styles.quizTopic}>{liveData.quizTitle}</ThemedText>
             </View>
-
-            {/* Live Dot Indicator */}
-            <View style={styles.liveIndicator}>
+            
+            {/* Live Indicator Badge */}
+            <View style={styles.liveBadge}>
               <Animated.View style={[styles.liveDot, liveDotStyle]} />
-              <ThemedText style={styles.liveText}>Live Now</ThemedText>
+              <ThemedText style={styles.liveText}>LIVE</ThemedText>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Stats Grid Section */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statColumn}>
+            <View style={[styles.statCard, { backgroundColor: `${theme.primary}15` }]}>
+              <Feather name="help-circle" size={24} color={theme.primary} />
+              <ThemedText style={styles.statLabel}>Total Questions</ThemedText>
+              <ThemedText style={[styles.statValue, { color: theme.primary }]}>{liveData.maxParticipants}</ThemedText>
+            </View>
+
+            <View style={[styles.statCard, { backgroundColor: `${theme.secondary}15` }]}>
+              <Feather name="users" size={24} color={theme.secondary} />
+              <ThemedText style={styles.statLabel}>All Participants</ThemedText>
+              <ThemedText style={[styles.statValue, { color: theme.secondary }]}>{liveData.maxParticipants}</ThemedText>
             </View>
           </View>
 
-          {/* Test Meta Info */}
-          <View style={styles.metaInfo}>
-            <View style={styles.metaItem}>
-              <Feather name="clock" size={14} color="rgba(43, 43, 43, 0.6)" />
-              <ThemedText style={styles.metaText}>{liveData.duration}</ThemedText>
+          <View style={styles.statColumn}>
+            <View style={[styles.statCard, { backgroundColor: '#10B98115' }]}>
+              <Feather name="check-circle" size={24} color="#10B981" />
+              <ThemedText style={styles.statLabel}>Joined</ThemedText>
+              <ThemedText style={[styles.statValue, { color: '#10B981' }]}>{liveData.joinedCount}</ThemedText>
             </View>
-            <View style={styles.metaDivider} />
-            <View style={styles.metaItem}>
-              <Feather name="help-circle" size={14} color="rgba(43, 43, 43, 0.6)" />
-              <ThemedText style={styles.metaText}>{liveData.maxParticipants}</ThemedText>
-            </View>
-            <View style={styles.metaDivider} />
-            <View style={styles.metaItem}>
-              <Feather name="users" size={14} color="rgba(43, 43, 43, 0.6)" />
-              <ThemedText style={styles.metaText}>{liveData.joinedCount}</ThemedText>
+
+            <View style={[styles.statCard, { backgroundColor: '#F59E0B15' }]}>
+              <Feather name="clock" size={24} color="#F59E0B" />
+              <ThemedText style={styles.statLabel}>Duration</ThemedText>
+              <ThemedText style={[styles.statValue, { color: '#F59E0B' }]}>{liveData.duration} min</ThemedText>
             </View>
           </View>
-
-          {/* Quiz Topic/Title Section */}
-          {liveData.quizTitle && (
-            <View style={styles.topicContainer}>
-              <ThemedText style={styles.topicText}>{liveData.quizTitle}</ThemedText>
-            </View>
-          )}
-
-          {/* Hidden Stats - kept for backend data but not displayed */}
-          <View style={{ display: 'none' }}>
-            <ThemedText>{liveData.duration}</ThemedText>
-            <ThemedText>{liveData.maxParticipants}</ThemedText>
-            <ThemedText>{liveData.quizTitle}</ThemedText>
-            <View style={[{ width: `${progress * 100}%` }]} />
-            <ThemedText>{liveData.joinedCount}</ThemedText>
-          </View>
-
-          {/* Button Section */}
-          <Pressable onPress={onStart} style={styles.startButton}>
-            <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
-            <Feather name="arrow-right" size={16} color="#FFFFFF" />
-          </Pressable>
         </View>
-      </LinearGradient>
+
+        {/* Progress Bar Section */}
+        <View style={styles.progressSection}>
+          <View style={styles.progressHeader}>
+            <ThemedText style={styles.progressLabel}>Participation Rate</ThemedText>
+            <ThemedText style={styles.progressPercent}>{participationPercentage}%</ThemedText>
+          </View>
+          <View style={[styles.progressBar, { backgroundColor: theme.backgroundSecondary }]}>
+            <LinearGradient
+              colors={[theme.primary, theme.secondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: `${progress * 100}%` }]}
+            />
+          </View>
+        </View>
+
+        {/* Action Button */}
+        <Pressable 
+          onPress={onStart} 
+          style={({ pressed }) => [
+            styles.startButton,
+            { backgroundColor: theme.primary, opacity: pressed ? 0.8 : 1 }
+          ]}
+        >
+          <ThemedText style={styles.startButtonText}>Start Test</ThemedText>
+          <Feather name="arrow-right" size={18} color="#FFFFFF" />
+        </Pressable>
+      </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 24,
-    paddingVertical: 28,
-    paddingHorizontal: 24,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
-  contentWrapper: {
-    gap: 16,
+  headerGradient: {
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
-  headerRow: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: Spacing.md,
   },
-  titleSection: {
+  headerText: {
     flex: 1,
+    gap: Spacing.xs,
   },
-  mainTitle: {
-    color: '#2B2B2B',
-    fontSize: 24,
-    fontWeight: '600',
-    lineHeight: 32,
-    letterSpacing: -0.3,
+  quizName: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 28,
   },
-  liveIndicator: {
-    flexDirection: 'row',
+  quizTopic: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  liveBadge: {
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 20,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    minWidth: 60,
   },
   liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#00D26A',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#10B981',
+    marginBottom: Spacing.xs,
   },
   liveText: {
-    color: '#2B2B2B',
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    gap: Spacing.md,
+  },
+  statColumn: {
+    flex: 1,
+    gap: Spacing.md,
+  },
+  statCard: {
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  statLabel: {
     fontSize: 12,
     fontWeight: '600',
+    marginTop: Spacing.xs,
   },
-  metaInfo: {
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  progressSection: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  progressHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
   },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  metaDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: 'rgba(43, 43, 43, 0.2)',
-  },
-  metaText: {
-    color: 'rgba(43, 43, 43, 0.7)',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  topicContainer: {
-    backgroundColor: 'rgba(43, 43, 43, 0.08)',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-  },
-  topicText: {
-    color: '#2B2B2B',
+  progressLabel: {
     fontSize: 13,
-    fontWeight: '500',
-    lineHeight: 18,
+    fontWeight: '600',
+  },
+  progressPercent: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: BorderRadius.full,
   },
   startButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
+    gap: Spacing.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
   },
   startButtonText: {
-    color: '#2B2B2B',
-    fontSize: 15,
+    color: 'white',
+    fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
