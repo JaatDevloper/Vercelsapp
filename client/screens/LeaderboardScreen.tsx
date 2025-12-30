@@ -593,7 +593,7 @@ export default function LeaderboardScreen() {
               ))}
             </ScrollView>
 
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, { paddingBottom: tabBarHeight + Spacing.lg }]}>
               <Pressable
                 onPress={() => {
                   navigation.navigate("Profile");
