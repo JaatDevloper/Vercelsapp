@@ -8,26 +8,29 @@ import Animated, {
   withTiming, 
   withRepeat, 
   withSequence,
+  interpolate,
+  useDerivedValue,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const liveDotScale = useSharedValue(1);
   const liveDotOpacity = useSharedValue(1);
-  const cardOpacity = useSharedValue(0);
+  const buttonScale = useSharedValue(1);
 
   useEffect(() => {
     liveDotScale.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 0 }),
-        withTiming(1.4, { duration: 600 }),
-        withTiming(1, { duration: 600 })
+        withTiming(1.4, { duration: 800 }),
+        withTiming(1, { duration: 800 })
       ),
       -1,
       true
@@ -36,14 +39,12 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     liveDotOpacity.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 0 }),
-        withTiming(0.3, { duration: 600 }),
-        withTiming(1, { duration: 600 })
+        withTiming(0.4, { duration: 800 }),
+        withTiming(1, { duration: 800 })
       ),
       -1,
       true
     );
-
-    cardOpacity.value = withTiming(1, { duration: 500 });
 
     const fetchLiveData = async () => {
       try {
@@ -67,181 +68,154 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     opacity: liveDotOpacity.value,
   }));
 
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: cardOpacity.value,
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
   }));
+
+  const handlePressIn = () => {
+    buttonScale.value = withTiming(0.97, { duration: 100 });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handlePressOut = () => {
+    buttonScale.value = withTiming(1, { duration: 100 });
+  };
 
   if (loading || !liveData) return null;
 
   return (
-    <Animated.View style={[cardStyle, { marginHorizontal: Spacing.lg, marginBottom: Spacing.lg, aspectRatio: 16 / 9 }]}>
+    <View style={styles.cardWrapper}>
       <LinearGradient
-        colors={[theme.primary, theme.secondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.card, { borderRadius: BorderRadius.lg, flex: 1 }]}
+        colors={["#F5F7FB", "#EEF2FF"]}
+        style={styles.card}
       >
-        <View style={styles.contentRow}>
-          {/* Quiz Info Section */}
-          <View style={styles.infoSection}>
-            <View style={styles.titleContainer}>
-              <ThemedText style={styles.quizName}>{liveData.liveTitle}</ThemedText>
-              <ThemedText style={styles.quizTopic}>{liveData.quizTitle}</ThemedText>
-            </View>
-          </View>
-
-          {/* Stats Section - Horizontal */}
-          <View style={styles.statsRow}>
-            {/* Total Questions */}
-            <View style={styles.stat}>
-              <Feather name="help-circle" size={16} color="rgba(255, 255, 255, 0.8)" />
-              <ThemedText style={styles.statValue}>{liveData.maxParticipants}</ThemedText>
-              <ThemedText style={styles.statLabel}>Questions</ThemedText>
-            </View>
-
-            {/* Participants Limit */}
-            <View style={styles.divider} />
-            <View style={styles.stat}>
-              <Feather name="users" size={16} color="rgba(255, 255, 255, 0.8)" />
-              <ThemedText style={styles.statValue}>{liveData.maxParticipants}</ThemedText>
-              <ThemedText style={styles.statLabel}>Limit</ThemedText>
-            </View>
-
-            {/* Joined Count */}
-            <View style={styles.divider} />
-            <View style={styles.stat}>
-              <Feather name="check-circle" size={16} color="rgba(255, 255, 255, 0.8)" />
-              <ThemedText style={styles.statValue}>{liveData.joinedCount}</ThemedText>
-              <ThemedText style={styles.statLabel}>Joined</ThemedText>
-            </View>
-          </View>
-
-          {/* Live Badge & Button */}
-          <View style={styles.actionSection}>
-            {/* Live Indicator */}
-            <View style={styles.liveBadge}>
-              <Animated.View style={[styles.liveDot, liveDotStyle]} />
-              <ThemedText style={styles.liveText}>LIVE</ThemedText>
-            </View>
-
-            {/* Start Button */}
-            <Pressable 
-              onPress={onStart}
-              style={({ pressed }) => [
-                styles.startButton,
-                { opacity: pressed ? 0.85 : 1 }
-              ]}
-            >
-              <Feather name="play" size={14} color={theme.primary} />
-              <ThemedText style={styles.startButtonText}>Start</ThemedText>
-            </Pressable>
+        <View style={styles.header}>
+          <ThemedText style={styles.headerLabel}>Live Quiz</ThemedText>
+          <View style={styles.liveIndicatorContainer}>
+            <Animated.View style={[styles.liveDot, liveDotStyle]} />
           </View>
         </View>
+
+        <View style={styles.titleSection}>
+          <ThemedText style={styles.quizTitle} numberOfLines={2}>
+            {liveData.liveTitle || "Daily Quiz Challenge"}
+          </ThemedText>
+          {liveData.quizTitle && (
+            <ThemedText style={styles.description}>
+              {liveData.quizTitle}
+            </ThemedText>
+          )}
+        </View>
+
+        <Animated.View style={[styles.ctaContainer, buttonAnimatedStyle]}>
+          <Pressable 
+            onPress={onStart}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={styles.startButton}
+          >
+            <View style={styles.buttonContent}>
+              <ThemedText style={styles.startButtonText}>Start Quiz</ThemedText>
+              <ThemedText style={styles.buttonSubtext}>
+                ⏱ 10 Questions • Live
+              </ThemedText>
+            </View>
+          </Pressable>
+        </Animated.View>
       </LinearGradient>
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  cardWrapper: {
+    width: "94%",
+    alignSelf: "center",
+    marginVertical: Spacing.md,
+    borderRadius: 28,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 30,
+    elevation: 8,
+  },
   card: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    overflow: 'hidden',
+    padding: 24,
+    borderRadius: 28,
+    width: "100%",
   },
-  contentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-    flex: 1,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
   },
-  infoSection: {
-    flex: 1.2,
-    justifyContent: 'center',
-  },
-  titleContainer: {
-    gap: Spacing.xs,
-  },
-  quizName: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '700',
-    lineHeight: 18,
-  },
-  quizTopic: {
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    flex: 2,
-    justifyContent: 'space-around',
-  },
-  stat: {
-    alignItems: 'center',
-    gap: 2,
-    flex: 1,
-  },
-  statValue: {
-    color: 'white',
+  headerLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    color: "#6B7280",
+    fontWeight: "500",
   },
-  statLabel: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 8,
-    fontWeight: '500',
-  },
-  divider: {
-    width: 1,
-    height: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  actionSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flex: 0.8,
-    justifyContent: 'flex-end',
-  },
-  liveBadge: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingVertical: 3,
-    paddingHorizontal: 6,
-    borderRadius: 6,
+  liveIndicatorContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
   },
   liveDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#10B981',
-    marginBottom: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#EF4444",
   },
-  liveText: {
-    color: 'white',
-    fontSize: 8,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+  titleSection: {
+    marginBottom: 24,
+  },
+  quizTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  description: {
+    fontSize: 14,
+    color: "#6B7280",
+    lineHeight: 19.6,
+    textAlign: "left",
+  },
+  ctaContainer: {
+    width: "100%",
   },
   startButton: {
-    backgroundColor: 'white',
-    paddingVertical: 6,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
+    backgroundColor: "#000000",
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    paddingHorizontal: 20,
   },
   startButtonText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 8,
+  },
+  buttonSubtext: {
+    color: "#E5E7EB",
+    fontSize: 12,
   },
 });
+
