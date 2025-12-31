@@ -229,14 +229,17 @@ export default function DiscoverScreen() {
 
   const combinedData = getCombinedData();
 
-  const handleLiveQuizStart = useCallback(() => {
+  const handleLiveQuizStart = useCallback(async () => {
+    // Show a loading state if needed, but since refetch is fast, we just wait
+    const { data: freshProfile } = await refetchProfile();
+    
     // Check if profile exists and has required fields
-    if (!profile || !profile.name) {
+    if (!freshProfile || !freshProfile.name) {
       navigation.navigate("LoginProfile");
       return;
     }
     navigation.navigate("Quiz", { quizId: "live" });
-  }, [navigation, profile]);
+  }, [navigation, refetchProfile]);
 
   const renderCombinedItem = useCallback(({ item, index }: { item: any; index: number }) => {
     if (isOfferTab) return renderBatchItem({ item, index });

@@ -16,20 +16,31 @@ import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import ParticipantProfilesModal from "./ParticipantProfilesModal";
 import { useQuery } from "@tanstack/react-query";
-import { useDeviceId } from "@/hooks/useDeviceId";
+import { getDeviceId } from "@/lib/deviceId";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const { theme } = useTheme();
-  const { deviceId } = useDeviceId();
+  const [deviceId, setDeviceId] = useState<string>("");
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
   const [showProfiles, setShowProfiles] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
 
+  useEffect(() => {
+    getDeviceId().then(setDeviceId);
+  }, []);
+
   const { refetch: refetchProfile } = useQuery<any>({
     queryKey: ["profile", deviceId],
-    enabled: false,
+    queryFn: async () => {
+      if (!deviceId) return null;
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const response = await fetch(`${baseUrl}/api/profile?deviceId=${encodeURIComponent(deviceId)}`);
+      if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!deviceId,
   });
 
   const liveDotScale = useSharedValue(1);
@@ -114,10 +125,17 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
       // Force a fresh profile check before starting
       const { data: profile } = await refetchProfile();
       console.log("LiveTestCard: Fresh profile check:", profile?.name || "Not logged in");
-      onStart();
+      
+      // Check if profile exists and has required fields
+      if (!profile || !profile.name) {
+        // We handle navigation here if onStart doesn't do it correctly
+        onStart(); 
+      } else {
+        onStart();
+      }
     } catch (error) {
       console.error("LiveTestCard: Auth check failed:", error);
-      onStart(); // Fallback to original onStart which handles navigation
+      onStart();
     } finally {
       setIsCheckingAuth(false);
     }
