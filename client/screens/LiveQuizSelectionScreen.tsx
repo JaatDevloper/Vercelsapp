@@ -6,13 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
-import { useProfile } from "@/hooks/useProfile";
 import { Spacing } from "@/constants/theme";
 
 export default function LiveQuizSelectionScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
-  const { profile } = useProfile();
   
   const { data: quizzes, isLoading } = useQuery<any[]>({
     queryKey: ["/api/quizzes"],
@@ -24,17 +22,6 @@ export default function LiveQuizSelectionScreen() {
   });
 
   const handleSelectQuiz = (quiz: any) => {
-    if (!profile) {
-      Alert.alert(
-        "Login Required",
-        "Please login or create a profile to launch a live quiz.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Login", onPress: () => navigation.navigate("LoginProfile") }
-        ]
-      );
-      return;
-    }
     navigation.navigate("CreateLiveQuiz", { quizId: quiz._id, quizTitle: quiz.title });
   };
 
