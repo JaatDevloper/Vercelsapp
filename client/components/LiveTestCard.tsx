@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
@@ -15,11 +15,11 @@ import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import ParticipantProfilesModal from "./ParticipantProfilesModal";
+import { useQuery } from "@tanstack/react-query";
+import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const { theme } = useTheme();
-  const [liveData, setLiveData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [showProfiles, setShowProfiles] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
 
@@ -27,7 +27,21 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const liveDotOpacity = useSharedValue(1);
   const buttonScale = useSharedValue(1);
 
-  useEffect(() => {
+  // Use TanStack Query for live data
+  const { data: liveData } = useQuery({
+    queryKey: ["/api/livequiz/active"],
+    queryFn: async () => {
+      const response = await fetch("/api/livequiz/active");
+      if (!response.ok) return null;
+      return response.json();
+    },
+    initialData: null,
+  });
+
+  // Add Silent Refresh for the live quiz data
+  useSilentAutoRefresh(["/api/livequiz/active"], 10000);
+
+  React.useEffect(() => {
     liveDotScale.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 0 }),
@@ -47,22 +61,6 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
       -1,
       true
     );
-
-    const fetchLiveData = async () => {
-      try {
-        const response = await fetch("/api/livequiz/active");
-        if (response.ok) {
-          const data = await response.json();
-          setLiveData(data);
-        }
-      } catch (e) {} finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLiveData();
-    const interval = setInterval(fetchLiveData, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchParticipants = async () => {
@@ -97,7 +95,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     buttonScale.value = withTiming(1, { duration: 100 });
   };
 
-  if (loading || !liveData) return null;
+  if (!liveData) return null;
 
   return (
     <View style={styles.cardWrapper}>
