@@ -67,13 +67,16 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
   const fetchParticipants = async () => {
     try {
-      const response = await fetch("/api/livequiz/participants");
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const response = await fetch(`${baseUrl}/api/livequiz/participants`);
       if (response.ok) {
         const data = await response.json();
         setParticipants(data);
         setShowProfiles(true);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Error fetching participants:", e);
+    }
   };
 
   const liveDotStyle = useAnimatedStyle(() => ({

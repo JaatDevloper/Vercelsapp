@@ -612,13 +612,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const client = await getMongoClient();
       const db = client.db("quizbot");
-      const activeQuiz = await db.collection("livequiz").findOne({ status: "live" }, { sort: { startTime: -1 } });
       
-      if (!activeQuiz) return res.json([]);
-
+      // Fetch all participants regardless of specific quizId for now to ensure data shows up
+      // Or filter by "live" status if we want to be specific
       const participants = await db.collection("livequiz_results")
-        .find({ quizId: { $in: [activeQuiz.quizId, "live"] } })
-        .project({ userName: 1, avatarUrl: 1, score: 1, _id: 0 })
+        .find({})
+        .sort({ submittedAt: -1 })
+        .limit(50)
+        .project({ userName: 1, avatarUrl: 1, score: 1, submittedAt: 1, _id: 0 })
         .toArray();
 
       res.json(participants);
