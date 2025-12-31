@@ -552,9 +552,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration,
         maxParticipants,
         status: "live",
-        joinedCount: Math.floor(Math.random() * 500) + 1500, // Mock initial joined for demo
+        joinedCount: 1500, // Initial joined for demo
         startTime: new Date().toISOString(),
       };
+      
+      // Fetch the actual question count from the linked quiz
+      const quizCollection = db.collection("quizzes");
+      const quiz = await quizCollection.findOne({ _id: quizId as any });
+      if (!quiz && ObjectId.isValid(quizId)) {
+        try {
+          const quizObj = await quizCollection.findOne({ _id: new ObjectId(quizId) });
+          if (quizObj) {
+            (liveQuizData as any).questionCount = Array.isArray(quizObj.questions) ? quizObj.questions.length : 0;
+          }
+        } catch (e) {}
+      } else if (quiz) {
+        (liveQuizData as any).questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+      }
       
       const result = await db.collection("livequiz").insertOne(liveQuizData);
       res.status(201).json({ _id: result.insertedId, ...liveQuizData });

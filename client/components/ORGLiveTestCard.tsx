@@ -107,7 +107,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Feather name="file-text" size={16} color="#6B7280" />
-            <ThemedText style={styles.statText}>{liveData.questionCount || 80} Qns</ThemedText>
+            <ThemedText style={styles.statText}>{liveData.questionCount || "..."} Qns</ThemedText>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
