@@ -218,14 +218,7 @@ export default function DiscoverScreen() {
   const handleLiveQuizStart = useCallback(() => {
     // Check if profile exists and has required fields
     if (!profile || !profile.name) {
-      Alert.alert(
-        "Login Required",
-        "Login Required for Live Quiz. If you want to take live quiz, please login or create a profile.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Login / Create", onPress: () => navigation.navigate("LoginProfile") }
-        ]
-      );
+      navigation.navigate("LoginProfile");
       return;
     }
     navigation.navigate("Quiz", { quizId: "live" });
