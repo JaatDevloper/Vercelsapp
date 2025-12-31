@@ -216,7 +216,8 @@ export default function DiscoverScreen() {
   const combinedData = getCombinedData();
 
   const handleLiveQuizStart = useCallback(() => {
-    if (!profile) {
+    // Check if profile exists and has required fields
+    if (!profile || !profile.name) {
       Alert.alert(
         "Login Required",
         "Login Required for Live Quiz. If you want to take live quiz, please login or create a profile.",
