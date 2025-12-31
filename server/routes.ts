@@ -558,16 +558,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Fetch the actual question count from the linked quiz
       const quizCollection = db.collection("quizzes");
-      const quiz = await quizCollection.findOne({ _id: quizId as any });
+      let quiz = await quizCollection.findOne({ _id: quizId as any });
+      
       if (!quiz && ObjectId.isValid(quizId)) {
         try {
-          const quizObj = await quizCollection.findOne({ _id: new ObjectId(quizId) });
-          if (quizObj) {
-            (liveQuizData as any).questionCount = Array.isArray(quizObj.questions) ? quizObj.questions.length : 0;
-          }
+          quiz = await quizCollection.findOne({ _id: new ObjectId(quizId) });
         } catch (e) {}
-      } else if (quiz) {
+      }
+      
+      if (!quiz) {
+        quiz = await quizCollection.findOne({ quiz_id: quizId });
+      }
+      
+      if (quiz) {
         (liveQuizData as any).questionCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+      } else {
+        (liveQuizData as any).questionCount = 80; // Fallback
       }
       
       const result = await db.collection("livequiz").insertOne(liveQuizData);
