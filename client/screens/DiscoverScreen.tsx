@@ -223,7 +223,7 @@ export default function DiscoverScreen() {
         "Login Required for Live Quiz. If you want to take live quiz, please login or create a profile.",
         [
           { text: "Cancel", style: "cancel" },
-          { text: "Login / Create", onPress: () => navigation.navigate("Profile" as any) }
+          { text: "Login / Create", onPress: () => navigation.navigate("LoginProfile") }
         ]
       );
       return;
