@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -67,6 +68,17 @@ export default function QuizDetailsScreen() {
   };
 
   const handleStartQuiz = () => {
+    if (!profile) {
+      Alert.alert(
+        "Login Required",
+        "Please login or create a profile to start the quiz.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Login", onPress: () => navigation.navigate("LoginProfile") }
+        ]
+      );
+      return;
+    }
     navigation.replace("Quiz", { quizId });
   };
 
