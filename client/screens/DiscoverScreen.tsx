@@ -76,12 +76,17 @@ export default function DiscoverScreen() {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
+      // Check if deviceId is set before refetching
       if (deviceId) {
-        refetchProfile();
+        refetchProfile().then((result) => {
+          if (result.data) {
+            console.log("Profile refetched on focus:", result.data.name);
+          }
+        });
       }
     });
     return unsubscribe;
-  }, [navigation, deviceId]);
+  }, [navigation, deviceId, refetchProfile]);
 
   const { 
     data: batches,
