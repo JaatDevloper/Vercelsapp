@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useSharedValue,
@@ -13,11 +14,14 @@ import { BlurView } from "expo-blur";
 import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
+import ParticipantProfilesModal from "./ParticipantProfilesModal";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const { theme } = useTheme();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showProfiles, setShowProfiles] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
 
   const liveDotScale = useSharedValue(1);
   const liveDotOpacity = useSharedValue(1);
@@ -60,6 +64,17 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     const interval = setInterval(fetchLiveData, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchParticipants = async () => {
+    try {
+      const response = await fetch("/api/livequiz/participants");
+      if (response.ok) {
+        const data = await response.json();
+        setParticipants(data);
+        setShowProfiles(true);
+      }
+    } catch (e) {}
+  };
 
   const liveDotStyle = useAnimatedStyle(() => ({
     transform: [{ scale: liveDotScale.value }],
@@ -133,12 +148,24 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
         {/* Participants */}
         <View style={styles.participantsRow}>
-          <View style={styles.avatarStack}>
-            <View style={[styles.avatar, { backgroundColor: "#6366F1", zIndex: 3 }]} />
-            <View style={[styles.avatar, { backgroundColor: "#818CF8", zIndex: 2, marginLeft: -12 }]} />
-            <View style={[styles.avatar, { backgroundColor: "#4F46E5", zIndex: 1, marginLeft: -12 }]} />
-            <View style={[styles.avatar, { backgroundColor: "#10B981", zIndex: 0, marginLeft: -12 }]} />
-          </View>
+          <Pressable onPress={fetchParticipants} style={styles.avatarStack}>
+            {participants.length > 0 ? (
+              participants.slice(0, 4).map((p, i) => (
+                <Image
+                  key={i}
+                  source={{ uri: p.avatarUrl || "https://via.placeholder.com/150" }}
+                  style={[styles.avatar, { zIndex: 4 - i, marginLeft: i === 0 ? 0 : -12 }]}
+                />
+              ))
+            ) : (
+              <>
+                <View style={[styles.avatar, { backgroundColor: "#6366F1", zIndex: 3 }]} />
+                <View style={[styles.avatar, { backgroundColor: "#818CF8", zIndex: 2, marginLeft: -12 }]} />
+                <View style={[styles.avatar, { backgroundColor: "#4F46E5", zIndex: 1, marginLeft: -12 }]} />
+                <View style={[styles.avatar, { backgroundColor: "#10B981", zIndex: 0, marginLeft: -12 }]} />
+              </>
+            )}
+          </Pressable>
 
           <ThemedText style={styles.joinedTotalText}>
             {liveData.joinedCount || 0}/{liveData.maxParticipants || 50}
@@ -176,6 +203,12 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
           </Pressable>
         </Animated.View>
       </BlurView>
+
+      <ParticipantProfilesModal
+        visible={showProfiles}
+        onClose={() => setShowProfiles(false)}
+        participants={participants}
+      />
     </View>
   );
 }

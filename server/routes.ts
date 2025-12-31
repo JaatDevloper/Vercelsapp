@@ -592,7 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (activeQuiz) {
         // Fetch actual joined count from results
         const joinedCount = await db.collection("livequiz_results").countDocuments({
-          quizId: activeQuiz.quizId
+          quizId: { $in: [activeQuiz.quizId, "live"] }
         });
         
         // Return active quiz with real joined count
@@ -605,6 +605,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(null);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch active live quiz" });
+    }
+  });
+
+  app.get("/api/livequiz/participants", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const activeQuiz = await db.collection("livequiz").findOne({ status: "live" }, { sort: { startTime: -1 } });
+      
+      if (!activeQuiz) return res.json([]);
+
+      const participants = await db.collection("livequiz_results")
+        .find({ quizId: { $in: [activeQuiz.quizId, "live"] } })
+        .project({ userName: 1, avatarUrl: 1, score: 1, _id: 0 })
+        .toArray();
+
+      res.json(participants);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch participants" });
     }
   });
 
