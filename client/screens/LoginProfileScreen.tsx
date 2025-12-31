@@ -95,13 +95,11 @@ export default function LoginProfileScreen() {
       },
       {
         onSuccess: () => {
-          // Force a small delay to allow QueryClient to finalize its internal state
+          // Mutation's onSuccess already awaits refetch, so data is loaded
+          // Small delay to ensure React renders the updated state
           setTimeout(() => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainTabs" as any }],
-            });
-          }, 300);
+            navigation.goBack();
+          }, 50);
         },
         onError: (error) => {
           if (error.message === "PROFILE_NOT_FOUND") {

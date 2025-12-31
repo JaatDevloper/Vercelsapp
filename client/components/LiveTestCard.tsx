@@ -11,19 +11,15 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { BlurView } from "expo-blur";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import ParticipantProfilesModal from "./ParticipantProfilesModal";
 import { useQuery } from "@tanstack/react-query";
 import { getDeviceId } from "@/lib/deviceId";
-import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const { theme } = useTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [deviceId, setDeviceId] = useState<string>("");
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +31,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     getDeviceId().then(setDeviceId);
   }, []);
 
-  const { refetch: refetchProfile, isFetching: isRefreshingProfile } = useQuery<any>({
+  const { refetch: refetchProfile } = useQuery<any>({
     queryKey: ["profile", deviceId],
     queryFn: async () => {
       if (!deviceId) return null;
@@ -45,7 +41,6 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
       return response.json();
     },
     enabled: !!deviceId,
-    staleTime: 0,
   });
 
   const liveDotScale = useSharedValue(1);
@@ -123,35 +118,24 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   };
 
   const handleStartPress = async () => {
-    if (isCheckingAuth || isRefreshingProfile) return;
+    if (isCheckingAuth) return;
     
     setIsCheckingAuth(true);
     try {
-      console.log("LiveTestCard: Starting fresh profile check...");
+      // Force a fresh profile check before starting
+      const { data: profile } = await refetchProfile();
+      console.log("LiveTestCard: Fresh profile check:", profile?.name || "Not logged in");
       
-      // We use a direct fetch here to bypass any React Query potential lag or caching issues
-      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
-      const response = await fetch(`${baseUrl}/api/profile?deviceId=${encodeURIComponent(deviceId)}`, {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      
-      let profile = null;
-      if (response.ok) {
-        profile = await response.json();
-      }
-      
-      console.log("LiveTestCard: Fresh direct check result:", profile?.name || "Not logged in");
-      
+      // Check if profile exists and has required fields
       if (!profile || !profile.name) {
-        console.log("LiveTestCard: No profile found, redirecting to login");
-        navigation.navigate("LoginProfile");
+        // We handle navigation here if onStart doesn't do it correctly
+        onStart(); 
       } else {
-        console.log("LiveTestCard: Profile valid, starting quiz");
-        navigation.navigate("Quiz", { quizId: "live" });
+        onStart();
       }
     } catch (error) {
-      console.error("LiveTestCard: Auth check exception:", error);
-      onStart(); // Fallback
+      console.error("LiveTestCard: Auth check failed:", error);
+      onStart();
     } finally {
       setIsCheckingAuth(false);
     }

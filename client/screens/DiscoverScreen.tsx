@@ -60,7 +60,7 @@ export default function DiscoverScreen() {
   }, []);
   
   // Fetch profile silently to check premium status
-  const { data: profile, refetch: refetchProfile, isFetching: profileFetching } = useQuery({
+  const { data: profile, refetch: refetchProfile } = useQuery({
     queryKey: ["profile", deviceId],
     queryFn: async () => {
       if (!deviceId) return null;
@@ -69,8 +69,7 @@ export default function DiscoverScreen() {
       if (!response.ok) return null;
       return response.json();
     },
-    enabled: !!deviceId,
-    staleTime: 0, // Always consider profile stale on this screen to ensure fresh checks
+    enabled: !!deviceId
   });
   
   useSilentAutoRefresh(["profile", deviceId], 5000, { enabled: !!deviceId });
