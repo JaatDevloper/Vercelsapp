@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -15,13 +15,22 @@ import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing } from "@/constants/theme";
 import ParticipantProfilesModal from "./ParticipantProfilesModal";
+import { useQuery } from "@tanstack/react-query";
+import { useDeviceId } from "@/hooks/useDeviceId";
 
 export default function LiveTestCard({ onStart }: { onStart: () => void }) {
   const { theme } = useTheme();
+  const { deviceId } = useDeviceId();
   const [liveData, setLiveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
   const [showProfiles, setShowProfiles] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
+
+  const { refetch: refetchProfile } = useQuery<any>({
+    queryKey: ["profile", deviceId],
+    enabled: false,
+  });
 
   const liveDotScale = useSharedValue(1);
   const liveDotOpacity = useSharedValue(1);
@@ -95,6 +104,23 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
   const handlePressOut = () => {
     buttonScale.value = withTiming(1, { duration: 100 });
+  };
+
+  const handleStartPress = async () => {
+    if (isCheckingAuth) return;
+    
+    setIsCheckingAuth(true);
+    try {
+      // Force a fresh profile check before starting
+      const { data: profile } = await refetchProfile();
+      console.log("LiveTestCard: Fresh profile check:", profile?.name || "Not logged in");
+      onStart();
+    } catch (error) {
+      console.error("LiveTestCard: Auth check failed:", error);
+      onStart(); // Fallback to original onStart which handles navigation
+    } finally {
+      setIsCheckingAuth(false);
+    }
   };
 
   if (loading || !liveData) return null;
@@ -195,14 +221,19 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
         {/* CTA */}
         <Animated.View style={[styles.ctaContainer, buttonAnimatedStyle]}>
           <Pressable
-            onPress={onStart}
+            onPress={handleStartPress}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
+            disabled={isCheckingAuth}
             style={styles.startButton}
           >
-            <ThemedText style={styles.startButtonText}>
-              Start Quiz
-            </ThemedText>
+            {isCheckingAuth ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <ThemedText style={styles.startButtonText}>
+                Start Quiz
+              </ThemedText>
+            )}
           </Pressable>
         </Animated.View>
       </BlurView>
