@@ -203,9 +203,16 @@ export function useProfile() {
   const loginProfileMutation = useMutation({
     mutationFn: (data: LoginProfileData) =>
       loginProfile({ ...data, newDeviceId: deviceId! }),
-    onSuccess: (existingProfile) => {
+    onSuccess: async (existingProfile) => {
       setAuthEnabled(true);
+      // 🔥 Set data immediately
       queryClient.setQueryData(["profile", deviceId], existingProfile);
+      
+      // 🚀 Force clear and refetch everything related to profile
+      await queryClient.resetQueries({ queryKey: ["profile"], exact: false });
+      await queryClient.refetchQueries({ queryKey: ["profile"], exact: false });
+      
+      console.log("Login Success: Profile cache fully reset and refetched");
     },
   });
 
