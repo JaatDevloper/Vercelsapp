@@ -197,6 +197,24 @@ export default function QuizScreen() {
     const finalScore = Math.max(0, positiveMarks - negativeMarks);
     const score = Math.round((correctCount / totalQuestions) * 100);
 
+    // Save to server for live quiz
+    if (actualQuizId === "live") {
+      fetch("/api/livequiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quizId: quiz.quiz_id || quiz._id,
+          score: finalScore,
+          correctAnswers: correctCount,
+          incorrectAnswers: incorrectCount,
+          deviceId: profile?.deviceId || "",
+          userName: profile?.name || "Student",
+          userEmail: profile?.email || "",
+          avatarUrl: profile?.avatarUrl || ""
+        })
+      }).catch(console.error);
+    }
+
     addHistory({
       quizId: quiz._id,
       quizTitle: quiz.title,

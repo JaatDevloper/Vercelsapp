@@ -215,6 +215,21 @@ export default function DiscoverScreen() {
 
   const combinedData = getCombinedData();
 
+  const handleLiveQuizStart = useCallback(() => {
+    if (!profile) {
+      Alert.alert(
+        "Login Required",
+        "Login Required for Live Quiz. If you want to take live quiz, please login or create a profile.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Login / Create", onPress: () => navigation.navigate("Profile" as any) }
+        ]
+      );
+      return;
+    }
+    navigation.navigate("Quiz", { quizId: "live" });
+  }, [navigation, profile]);
+
   const renderCombinedItem = useCallback(({ item, index }: { item: any; index: number }) => {
     if (isOfferTab) return renderBatchItem({ item, index });
     
@@ -222,7 +237,7 @@ export default function DiscoverScreen() {
       return (
         <View style={{ marginBottom: Spacing.xl }}>
           <Animated.View entering={PinwheelIn.duration(1000)}>
-            <LiveTestCard onStart={() => navigation.navigate("Quiz", { quizId: "live" })} />
+            <LiveTestCard onStart={handleLiveQuizStart} />
           </Animated.View>
           <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
           <ScrollView 

@@ -552,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration,
         maxParticipants,
         status: "live",
-        joinedCount: 1500, // Initial joined for demo
+        joinedCount: 0, 
         startTime: new Date().toISOString(),
       };
       
@@ -590,14 +590,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeQuiz = await db.collection("livequiz").findOne({ status: "live" }, { sort: { startTime: -1 } });
       
       if (activeQuiz) {
-        // Increment joinedCount slightly for real-time feel
-        await db.collection("livequiz").updateOne(
-          { _id: activeQuiz._id },
-          { $inc: { joinedCount: Math.floor(Math.random() * 5) } }
-        );
+        // Fetch actual joined count from results
+        const joinedCount = await db.collection("livequiz_results").countDocuments({
+          quizId: activeQuiz.quizId
+        });
+        
+        // Return active quiz with real joined count
+        return res.json({
+          ...activeQuiz,
+          joinedCount
+        });
       }
       
-      res.json(activeQuiz || null);
+      res.json(null);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch active live quiz" });
     }
@@ -605,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/livequiz/submit", async (req: Request, res: Response) => {
     try {
-      const { quizId, score, correctAnswers, incorrectAnswers, deviceId, userName } = req.body;
+      const { quizId, score, correctAnswers, incorrectAnswers, deviceId, userName, userEmail, avatarUrl } = req.body;
       const client = await getMongoClient();
       const db = client.db("quizbot");
       
@@ -616,6 +621,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         incorrectAnswers,
         deviceId,
         userName,
+        userEmail: userEmail || "",
+        avatarUrl: avatarUrl || "",
         submittedAt: new Date().toISOString()
       };
       
