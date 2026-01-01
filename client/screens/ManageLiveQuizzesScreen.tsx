@@ -8,6 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -20,8 +21,8 @@ export default function ManageLiveQuizzesScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
+  const headerHeight = useHeaderHeight(); // ✅ KEY FIX
 
-  /* ================= FETCH LIVE QUIZZES ================= */
   const { data: liveQuizzes = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/livequizzes"],
     queryFn: async () => {
@@ -31,7 +32,6 @@ export default function ManageLiveQuizzesScreen() {
     },
   });
 
-  /* ================= DELETE QUIZ ================= */
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const baseUrl = process.env.EXPO_PUBLIC_DOMAIN
@@ -50,27 +50,8 @@ export default function ManageLiveQuizzesScreen() {
       });
       Alert.alert("Success", "Live Quiz deleted successfully");
     },
-    onError: () => {
-      Alert.alert("Error", "Failed to delete live quiz");
-    },
   });
 
-  const handleDelete = (id: string) => {
-    Alert.alert(
-      "Delete Live Quiz",
-      "Are you sure you want to delete this live quiz?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => deleteMutation.mutate(id),
-        },
-      ]
-    );
-  };
-
-  /* ================= LOADING ================= */
   if (isLoading) {
     return (
       <ThemedView style={styles.center}>
@@ -79,7 +60,6 @@ export default function ManageLiveQuizzesScreen() {
     );
   }
 
-  /* ================= UI ================= */
   return (
     <ThemedView style={styles.container}>
       <FlatList
@@ -87,8 +67,6 @@ export default function ManageLiveQuizzesScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <ThemedText style={styles.title}>{item.title}</ThemedText>
-
             <View style={styles.row}>
               <View style={styles.liveBadge}>
                 <ThemedText style={styles.liveText}>LIVE</ThemedText>
@@ -96,7 +74,7 @@ export default function ManageLiveQuizzesScreen() {
 
               <View style={styles.participants}>
                 <Feather name="users" size={16} color="#aaa" />
-                <ThemedText style={styles.count}>0</ThemedText>
+                <ThemedText>0</ThemedText>
               </View>
 
               <Pressable
@@ -107,30 +85,21 @@ export default function ManageLiveQuizzesScreen() {
                 <Feather name="edit-2" size={18} color={theme.primary} />
               </Pressable>
 
-              <Pressable onPress={() => handleDelete(item.id)}>
+              <Pressable onPress={() => deleteMutation.mutate(item.id)}>
                 <Feather name="trash" size={18} color="#ff4d4d" />
               </Pressable>
             </View>
           </View>
         )}
-        ListHeaderComponent={
-          <ThemedText style={styles.header}>
-            Manage Live Quizzes
-          </ThemedText>
-        }
-        ListEmptyComponent={
-          <ThemedText style={styles.empty}>
-            No Live Quizzes Found
-          </ThemedText>
-        }
         contentContainerStyle={{
-          padding: Spacing.md,
-          paddingBottom: 140, // FAB safe space
+          paddingTop: headerHeight + 16, // ✅ FIX
+          paddingHorizontal: Spacing.md,
+          paddingBottom: 160,
         }}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* ================= FAB ================= */}
+      {/* FAB */}
       <Pressable
         style={[styles.fab, { backgroundColor: theme.primary }]}
         onPress={() => navigation.navigate("CreateLiveQuiz")}
@@ -141,32 +110,14 @@ export default function ManageLiveQuizzesScreen() {
   );
 }
 
-/* ================= STYLES ================= */
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: Spacing.md,
-  },
+  container: { flex: 1 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   card: {
     backgroundColor: "#2e3646",
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.md,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 10,
   },
   row: {
     flexDirection: "row",
@@ -188,14 +139,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  count: {
-    fontSize: 13,
-  },
-  empty: {
-    textAlign: "center",
-    marginTop: 60,
-    opacity: 0.6,
   },
   fab: {
     position: "absolute",
