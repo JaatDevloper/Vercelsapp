@@ -310,7 +310,7 @@ export default function DiscoverScreen() {
             onPress={() => {
               setUnreadNotifications(0);
               AsyncStorage.setItem("last_read_notification_time", new Date().toISOString());
-              navigation.navigate("Main", { screen: "Profile" } as any);
+              navigation.navigate("Notifications");
             }} 
             style={styles.notificationBadgeContainer}
           >

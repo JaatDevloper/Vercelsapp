@@ -29,10 +29,12 @@ import BatchDetailsScreen from "@/screens/BatchDetailsScreen";
 import LiveQuizSelectionScreen from "@/screens/LiveQuizSelectionScreen";
 import CreateLiveQuizScreen from "@/screens/CreateLiveQuizScreen";
 import QuizResultSummaryScreen from "@/screens/QuizResultSummaryScreen";
+import NotificationsScreen from "@/screens/NotificationsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
   Main: undefined;
+  Notifications: undefined;
   AdminDashboard: undefined;
   ManageQuizzes: undefined;
   ManageBatches: undefined;
@@ -113,6 +115,14 @@ export default function RootStackNavigator() {
         name="Main"
         component={MainTabNavigator}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
       />
       <Stack.Screen
         name="AdminDashboard"
