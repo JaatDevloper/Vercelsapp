@@ -141,8 +141,6 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     }
   };
 
-  if (loading || !liveData) return null;
-
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
@@ -174,6 +172,8 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
     const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
   }, [liveData?.expiresAt]);
+
+  if (loading || !liveData) return null;
 
   return (
     <View style={styles.cardWrapper}>

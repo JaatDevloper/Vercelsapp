@@ -610,16 +610,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (activeQuiz.expiresAt && new Date() > new Date(activeQuiz.expiresAt)) {
           console.log(`Live quiz ${activeQuiz._id} expired. Cleaning up...`);
           
-          // Mark as expired first
-          await db.collection("livequiz").updateOne(
-            { _id: activeQuiz._id },
-            { $set: { status: "expired" } }
-          );
-
-          // Clear data from livequiz and livequiz_results
-          // Using quizId to target results correctly
-          await db.collection("livequiz").deleteOne({ _id: activeQuiz._id });
-          await db.collection("livequiz_results").deleteMany({ quizId: activeQuiz.quizId });
+          try {
+            // Clear data from livequiz and livequiz_results
+            await db.collection("livequiz").deleteOne({ _id: activeQuiz._id });
+            await db.collection("livequiz_results").deleteMany({ quizId: activeQuiz.quizId });
+          } catch (cleanupError) {
+            console.error("Error during live quiz cleanup:", cleanupError);
+          }
           
           return res.json(null);
         }
