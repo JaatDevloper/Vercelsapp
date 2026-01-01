@@ -69,7 +69,7 @@ export default function ManageLiveQuizzesScreen() {
           <View style={[styles.quizItem, { backgroundColor: theme.backgroundSecondary }]}>
             <View style={styles.quizInfo}>
               <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.liveTitle || item.quizTitle}</ThemedText>
-              <ThemedText type="small">Status: {item.status}</ThemedText>
+              <ThemedText type="small" style={{ marginTop: 4 }}>Status: {item.status}</ThemedText>
               <ThemedText type="small">Participants: {item.joinedCount || 0}</ThemedText>
             </View>
             <View style={styles.actions}>
@@ -77,13 +77,13 @@ export default function ManageLiveQuizzesScreen() {
                 onPress={() => navigation.navigate("CreateLiveQuiz", { quizId: item.quizId, quizTitle: item.quizTitle, existingQuiz: item })}
                 style={styles.actionButton}
               >
-                <Feather name="edit-2" size={18} color={theme.primary} />
+                <Feather name="edit-2" size={20} color={theme.primary} />
               </Pressable>
               <Pressable 
                 onPress={() => handleDelete(item._id)}
                 style={styles.actionButton}
               >
-                <Feather name="trash-2" size={18} color="#EF4444" />
+                <Feather name="trash-2" size={20} color="#EF4444" />
               </Pressable>
             </View>
           </View>
@@ -100,7 +100,7 @@ export default function ManageLiveQuizzesScreen() {
         style={[styles.fab, { backgroundColor: theme.primary }]}
         onPress={() => navigation.navigate("LiveQuizSelection")}
       >
-        <Feather name="plus" size={24} color="white" />
+        <Feather name="plus" size={28} color="white" />
       </Pressable>
     </ThemedView>
   );
@@ -109,32 +109,37 @@ export default function ManageLiveQuizzesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: Spacing.md },
+  list: { padding: Spacing.md, paddingTop: Spacing.lg },
   quizItem: {
     padding: Spacing.md,
-    borderRadius: 12,
-    marginBottom: Spacing.sm,
+    borderRadius: 16,
+    marginBottom: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  quizInfo: { flex: 1 },
-  actions: { flexDirection: 'row', gap: 12 },
-  actionButton: { padding: 4 },
-  empty: { padding: 20, alignItems: 'center' },
+  quizInfo: { flex: 1, paddingRight: Spacing.sm },
+  actions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  actionButton: { padding: 8 },
+  empty: { padding: 40, alignItems: 'center' },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    right: 24,
+    bottom: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
   }
 });
