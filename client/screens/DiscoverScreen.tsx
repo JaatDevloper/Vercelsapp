@@ -396,10 +396,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingRight: 60, // Add space for the dark mode toggle
   },
   notificationBadgeContainer: {
     position: "relative",
     padding: 4,
+    marginRight: 10,
   },
   badge: {
     position: "absolute",
