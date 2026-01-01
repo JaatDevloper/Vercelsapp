@@ -15,6 +15,7 @@ export default function CreateLiveQuizScreen() {
   const [liveTitle, setLiveTitle] = useState("");
   const [duration, setDuration] = useState("80");
   const [maxParticipants, setMaxParticipants] = useState("3500");
+  const [expireTime, setExpireTime] = useState("1h");
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
@@ -34,6 +35,7 @@ export default function CreateLiveQuizScreen() {
           liveTitle,
           duration: parseInt(duration),
           maxParticipants: parseInt(maxParticipants),
+          expireTime,
           status: "live",
           startTime: new Date().toISOString(),
           joinedCount: 0
@@ -83,6 +85,25 @@ export default function CreateLiveQuizScreen() {
           keyboardType="numeric"
         />
 
+        <ThemedText type="body" style={styles.inputLabel}>Expire After</ThemedText>
+        <View style={styles.expireOptions}>
+          {["1h", "1d", "2d"].map((time) => (
+            <Pressable
+              key={time}
+              onPress={() => setExpireTime(time)}
+              style={[
+                styles.expireButton,
+                { backgroundColor: theme.backgroundSecondary },
+                expireTime === time && { borderColor: theme.primary, borderWidth: 2 }
+              ]}
+            >
+              <ThemedText style={{ color: expireTime === time ? theme.primary : theme.text }}>
+                {time === "1h" ? "1 Hour" : time === "1d" ? "1 Day" : "2 Days"}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
+
         <Pressable 
           onPress={handleCreate}
           disabled={loading}
@@ -110,6 +131,20 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
+  },
+  expireOptions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  expireButton: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   buttonText: { color: 'white', fontWeight: 'bold' }
 });

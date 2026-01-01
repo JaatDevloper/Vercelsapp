@@ -143,6 +143,38 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
   if (loading || !liveData) return null;
 
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!liveData?.expiresAt) return;
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const expiresAt = new Date(liveData.expiresAt).getTime();
+      const diff = expiresAt - now;
+
+      if (diff <= 0) {
+        setTimeLeft("Expired");
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (hours > 24) {
+        const days = Math.floor(hours / 24);
+        setTimeLeft(`${days}d ${hours % 24}h`);
+      } else {
+        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+      }
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [liveData?.expiresAt]);
+
   return (
     <View style={styles.cardWrapper}>
       <BlurView intensity={16} tint="light" style={styles.card}>
@@ -154,7 +186,7 @@ export default function LiveTestCard({ onStart }: { onStart: () => void }) {
 
           <View style={styles.liveIndicatorContainer}>
             <Animated.View style={[styles.liveDot, liveDotStyle]} />
-            <ThemedText style={styles.liveNowText}>Live Now</ThemedText>
+            <ThemedText style={styles.liveNowText}>{timeLeft || "Live Now"}</ThemedText>
           </View>
         </View>
 

@@ -541,10 +541,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============ LIVE QUIZ API ENDPOINTS ============
   app.post("/api/admin/livequiz", async (req: Request, res: Response) => {
     try {
-      const { quizId, quizTitle, liveTitle, duration, maxParticipants } = req.body;
+      const { quizId, quizTitle, liveTitle, duration, maxParticipants, expireTime } = req.body;
       const client = await getMongoClient();
       const db = client.db("quizbot");
       
+      const startTime = new Date();
+      let expiresAt: Date;
+      
+      switch (expireTime) {
+        case "1d":
+          expiresAt = new Date(startTime.getTime() + 24 * 60 * 60 * 1000);
+          break;
+        case "2d":
+          expiresAt = new Date(startTime.getTime() + 2 * 24 * 60 * 60 * 1000);
+          break;
+        case "1h":
+        default:
+          expiresAt = new Date(startTime.getTime() + 60 * 60 * 1000);
+      }
+
       const liveQuizData = {
         quizId,
         quizTitle,
@@ -553,7 +568,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxParticipants,
         status: "live",
         joinedCount: 0, 
-        startTime: new Date().toISOString(),
+        startTime: startTime.toISOString(),
+        expiresAt: expiresAt.toISOString(),
       };
       
       // Fetch the actual question count from the linked quiz
@@ -590,6 +606,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activeQuiz = await db.collection("livequiz").findOne({ status: "live" }, { sort: { startTime: -1 } });
       
       if (activeQuiz) {
+        // Check for expiration
+        if (activeQuiz.expiresAt && new Date() > new Date(activeQuiz.expiresAt)) {
+          console.log(`Live quiz ${activeQuiz._id} expired. Cleaning up...`);
+          
+          // Mark as expired first
+          await db.collection("livequiz").updateOne(
+            { _id: activeQuiz._id },
+            { $set: { status: "expired" } }
+          );
+
+          // Clear data from livequiz and livequiz_results
+          // Using quizId to target results correctly
+          await db.collection("livequiz").deleteOne({ _id: activeQuiz._id });
+          await db.collection("livequiz_results").deleteMany({ quizId: activeQuiz.quizId });
+          
+          return res.json(null);
+        }
+
         // Fetch actual joined count from results
         const joinedCount = await db.collection("livequiz_results").countDocuments({
           quizId: { $in: [activeQuiz.quizId, "live"] }
