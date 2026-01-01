@@ -518,7 +518,7 @@ export default function AdminDashboardScreen() {
           <ActionButton
             icon="radio"
             label="Live Quiz"
-            onPress={() => navigation.navigate("LiveQuizSelection" as any)}
+            onPress={() => navigation.navigate("ManageLiveQuizzes" as any)}
             theme={theme}
             color="#3B82F6"
           />

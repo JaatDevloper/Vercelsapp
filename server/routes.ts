@@ -539,6 +539,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============ LIVE QUIZ API ENDPOINTS ============
+  app.get("/api/admin/livequizzes", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const liveQuizzes = await db.collection("livequiz").find().sort({ startTime: -1 }).toArray();
+      res.json(liveQuizzes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch live quizzes" });
+    }
+  });
+
+  app.delete("/api/admin/livequiz/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      
+      const result = await db.collection("livequiz").deleteOne({ 
+        _id: ObjectId.isValid(id) ? new ObjectId(id) : id as any 
+      });
+      
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: "Live quiz not found" });
+      }
+      
+      res.json({ message: "Live quiz deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete live quiz" });
+    }
+  });
+
   app.post("/api/admin/livequiz", async (req: Request, res: Response) => {
     try {
       const { quizId, quizTitle, liveTitle, duration, maxParticipants, expireTime } = req.body;

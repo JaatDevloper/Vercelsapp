@@ -15,6 +15,7 @@ import MultiplayerResultsScreen from "@/screens/MultiplayerResultsScreen";
 import BadgesScreen from "@/screens/BadgesScreen";
 import AdminDashboardScreen from "@/screens/AdminDashboardScreen";
 import ManageQuizzesScreen from "@/screens/ManageQuizzesScreen";
+import ManageLiveQuizzesScreen from "@/screens/ManageLiveQuizzesScreen";
 import CreateQuizScreen from "@/screens/CreateQuizScreen";
 import CreateBatchScreen from "@/screens/CreateBatchScreen";
 import HelpSupportScreen from "@/screens/HelpSupportScreen";
@@ -37,6 +38,7 @@ export type RootStackParamList = {
   Notifications: undefined;
   AdminDashboard: undefined;
   ManageQuizzes: undefined;
+  ManageLiveQuizzes: undefined;
   ManageBatches: undefined;
   EditBatch: { batch: any };
   BatchDetails: { batchId: string };
@@ -234,6 +236,14 @@ export default function RootStackNavigator() {
         options={{
           presentation: "modal",
           headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ManageLiveQuizzes"
+        component={ManageLiveQuizzesScreen}
+        options={{
+          presentation: "modal",
+          headerTitle: "Manage Live Quizzes",
         }}
       />
       <Stack.Screen
