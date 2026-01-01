@@ -548,16 +548,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startTime = new Date();
       let expiresAt: Date;
       
-      switch (expireTime) {
-        case "1d":
-          expiresAt = new Date(startTime.getTime() + 24 * 60 * 60 * 1000);
-          break;
-        case "2d":
-          expiresAt = new Date(startTime.getTime() + 2 * 24 * 60 * 60 * 1000);
-          break;
-        case "1h":
-        default:
-          expiresAt = new Date(startTime.getTime() + 60 * 60 * 1000);
+      const parseCustomTime = (timeStr: string): number => {
+        const unit = timeStr.slice(-1).toLowerCase();
+        const value = parseInt(timeStr.slice(0, -1));
+        if (isNaN(value)) return 60 * 60 * 1000; // Default 1h
+        
+        switch (unit) {
+          case 'm': return value * 60 * 1000;
+          case 'h': return value * 60 * 60 * 1000;
+          case 'd': return value * 24 * 60 * 60 * 1000;
+          default: return value * 60 * 60 * 1000; // Default to hours
+        }
+      };
+
+      if (expireTime === "1d") {
+        expiresAt = new Date(startTime.getTime() + 24 * 60 * 60 * 1000);
+      } else if (expireTime === "2d") {
+        expiresAt = new Date(startTime.getTime() + 2 * 24 * 60 * 60 * 1000);
+      } else if (expireTime === "1h") {
+        expiresAt = new Date(startTime.getTime() + 60 * 60 * 1000);
+      } else {
+        // Custom time string like "30m", "5h", "3d"
+        expiresAt = new Date(startTime.getTime() + parseCustomTime(expireTime));
       }
 
       const liveQuizData = {

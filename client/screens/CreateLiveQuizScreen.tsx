@@ -16,11 +16,17 @@ export default function CreateLiveQuizScreen() {
   const [duration, setDuration] = useState("80");
   const [maxParticipants, setMaxParticipants] = useState("3500");
   const [expireTime, setExpireTime] = useState("1h");
+  const [customTime, setCustomTime] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
     if (!liveTitle.trim()) {
       Alert.alert("Error", "Please enter a Live Test Title");
+      return;
+    }
+
+    if (expireTime === "custom" && !customTime.trim()) {
+      Alert.alert("Error", "Please enter a custom expire time");
       return;
     }
 
@@ -35,7 +41,7 @@ export default function CreateLiveQuizScreen() {
           liveTitle,
           duration: parseInt(duration),
           maxParticipants: parseInt(maxParticipants),
-          expireTime,
+          expireTime: expireTime === "custom" ? customTime : expireTime,
           status: "live",
           startTime: new Date().toISOString(),
           joinedCount: 0
@@ -87,7 +93,7 @@ export default function CreateLiveQuizScreen() {
 
         <ThemedText type="body" style={styles.inputLabel}>Expire After</ThemedText>
         <View style={styles.expireOptions}>
-          {["1h", "1d", "2d"].map((time) => (
+          {["1h", "1d", "2d", "custom"].map((time) => (
             <Pressable
               key={time}
               onPress={() => setExpireTime(time)}
@@ -98,11 +104,24 @@ export default function CreateLiveQuizScreen() {
               ]}
             >
               <ThemedText style={{ color: expireTime === time ? theme.primary : theme.text }}>
-                {time === "1h" ? "1 Hour" : time === "1d" ? "1 Day" : "2 Days"}
+                {time === "1h" ? "1 Hour" : time === "1d" ? "1 Day" : time === "2d" ? "2 Days" : "Custom"}
               </ThemedText>
             </Pressable>
           ))}
         </View>
+
+        {expireTime === "custom" && (
+          <View style={{ marginTop: Spacing.sm }}>
+            <ThemedText type="body" style={styles.inputLabel}>Custom Expire Time (e.g. 30m, 5h, 3d)</ThemedText>
+            <TextInput
+              style={[styles.input, { backgroundColor: theme.backgroundSecondary, color: theme.text }]}
+              value={customTime}
+              onChangeText={setCustomTime}
+              placeholder="Enter time (e.g. 12h)"
+              placeholderTextColor={theme.textSecondary}
+            />
+          </View>
+        )}
 
         <Pressable 
           onPress={handleCreate}
