@@ -68,16 +68,29 @@ export default function ManageLiveQuizzesScreen() {
         renderItem={({ item }) => (
           <View style={[styles.quizItem, { backgroundColor: theme.backgroundSecondary }]}>
             <View style={styles.quizInfo}>
-              <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.liveTitle || item.quizTitle}</ThemedText>
-              <ThemedText type="small" style={{ marginTop: 4 }}>Status: {item.status}</ThemedText>
-              <ThemedText type="small">Participants: {item.joinedCount || 0}</ThemedText>
+              <ThemedText type="subtitle" style={styles.quizTitle}>
+                {item.liveTitle || item.quizTitle}
+              </ThemedText>
+              <View style={styles.statsRow}>
+                <View style={[styles.statusBadge, { backgroundColor: item.status === 'active' ? '#DEF7EC' : '#FDE8E8' }]}>
+                  <ThemedText style={[styles.statusText, { color: item.status === 'active' ? '#03543F' : '#9B1C1C' }]}>
+                    {item.status.toUpperCase()}
+                  </ThemedText>
+                </View>
+                <View style={styles.participantCount}>
+                  <Feather name="users" size={14} color={theme.textSecondary} />
+                  <ThemedText type="small" style={{ marginLeft: 4 }}>
+                    {item.joinedCount || 0}
+                  </ThemedText>
+                </View>
+              </View>
             </View>
             <View style={styles.actions}>
               <Pressable 
                 onPress={() => navigation.navigate("CreateLiveQuiz", { quizId: item.quizId, quizTitle: item.quizTitle, existingQuiz: item })}
                 style={styles.actionButton}
               >
-                <Feather name="edit-2" size={20} color={theme.primary} />
+                <Feather name="edit-3" size={20} color={theme.primary} />
               </Pressable>
               <Pressable 
                 onPress={() => handleDelete(item._id)}
@@ -91,7 +104,10 @@ export default function ManageLiveQuizzesScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <ThemedText>No running live quizzes found.</ThemedText>
+            <Feather name="list" size={48} color={theme.textSecondary} style={{ marginBottom: 16, opacity: 0.5 }} />
+            <ThemedText type="body" style={{ textAlign: 'center', opacity: 0.7 }}>
+              No running live quizzes found.{"\n"}Tap the + button to create one!
+            </ThemedText>
           </View>
         }
       />
@@ -100,7 +116,7 @@ export default function ManageLiveQuizzesScreen() {
         style={[styles.fab, { backgroundColor: theme.primary }]}
         onPress={() => navigation.navigate("LiveQuizSelection")}
       >
-        <Feather name="plus" size={28} color="white" />
+        <Feather name="plus" size={32} color="white" />
       </Pressable>
     </ThemedView>
   );
@@ -109,37 +125,77 @@ export default function ManageLiveQuizzesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: Spacing.md, paddingTop: Spacing.lg },
+  list: { 
+    padding: Spacing.md, 
+    paddingTop: Spacing.md,
+    paddingBottom: 100 // Space for FAB
+  },
   quizItem: {
-    padding: Spacing.md,
-    borderRadius: 16,
+    padding: Spacing.lg,
+    borderRadius: 20,
     marginBottom: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
   },
-  quizInfo: { flex: 1, paddingRight: Spacing.sm },
-  actions: { flexDirection: 'row', gap: 16, alignItems: 'center' },
-  actionButton: { padding: 8 },
-  empty: { padding: 40, alignItems: 'center' },
+  quizInfo: { flex: 1, paddingRight: Spacing.md },
+  quizTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    marginBottom: 8 
+  },
+  statsRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    gap: 12
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  participantCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actions: { 
+    flexDirection: 'row', 
+    gap: 12, 
+    alignItems: 'center' 
+  },
+  actionButton: { 
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 12,
+  },
+  empty: { 
+    paddingVertical: 100, 
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   fab: {
     position: 'absolute',
     right: 24,
     bottom: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4.65,
+    shadowRadius: 6,
+    zIndex: 999,
   }
 });
