@@ -24,7 +24,8 @@ export default function ManageLiveQuizzesScreen() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/admin/livequiz/${id}`, {
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const response = await fetch(`${baseUrl}/api/admin/livequiz/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete live quiz');
@@ -34,7 +35,8 @@ export default function ManageLiveQuizzesScreen() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/livequizzes"] });
       Alert.alert("Success", "Live Quiz deleted successfully");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete error:", error);
       Alert.alert("Error", "Failed to delete live quiz");
     }
   });

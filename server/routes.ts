@@ -556,9 +556,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await getMongoClient();
       const db = client.db("quizbot");
       
-      const result = await db.collection("livequiz").deleteOne({ 
-        _id: ObjectId.isValid(id) ? new ObjectId(id) : id as any 
-      });
+      let query: any = {};
+      if (ObjectId.isValid(id)) {
+        query = { _id: new ObjectId(id) };
+      } else {
+        query = { _id: id };
+      }
+      
+      const result = await db.collection("livequiz").deleteOne(query);
       
       if (result.deletedCount === 0) {
         return res.status(404).json({ error: "Live quiz not found" });
@@ -566,6 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ message: "Live quiz deleted successfully" });
     } catch (error) {
+      console.error("Delete error:", error);
       res.status(500).json({ error: "Failed to delete live quiz" });
     }
   });
