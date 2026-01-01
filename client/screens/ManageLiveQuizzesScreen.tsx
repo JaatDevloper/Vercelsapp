@@ -62,16 +62,6 @@ export default function ManageLiveQuizzesScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable 
-          style={[styles.createButton, { backgroundColor: theme.primary }]}
-          onPress={() => navigation.navigate("LiveQuizSelection")}
-        >
-          <Feather name="plus" size={20} color="white" />
-          <ThemedText style={styles.createButtonText}>Create New Live Quiz</ThemedText>
-        </Pressable>
-      </View>
-
       <FlatList
         data={liveQuizzes}
         keyExtractor={(item) => item._id}
@@ -105,6 +95,13 @@ export default function ManageLiveQuizzesScreen() {
           </View>
         }
       />
+
+      <Pressable 
+        style={[styles.fab, { backgroundColor: theme.primary }]}
+        onPress={() => navigation.navigate("LiveQuizSelection")}
+      >
+        <Feather name="plus" size={24} color="white" />
+      </Pressable>
     </ThemedView>
   );
 }
@@ -112,16 +109,6 @@ export default function ManageLiveQuizzesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: Spacing.md },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Spacing.md,
-    borderRadius: 12,
-    gap: 8,
-  },
-  createButtonText: { color: 'white', fontWeight: 'bold' },
   list: { padding: Spacing.md },
   quizItem: {
     padding: Spacing.md,
@@ -134,5 +121,20 @@ const styles = StyleSheet.create({
   quizInfo: { flex: 1 },
   actions: { flexDirection: 'row', gap: 12 },
   actionButton: { padding: 4 },
-  empty: { padding: 20, alignItems: 'center' }
+  empty: { padding: 20, alignItems: 'center' },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  }
 });
