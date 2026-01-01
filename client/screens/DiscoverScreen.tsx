@@ -30,6 +30,7 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import type { Quiz } from "@/types/quiz";
 import { getDeviceId } from "@/lib/deviceId";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import Animated, { FadeInUp, PinwheelIn } from "react-native-reanimated";
 import LiveTestCard from "@/components/LiveTestCard";
@@ -54,10 +55,34 @@ export default function DiscoverScreen() {
   const searchInputRef = useRef<TextInput>(null);
   const [premiumModalVisible, setPremiumModalVisible] = useState(false);
   const [deviceId, setDeviceId] = useState<string>("");
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     getDeviceId().then(setDeviceId);
   }, []);
+
+  // Fetch notifications to count unread
+  const { data: notifications } = useQuery<any[]>({
+    queryKey: ["/api/notifications"],
+    queryFn: async () => {
+      const response = await fetch("/api/notifications");
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: true
+  });
+
+  useEffect(() => {
+    const checkUnread = async () => {
+      if (!notifications) return;
+      const lastRead = await AsyncStorage.getItem("last_read_notification_time");
+      const lastReadTime = lastRead ? new Date(lastRead).getTime() : 0;
+      
+      const unread = notifications.filter(n => new Date(n.createdAt).getTime() > lastReadTime).length;
+      setUnreadNotifications(unread);
+    };
+    checkUnread();
+  }, [notifications]);
   
   // Fetch profile silently to check premium status
   const { data: profile, refetch: refetchProfile } = useQuery({
@@ -281,6 +306,21 @@ export default function DiscoverScreen() {
             <Feather name="zap" size={28} color={isDark ? Colors.dark.primary : Colors.light.primary} />
             <ThemedText type="h3">{isOfferTab ? "Special Offers" : "QuizzyEdu"}</ThemedText>
           </View>
+          <Pressable 
+            onPress={() => {
+              setUnreadNotifications(0);
+              AsyncStorage.setItem("last_read_notification_time", new Date().toISOString());
+              navigation.navigate("Main", { screen: "Profile" } as any);
+            }} 
+            style={styles.notificationBadgeContainer}
+          >
+            <Feather name="bell" size={24} color={theme.text} />
+            {unreadNotifications > 0 && (
+              <View style={[styles.badge, { backgroundColor: Colors.light.error }]}>
+                <ThemedText style={styles.badgeText}>{unreadNotifications > 9 ? "9+" : unreadNotifications}</ThemedText>
+              </View>
+            )}
+          </Pressable>
         </View>
 
         {!isOfferTab && (
@@ -353,6 +393,32 @@ const styles = StyleSheet.create({
   },
   appNameRow: {
     marginBottom: Spacing.sm,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  notificationBadgeContainer: {
+    position: "relative",
+    padding: 4,
+  },
+  badge: {
+    position: "absolute",
+    right: -2,
+    top: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "bold",
+    lineHeight: 12,
   },
   controlsRow: {
     flexDirection: "row",
