@@ -127,8 +127,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { 
     padding: Spacing.md, 
-    paddingTop: Spacing.md,
-    paddingBottom: 100 // Space for FAB
+    paddingTop: Spacing.xl * 2, // Compensate for header height
+    paddingBottom: 120 // Space for FAB
   },
   quizItem: {
     padding: Spacing.lg,
