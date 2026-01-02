@@ -155,6 +155,15 @@ export default function DiscoverScreen() {
         <View style={styles.batchInfo}>
           <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.title}</ThemedText>
           <ThemedText type="small" numberOfLines={1}>{item.description}</ThemedText>
+          {isOfferTab && (
+            <Pressable
+              onPress={() => handleBatchPress(item)}
+              style={[styles.enrollButton, { backgroundColor: theme.primary }]}
+            >
+              <ThemedText style={styles.enrollButtonText}>Enrole Now</ThemedText>
+              <Feather name="arrow-right" size={16} color="white" />
+            </Pressable>
+          )}
         </View>
       </Pressable>
     </Animated.View>
@@ -497,5 +506,20 @@ const styles = StyleSheet.create({
   batchInfo: {
     padding: Spacing.sm,
     gap: Spacing.xs,
+  },
+  enrollButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.sm,
+  },
+  enrollButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
