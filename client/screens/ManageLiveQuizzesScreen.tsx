@@ -26,7 +26,7 @@ export default function ManageLiveQuizzesScreen() {
     });
   }, [navigation, theme.primary]);
 
-  const { data: liveQuizzes, isLoading, refetch } = useQuery<any[]>({
+  const { data: liveQuizzes, isLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/livequizzes"],
     queryFn: async () => {
       const response = await fetch("/api/admin/livequizzes");
@@ -37,45 +37,30 @@ export default function ManageLiveQuizzesScreen() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/admin/livequiz/${id}`, {
+      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
+      const response = await fetch(`${baseUrl}/api/admin/livequiz/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to delete live quiz');
-      }
+      if (!response.ok) throw new Error('Failed to delete live quiz');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/livequizzes"] });
-      refetch();
       Alert.alert("Success", "Live Quiz deleted successfully");
     },
     onError: (error) => {
       console.error("Delete error:", error);
-      Alert.alert("Error", error instanceof Error ? error.message : "Failed to delete live quiz");
+      Alert.alert("Error", "Failed to delete live quiz");
     }
   });
 
   const handleDelete = (id: string) => {
-    console.log("Delete icon clicked for ID:", id);
     Alert.alert(
       "Delete Live Quiz",
       "Are you sure you want to delete this live quiz?",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive", 
-          onPress: () => {
-            console.log("Deletion confirmed for ID:", id);
-            deleteMutation.mutate(id);
-          }
-        }
+        { text: "Delete", style: "destructive", onPress: () => deleteMutation.mutate(id) }
       ]
     );
   };
@@ -115,34 +100,16 @@ export default function ManageLiveQuizzesScreen() {
             </View>
             <View style={styles.actions}>
               <Pressable 
-                onPress={() => {
-                  console.log("Edit button pressed for:", item._id);
-                  navigation.navigate("CreateLiveQuiz", { quizId: item.quizId, quizTitle: item.quizTitle, existingQuiz: item });
-                }}
+                onPress={() => navigation.navigate("CreateLiveQuiz", { quizId: item.quizId, quizTitle: item.quizTitle, existingQuiz: item })}
                 style={styles.actionButton}
               >
-                <Feather name="edit-3" size={24} color={theme.primary} />
+                <Feather name="edit-3" size={20} color={theme.primary} />
               </Pressable>
               <Pressable 
-                onPress={() => {
-                  console.log("Delete button clicked for ID:", item._id);
-                  handleDelete(item._id);
-                }}
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  { 
-                    backgroundColor: pressed ? 'rgba(0,0,0,0.1)' : 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    borderColor: '#EF4444',
-                    position: 'relative',
-                    zIndex: 1000
-                  }
-                ]}
-                hitSlop={{ top: 50, bottom: 50, left: 50, right: 50 }}
+                onPress={() => handleDelete(item._id)}
+                style={styles.actionButton}
               >
-                <View pointerEvents="none">
-                  <Feather name="trash-2" size={28} color="#EF4444" />
-                </View>
+                <Feather name="trash-2" size={20} color="#EF4444" />
               </Pressable>
             </View>
           </View>
@@ -212,13 +179,9 @@ const styles = StyleSheet.create({
     alignItems: 'center' 
   },
   actionButton: { 
-    padding: 12,
+    padding: 10,
     backgroundColor: 'rgba(0,0,0,0.03)',
     borderRadius: 12,
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   empty: { 
     paddingVertical: 100, 
