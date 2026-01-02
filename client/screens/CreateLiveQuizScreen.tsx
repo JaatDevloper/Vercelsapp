@@ -137,7 +137,10 @@ export default function CreateLiveQuizScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { padding: Spacing.lg },
+  scroll: { 
+    padding: Spacing.lg,
+    paddingTop: Spacing.xl * 3
+  },
   label: { marginBottom: Spacing.xl },
   inputLabel: { marginBottom: Spacing.xs, marginTop: Spacing.md },
   input: {
