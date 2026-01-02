@@ -81,7 +81,7 @@ export default function ManageLiveQuizzesScreen() {
         renderItem={({ item }) => (
           <View style={[styles.quizItem, { backgroundColor: theme.backgroundSecondary }]}>
             <View style={styles.quizInfo}>
-              <ThemedText type="subtitle" style={styles.quizTitle}>
+              <ThemedText type="h3" style={styles.quizTitle}>
                 {item.liveTitle || item.quizTitle}
               </ThemedText>
               <View style={styles.statsRow}>
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { 
     padding: Spacing.md, 
-    paddingTop: Spacing.xl * 1.5,
+    paddingTop: Spacing.xl * 3,
     paddingBottom: Spacing.xl
   },
   quizItem: {
