@@ -563,10 +563,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         query = { _id: id };
       }
       
+      // Delete from livequiz
       const result = await db.collection("livequiz").deleteOne(query);
       
       if (result.deletedCount === 0) {
         return res.status(404).json({ error: "Live quiz not found" });
+      }
+
+      // Also delete from livequiz_results
+      // If it was an ObjectId, we might need to handle both string and ObjectId in livequiz_results
+      // assuming livequiz_results uses the same ID format
+      try {
+        await db.collection("livequiz_results").deleteMany({ liveQuizId: id });
+        if (ObjectId.isValid(id)) {
+          await db.collection("livequiz_results").deleteMany({ liveQuizId: new ObjectId(id) as any });
+        }
+      } catch (e) {
+        console.error("Error cleaning up livequiz_results:", e);
       }
       
       res.json({ message: "Live quiz deleted successfully" });
