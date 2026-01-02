@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { 
     padding: Spacing.md, 
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xl * 1.5,
     paddingBottom: Spacing.xl
   },
   quizItem: {
