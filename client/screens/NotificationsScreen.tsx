@@ -6,10 +6,12 @@ import {
   Pressable,
   ActivityIndicator,
   FlatList,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -41,6 +43,31 @@ export default function NotificationsScreen() {
     fetchNotifications();
   }, []);
 
+  const renderMessage = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return (
+      <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 2 }}>
+        {parts.map((part, i) => {
+          if (part.match(urlRegex)) {
+            return (
+              <ThemedText
+                key={i}
+                type="small"
+                style={{ color: theme.primary, textDecorationLine: "underline" }}
+                onPress={() => Linking.openURL(part)}
+              >
+                {part}
+              </ThemedText>
+            );
+          }
+          return part;
+        })}
+      </ThemedText>
+    );
+  };
+
   const renderNotification = ({ item }: { item: any }) => (
     <View style={[styles.notificationCard, { backgroundColor: theme.backgroundSecondary, borderColor: theme.border }]}>
       <View style={[styles.iconContainer, { backgroundColor: `${theme.primary}15` }]}>
@@ -48,7 +75,15 @@ export default function NotificationsScreen() {
       </View>
       <View style={styles.notificationContent}>
         <ThemedText type="body" style={{ fontWeight: "600" }}>{item.title}</ThemedText>
-        <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 2 }}>{item.message}</ThemedText>
+        {renderMessage(item.message)}
+        {item.imageUrl && (
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={styles.notificationImage}
+            contentFit="cover"
+            transition={200}
+          />
+        )}
         <ThemedText type="small" style={{ color: theme.textSecondary, fontSize: 10, marginTop: 4 }}>
           {new Date(item.createdAt).toLocaleDateString()}
         </ThemedText>
@@ -121,6 +156,13 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   notificationContent: { flex: 1 },
+  notificationImage: {
+    width: "100%",
+    height: 180,
+    borderRadius: BorderRadius.sm,
+    marginTop: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.05)",
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   empty: { flex: 1, justifyContent: "center", alignItems: "center", marginTop: 100 },
 });

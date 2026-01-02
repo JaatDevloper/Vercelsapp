@@ -368,6 +368,7 @@ export default function AdminDashboardScreen() {
   const [broadcastModalVisible, setBroadcastModalVisible] = useState(false);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastImageUrl, setBroadcastImageUrl] = useState("");
   const [broadcastLoading, setBroadcastLoading] = useState(false);
 
   const handleSendBroadcast = async () => {
@@ -386,6 +387,7 @@ export default function AdminDashboardScreen() {
         body: JSON.stringify({
           title: broadcastTitle || "System Update",
           message: broadcastMessage,
+          imageUrl: broadcastImageUrl || null,
           type: "info",
         }),
       });
@@ -395,6 +397,7 @@ export default function AdminDashboardScreen() {
         setBroadcastModalVisible(false);
         setBroadcastTitle("");
         setBroadcastMessage("");
+        setBroadcastImageUrl("");
       } else {
         Alert.alert("Error", "Failed to send broadcast");
       }

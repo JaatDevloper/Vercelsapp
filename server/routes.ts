@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Post a broadcast message
   app.post("/api/admin/broadcast", async (req: Request, res: Response) => {
     try {
-      const { message, title, type } = req.body;
+      const { message, title, type, imageUrl } = req.body;
 
       if (!message || message.trim().length === 0) {
         return res.status(400).json({ error: "Message is required" });
@@ -279,6 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: title || "System Broadcast",
         message: message.trim(),
         type: type || "info",
+        imageUrl: imageUrl || null,
         createdAt: new Date().toISOString(),
       };
 
