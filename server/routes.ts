@@ -295,6 +295,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload image for broadcast
+  app.post("/api/admin/broadcast/upload", async (req: Request, res: Response) => {
+    try {
+      const { image } = req.body; // base64 image
+      if (!image) {
+        return res.status(400).json({ error: "No image provided" });
+      }
+
+      // In a real app, you'd upload to S3/Cloudinary/etc.
+      // For now, we'll store it as a base64 string or similar if small,
+      // but usually we should provide a way to handle this.
+      // Since this is a demo environment, we can't easily host files without a service.
+      // We'll return the base64 URI for now to demonstrate the functionality.
+      
+      res.json({ imageUrl: image });
+    } catch (error) {
+      res.status(500).json({ error: "Upload failed" });
+    }
+  });
+
   // Get notifications for user
   app.get("/api/notifications", async (req: Request, res: Response) => {
     try {

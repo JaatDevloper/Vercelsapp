@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 
 import { Image } from "expo-image";
+import * as ImagePicker from 'expo-image-picker';
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -370,6 +371,37 @@ export default function AdminDashboardScreen() {
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [broadcastImageUrl, setBroadcastImageUrl] = useState("");
   const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0].base64) {
+      setUploadingImage(true);
+      try {
+        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        // In a real app, you would upload this to your server/S3
+        // For now, we use the base64 string directly
+        setBroadcastImageUrl(base64Image);
+        Alert.alert("Success", "Image selected successfully");
+      } catch (error) {
+        Alert.alert("Error", "Failed to process image");
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
 
   const handleSendBroadcast = async () => {
     if (!broadcastMessage.trim()) {
@@ -1057,20 +1089,58 @@ export default function AdminDashboardScreen() {
               }]}
             />
 
-            <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs, color: theme.textSecondary }}>Image URL (Optional)</ThemedText>
-            <TextInput
-              placeholder="https://example.com/image.jpg"
-              value={broadcastImageUrl}
-              onChangeText={setBroadcastImageUrl}
-              placeholderTextColor={theme.textSecondary}
-              style={[styles.searchInput, { 
-                backgroundColor: theme.backgroundSecondary, 
-                color: theme.text,
-                borderRadius: BorderRadius.md,
-                padding: Spacing.sm,
-                width: '100%'
-              }]}
-            />
+            <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs, color: theme.textSecondary }}>Image URL or Upload</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TextInput
+                placeholder="https://example.com/image.jpg"
+                value={broadcastImageUrl.startsWith('data:') ? 'Image selected' : broadcastImageUrl}
+                onChangeText={setBroadcastImageUrl}
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.searchInput, { 
+                  backgroundColor: theme.backgroundSecondary, 
+                  color: theme.text,
+                  borderRadius: BorderRadius.md,
+                  padding: Spacing.sm,
+                  flex: 1,
+                  marginRight: Spacing.sm
+                }]}
+                editable={!broadcastImageUrl.startsWith('data:')}
+              />
+              <Pressable
+                onPress={handlePickImage}
+                style={[styles.actionButton, { 
+                  backgroundColor: theme.primary,
+                  padding: Spacing.sm,
+                  width: 44,
+                  height: 44,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginVertical: 0
+                }]}
+              >
+                {uploadingImage ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Feather name="image" size={20} color="white" />
+                )}
+              </Pressable>
+            </View>
+
+            {broadcastImageUrl ? (
+              <View style={{ marginTop: Spacing.sm, alignItems: 'center' }}>
+                <Image
+                  source={{ uri: broadcastImageUrl }}
+                  style={{ width: '100%', height: 100, borderRadius: BorderRadius.sm }}
+                  contentFit="cover"
+                />
+                <Pressable 
+                  onPress={() => setBroadcastImageUrl("")}
+                  style={{ marginTop: Spacing.xs }}
+                >
+                  <ThemedText type="small" style={{ color: "#FF6B6B" }}>Remove Image</ThemedText>
+                </Pressable>
+              </View>
+            ) : null}
 
             <Pressable
               onPress={handleSendBroadcast}
