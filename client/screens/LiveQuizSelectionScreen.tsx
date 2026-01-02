@@ -57,7 +57,10 @@ export default function LiveQuizSelectionScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  list: { padding: Spacing.md },
+  list: { 
+    padding: Spacing.md,
+    paddingTop: Spacing.xl * 3
+  },
   quizItem: {
     padding: Spacing.md,
     borderRadius: 12,
