@@ -1057,6 +1057,21 @@ export default function AdminDashboardScreen() {
               }]}
             />
 
+            <ThemedText type="small" style={{ marginTop: Spacing.md, marginBottom: Spacing.xs, color: theme.textSecondary }}>Image URL (Optional)</ThemedText>
+            <TextInput
+              placeholder="https://example.com/image.jpg"
+              value={broadcastImageUrl}
+              onChangeText={setBroadcastImageUrl}
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.searchInput, { 
+                backgroundColor: theme.backgroundSecondary, 
+                color: theme.text,
+                borderRadius: BorderRadius.md,
+                padding: Spacing.sm,
+                width: '100%'
+              }]}
+            />
+
             <Pressable
               onPress={handleSendBroadcast}
               disabled={broadcastLoading}
