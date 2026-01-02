@@ -26,7 +26,7 @@ export default function ManageLiveQuizzesScreen() {
     });
   }, [navigation, theme.primary]);
 
-  const { data: liveQuizzes, isLoading } = useQuery<any[]>({
+  const { data: liveQuizzes, isLoading, refetch } = useQuery<any[]>({
     queryKey: ["/api/admin/livequizzes"],
     queryFn: async () => {
       const response = await fetch("/api/admin/livequizzes");
@@ -37,20 +37,27 @@ export default function ManageLiveQuizzesScreen() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const baseUrl = process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : "";
-      const response = await fetch(`${baseUrl}/api/admin/livequiz/${id}`, {
+      const response = await fetch(`/api/admin/livequiz/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       });
-      if (!response.ok) throw new Error('Failed to delete live quiz');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete live quiz');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/livequizzes"] });
+      refetch();
       Alert.alert("Success", "Live Quiz deleted successfully");
     },
     onError: (error) => {
       console.error("Delete error:", error);
-      Alert.alert("Error", "Failed to delete live quiz");
+      Alert.alert("Error", error instanceof Error ? error.message : "Failed to delete live quiz");
     }
   });
 
@@ -100,16 +107,31 @@ export default function ManageLiveQuizzesScreen() {
             </View>
             <View style={styles.actions}>
               <Pressable 
-                onPress={() => navigation.navigate("CreateLiveQuiz", { quizId: item.quizId, quizTitle: item.quizTitle, existingQuiz: item })}
+                onPress={() => {
+                  console.log("Edit button pressed for:", item._id);
+                  navigation.navigate("CreateLiveQuiz", { quizId: item.quizId, quizTitle: item.quizTitle, existingQuiz: item });
+                }}
                 style={styles.actionButton}
               >
-                <Feather name="edit-3" size={20} color={theme.primary} />
+                <Feather name="edit-3" size={24} color={theme.primary} />
               </Pressable>
               <Pressable 
-                onPress={() => handleDelete(item._id)}
-                style={styles.actionButton}
+                onPress={() => {
+                  console.log("Delete button pressed for:", item._id);
+                  handleDelete(item._id);
+                }}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  { 
+                    backgroundColor: pressed ? 'rgba(0,0,0,0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    borderColor: '#EF4444',
+                    zIndex: 999
+                  }
+                ]}
+                hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
               >
-                <Feather name="trash-2" size={20} color="#EF4444" />
+                <Feather name="trash-2" size={28} color="#EF4444" />
               </Pressable>
             </View>
           </View>
@@ -179,9 +201,13 @@ const styles = StyleSheet.create({
     alignItems: 'center' 
   },
   actionButton: { 
-    padding: 10,
+    padding: 12,
     backgroundColor: 'rgba(0,0,0,0.03)',
     borderRadius: 12,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   empty: { 
     paddingVertical: 100, 
