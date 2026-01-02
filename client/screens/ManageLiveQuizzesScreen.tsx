@@ -62,12 +62,20 @@ export default function ManageLiveQuizzesScreen() {
   });
 
   const handleDelete = (id: string) => {
+    console.log("Delete icon clicked for ID:", id);
     Alert.alert(
       "Delete Live Quiz",
       "Are you sure you want to delete this live quiz?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => deleteMutation.mutate(id) }
+        { 
+          text: "Delete", 
+          style: "destructive", 
+          onPress: () => {
+            console.log("Deletion confirmed for ID:", id);
+            deleteMutation.mutate(id);
+          }
+        }
       ]
     );
   };
@@ -117,7 +125,7 @@ export default function ManageLiveQuizzesScreen() {
               </Pressable>
               <Pressable 
                 onPress={() => {
-                  console.log("Delete button pressed for:", item._id);
+                  console.log("Delete button clicked for ID:", item._id);
                   handleDelete(item._id);
                 }}
                 style={({ pressed }) => [
@@ -126,12 +134,15 @@ export default function ManageLiveQuizzesScreen() {
                     backgroundColor: pressed ? 'rgba(0,0,0,0.1)' : 'rgba(239, 68, 68, 0.1)',
                     borderWidth: 2,
                     borderColor: '#EF4444',
-                    zIndex: 999
+                    position: 'relative',
+                    zIndex: 1000
                   }
                 ]}
-                hitSlop={{ top: 40, bottom: 40, left: 40, right: 40 }}
+                hitSlop={{ top: 50, bottom: 50, left: 50, right: 50 }}
               >
-                <Feather name="trash-2" size={28} color="#EF4444" />
+                <View pointerEvents="none">
+                  <Feather name="trash-2" size={28} color="#EF4444" />
+                </View>
               </Pressable>
             </View>
           </View>

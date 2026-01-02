@@ -550,49 +550,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/livequiz/:id", async (req: Request, res: Response) => {
-    try {
+    app.delete("/api/admin/livequiz/:id", async (req: Request, res: Response) => {
       const { id } = req.params;
-      const client = await getMongoClient();
-      const db = client.db("quizbot");
-      
-      let query: any = {};
-      if (ObjectId.isValid(id)) {
-        query = { _id: new ObjectId(id) };
-      } else {
-        query = { _id: id };
-      }
-      
-      // Delete from livequiz
-      const result = await db.collection("livequiz").deleteOne(query as any);
-      
-      if (result.deletedCount === 0) {
-        console.log("No live quiz found for deletion with query:", query);
-        // If not found by ID, maybe it's already deleted or ID mismatch. 
-        // We'll return 200 anyway to unblock the frontend if it's a stale reference
-        return res.json({ message: "Live quiz already removed or not found" });
-      }
-
-      console.log("Successfully deleted live quiz from livequiz collection");
-
-      // Also delete from livequiz_results
+      console.log("ADMIN DELETE REQUEST RECEIVED FOR ID:", id);
       try {
-        const res1 = await db.collection("livequiz_results").deleteMany({ liveQuizId: id as any });
-        console.log(`Deleted ${res1.deletedCount} results from livequiz_results (string id)`);
+        const client = await getMongoClient();
+        const db = client.db("quizbot");
+        
+        let query: any = {};
         if (ObjectId.isValid(id)) {
-          const res2 = await db.collection("livequiz_results").deleteMany({ liveQuizId: new ObjectId(id) as any });
-          console.log(`Deleted ${res2.deletedCount} results from livequiz_results (ObjectId)`);
+          query = { _id: new ObjectId(id) };
+        } else {
+          query = { _id: id };
         }
-      } catch (e) {
-        console.error("Error cleaning up livequiz_results:", e);
+        
+        console.log("Attempting deletion from 'livequiz' with query:", JSON.stringify(query));
+        const result = await db.collection("livequiz").deleteOne(query);
+        console.log("Livequiz deletion result:", JSON.stringify(result));
+        
+        // Also try to delete from livequiz_results
+        try {
+          const resultsQuery = { liveQuizId: id };
+          console.log("Attempting cleanup in 'livequiz_results' with query:", JSON.stringify(resultsQuery));
+          const res1 = await db.collection("livequiz_results").deleteMany(resultsQuery as any);
+          console.log(`Cleaned up ${res1.deletedCount} results (string ID)`);
+          
+          if (ObjectId.isValid(id)) {
+            const res2 = await db.collection("livequiz_results").deleteMany({ liveQuizId: new ObjectId(id) } as any);
+            console.log(`Cleaned up ${res2.deletedCount} results (ObjectId)`);
+          }
+        } catch (e) {
+          console.error("Results cleanup failed:", e);
+        }
+        
+        return res.status(200).json({ 
+          success: true, 
+          message: result.deletedCount > 0 ? "Deleted successfully" : "Quiz not found but marked as handled",
+          deletedCount: result.deletedCount
+        });
+      } catch (error) {
+        console.error("FATAL DELETE ERROR:", error);
+        return res.status(500).json({ success: false, error: "Internal server error during deletion" });
       }
-      
-      res.json({ message: "Live quiz deleted successfully" });
-    } catch (error) {
-      console.error("Delete error:", error);
-      res.status(500).json({ error: "Failed to delete live quiz" });
-    }
-  });
+    });
 
   app.put("/api/admin/livequiz/:id", async (req: Request, res: Response) => {
     try {
