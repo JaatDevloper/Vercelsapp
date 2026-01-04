@@ -55,10 +55,52 @@ export default function ManageQuizzesScreen() {
   const [newCategoryColor, setNewCategoryColor] = useState("#95E1D3");
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedQuizIds, setSelectedQuizIds] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const toggleSelectQuiz = (quizId: string) => {
+    setSelectedQuizIds(prev =>
+      prev.includes(quizId)
+        ? prev.filter(id => id !== quizId)
+        : [...prev, quizId]
+    );
+  };
+
+  const toggleSelectAll = (filteredQuizzes: ManagedQuiz[]) => {
+    if (selectedQuizIds.length === filteredQuizzes.length) {
+      setSelectedQuizIds([]);
+    } else {
+      setSelectedQuizIds(filteredQuizzes.map(q => q.quiz_id));
+    }
+  };
+
+  const bulkUpdateCategory = async (category: string) => {
+    if (selectedQuizIds.length === 0) return;
+    try {
+      setLoading(true);
+      const promises = selectedQuizIds.map(id =>
+        fetch(`/api/manage/quizzes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ category }),
+        })
+      );
+      await Promise.all(promises);
+      loadData();
+      if (selectedFilter !== "All") loadCategoryQuizzes(selectedFilter);
+      else loadAllQuizzes();
+      setSelectedQuizIds([]);
+      setShowCategoryModal(false);
+      Alert.alert("Success", `Moved ${selectedQuizIds.length} quizzes to ${category}`);
+    } catch (error) {
+      Alert.alert("Error", "Failed to update some quizzes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Fetch category-specific quizzes when selectedFilter changes
@@ -265,87 +307,104 @@ export default function ManageQuizzesScreen() {
     setShowEditCategoryModal(true);
   };
 
-  const renderQuizCard = ({ item: quiz }: { item: ManagedQuiz }) => (
-    <Animated.View
-      entering={FadeInDown.delay(50)}
-      style={[
-        styles.quizCard,
-        {
-          backgroundColor: theme.backgroundSecondary,
-          opacity: quiz.isDeleted ? 0.6 : 1,
-        },
-      ]}
-    >
-      <View style={styles.quizHeader}>
-        <View style={styles.quizInfo}>
-          <ThemedText type="body">
-            {quiz.title}
-          </ThemedText>
-          <ThemedText
-            type="small"
-            style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
-          >
-            By {quiz.creator_name} • {quiz.questionCount} questions
+  const renderQuizCard = ({ item: quiz }: { item: ManagedQuiz }) => {
+    const isSelected = selectedQuizIds.includes(quiz.quiz_id);
+    return (
+      <Animated.View
+        entering={FadeInDown.delay(50)}
+        style={[
+          styles.quizCard,
+          {
+            backgroundColor: theme.backgroundSecondary,
+            opacity: quiz.isDeleted ? 0.6 : 1,
+            borderWidth: isSelected ? 2 : 0,
+            borderColor: theme.primary,
+          },
+        ]}
+      >
+        <Pressable
+          onPress={() => toggleSelectQuiz(quiz.quiz_id)}
+          style={styles.quizHeader}
+        >
+          <View style={[
+            styles.checkbox,
+            {
+              borderColor: theme.primary,
+              backgroundColor: isSelected ? theme.primary : 'transparent'
+            }
+          ]}>
+            {isSelected && <Feather name="check" size={12} color="white" />}
+          </View>
+          <View style={[styles.quizInfo, { marginLeft: Spacing.sm }]}>
+            <ThemedText type="body">
+              {quiz.title}
+            </ThemedText>
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary, marginTop: Spacing.xs }}
+            >
+              By {quiz.creator_name} • {quiz.questionCount} questions
+            </ThemedText>
+          </View>
+          {quiz.isDeleted && (
+            <View style={[styles.deletedBadge, { backgroundColor: "#FF000030" }]}>
+              <Feather name="trash-2" size={12} color="#FF0000" />
+            </View>
+          )}
+        </Pressable>
+
+        <View style={styles.categoryBadge}>
+          <ThemedText type="small" style={{ color: theme.primary }}>
+            {quiz.managedCategory || quiz.category || "General"}
           </ThemedText>
         </View>
-        {quiz.isDeleted && (
-          <View style={[styles.deletedBadge, { backgroundColor: "#FF000030" }]}>
-            <Feather name="trash-2" size={12} color="#FF0000" />
-          </View>
-        )}
-      </View>
 
-      <View style={styles.categoryBadge}>
-        <ThemedText type="small" style={{ color: theme.primary }}>
-          {quiz.managedCategory || quiz.category || "General"}
-        </ThemedText>
-      </View>
-
-      <View style={styles.quizActions}>
-        <Pressable
-          onPress={() => setSelectedQuiz(quiz)}
-          style={({ pressed }) => [
-            styles.actionBtn,
-            {
-              backgroundColor: `${theme.primary}20`,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-        >
-          <Feather name="folder" size={16} color={theme.primary} />
-          <ThemedText type="small" style={{ marginLeft: Spacing.xs }}>
-            Move
-          </ThemedText>
-        </Pressable>
-
-        <Pressable
-          onPress={() => softDeleteQuiz(quiz.quiz_id, quiz.isDeleted)}
-          style={({ pressed }) => [
-            styles.actionBtn,
-            {
-              backgroundColor: quiz.isDeleted ? "#00AA0020" : "#FF000020",
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-        >
-          <Feather
-            name={quiz.isDeleted ? "refresh-cw" : "trash-2"}
-            size={16}
-            color={quiz.isDeleted ? "#00AA00" : "#FF0000"}
-          />
-          <ThemedText
-            type="small"
-            style={{
-              marginLeft: Spacing.xs,
-              color: quiz.isDeleted ? "#00AA00" : "#FF0000",
-            }}
+        <View style={styles.quizActions}>
+          <Pressable
+            onPress={() => setSelectedQuiz(quiz)}
+            style={({ pressed }) => [
+              styles.actionBtn,
+              {
+                backgroundColor: `${theme.primary}20`,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
           >
-            {quiz.isDeleted ? "Restore" : "Delete"}
-          </ThemedText>
-        </Pressable>
-      </View>
-    </Animated.View>
-  );
+            <Feather name="folder" size={16} color={theme.primary} />
+            <ThemedText type="small" style={{ marginLeft: Spacing.xs }}>
+              Move
+            </ThemedText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => softDeleteQuiz(quiz.quiz_id, quiz.isDeleted)}
+            style={({ pressed }) => [
+              styles.actionBtn,
+              {
+                backgroundColor: quiz.isDeleted ? "#00AA0020" : "#FF000020",
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
+          >
+            <Feather
+              name={quiz.isDeleted ? "refresh-cw" : "trash-2"}
+              size={16}
+              color={quiz.isDeleted ? "#00AA00" : "#FF0000"}
+            />
+            <ThemedText
+              type="small"
+              style={{
+                marginLeft: Spacing.xs,
+                color: quiz.isDeleted ? "#00AA00" : "#FF0000",
+              }}
+            >
+              {quiz.isDeleted ? "Restore" : "Delete"}
+            </ThemedText>
+          </Pressable>
+        </View>
+      </Animated.View>
+    );
+  };
 
   if (loading) {
     return (
@@ -462,6 +521,44 @@ export default function ManageQuizzesScreen() {
         ))}
       </ScrollView>
 
+      {/* Bulk Actions Bar */}
+      {filteredQuizzes.length > 0 && (
+        <View style={[styles.bulkActions, { backgroundColor: theme.backgroundSecondary }]}>
+          <Pressable
+            onPress={() => toggleSelectAll(filteredQuizzes)}
+            style={styles.bulkSelectBtn}
+          >
+            <View style={[
+              styles.checkbox,
+              {
+                borderColor: theme.primary,
+                backgroundColor: selectedQuizIds.length === filteredQuizzes.length ? theme.primary : 'transparent'
+              }
+            ]}>
+              {selectedQuizIds.length === filteredQuizzes.length && <Feather name="check" size={12} color="white" />}
+            </View>
+            <ThemedText type="small" style={{ marginLeft: Spacing.sm }}>
+              Select All ({selectedQuizIds.length})
+            </ThemedText>
+          </Pressable>
+
+          {selectedQuizIds.length > 0 && (
+            <Pressable
+              onPress={() => setShowCategoryModal(true)}
+              style={({ pressed }) => [
+                styles.bulkMoveBtn,
+                { backgroundColor: theme.primary, opacity: pressed ? 0.8 : 1 }
+              ]}
+            >
+              <Feather name="folder" size={16} color="white" />
+              <ThemedText type="small" style={{ color: 'white', marginLeft: Spacing.xs }}>
+                Move Selected
+              </ThemedText>
+            </Pressable>
+          )}
+        </View>
+      )}
+
       {filteredQuizzes.length === 0 ? (
         <View style={styles.emptyState}>
           <Feather name="inbox" size={48} color={theme.textSecondary} />
@@ -513,7 +610,9 @@ export default function ManageQuizzesScreen() {
                 <Pressable
                   key={cat.name}
                   onPress={() => {
-                    if (selectedQuiz) {
+                    if (selectedQuizIds.length > 0) {
+                      bulkUpdateCategory(cat.name);
+                    } else if (selectedQuiz) {
                       updateQuizCategory(selectedQuiz.quiz_id, cat.name);
                     }
                   }}
@@ -917,5 +1016,33 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     justifyContent: "center",
     alignItems: "center",
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bulkActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+    marginHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  bulkSelectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bulkMoveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
   },
 });
