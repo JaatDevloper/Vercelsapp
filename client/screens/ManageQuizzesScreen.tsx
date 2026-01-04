@@ -48,6 +48,7 @@ export default function ManageQuizzesScreen() {
   const [categories, setCategories] = useState<QuizCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuiz, setSelectedQuiz] = useState<ManagedQuiz | null>(null);
+  const [showMoveModal, setShowMoveModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<QuizCategory | null>(null);
@@ -93,7 +94,7 @@ export default function ManageQuizzesScreen() {
       if (selectedFilter !== "All") loadCategoryQuizzes(selectedFilter);
       else loadAllQuizzes();
       setSelectedQuizIds([]);
-      setShowCategoryModal(false);
+      setShowMoveModal(false);
       Alert.alert("Success", `Moved ${selectedQuizIds.length} quizzes to ${category}`);
     } catch (error) {
       Alert.alert("Error", "Failed to update some quizzes");
@@ -544,7 +545,7 @@ export default function ManageQuizzesScreen() {
 
           {selectedQuizIds.length > 0 && (
             <Pressable
-              onPress={() => setShowCategoryModal(true)}
+              onPress={() => setShowMoveModal(true)}
               style={({ pressed }) => [
                 styles.bulkMoveBtn,
                 { backgroundColor: theme.primary, opacity: pressed ? 0.8 : 1 }
@@ -584,12 +585,15 @@ export default function ManageQuizzesScreen() {
         />
       )}
 
-      {/* Category Selection Modal */}
+      {/* Move Quizzes Modal */}
       <Modal
-        visible={!!selectedQuiz}
+        visible={showMoveModal || !!selectedQuiz}
         transparent
         animationType="fade"
-        onRequestClose={() => setSelectedQuiz(null)}
+        onRequestClose={() => {
+          setSelectedQuiz(null);
+          setShowMoveModal(false);
+        }}
       >
         <View style={[styles.modalOverlay, { backgroundColor: "#00000080" }]}>
           <View
@@ -599,8 +603,11 @@ export default function ManageQuizzesScreen() {
             ]}
           >
             <View style={styles.modalHeader}>
-              <ThemedText type="h3">Select Category</ThemedText>
-              <Pressable onPress={() => setSelectedQuiz(null)}>
+              <ThemedText type="h3">Move to Category</ThemedText>
+              <Pressable onPress={() => {
+                setSelectedQuiz(null);
+                setShowMoveModal(false);
+              }}>
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
             </View>
@@ -615,6 +622,8 @@ export default function ManageQuizzesScreen() {
                     } else if (selectedQuiz) {
                       updateQuizCategory(selectedQuiz.quiz_id, cat.name);
                     }
+                    setSelectedQuiz(null);
+                    setShowMoveModal(false);
                   }}
                   style={({ pressed }) => [
                     styles.categoryOption,
