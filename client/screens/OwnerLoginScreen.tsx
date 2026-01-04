@@ -222,16 +222,6 @@ export default function OwnerLoginScreen() {
                 </>
               )}
             </Pressable>
-
-            <View style={styles.securityNote}>
-              <Feather name="info" size={16} color={theme.textSecondary} />
-              <ThemedText
-                type="small"
-                style={[styles.securityText, { color: theme.textSecondary }]}
-              >
-                Your credentials are securely stored in the app
-              </ThemedText>
-            </View>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
