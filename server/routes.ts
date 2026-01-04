@@ -337,6 +337,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get recent activity across collections
+  app.get("/api/admin/activity", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      
+      const activities: any[] = [];
+      
+      // 1. New Profiles (appprofile)
+      const newProfiles = await db.collection("appprofile")
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .toArray();
+        
+      newProfiles.forEach(profile => {
+        activities.push({
+          id: `profile-${profile._id}`,
+          type: "user",
+          message: `${profile.username || "A new user"} joined`,
+          timestamp: profile.createdAt || profile.updatedAt || new Date().toISOString(),
+          color: "#4ECDC4"
+        });
+      });
+      
+      // 2. New Quizzes (quizzes)
+      const newQuizzes = await db.collection("quizzes")
+        .find({ isDeleted: { $ne: true } })
+        .sort({ created_at: -1, timestamp: -1 })
+        .limit(5)
+        .toArray();
+        
+      newQuizzes.forEach(quiz => {
+        activities.push({
+          id: `quiz-${quiz._id}`,
+          type: "quiz",
+          message: `New quiz: ${quiz.title || quiz.quiz_name}`,
+          timestamp: quiz.created_at || quiz.timestamp || new Date().toISOString(),
+          color: "#FFD93D"
+        });
+      });
+      
+      // 3. Completed Rooms (rooms)
+      const completedRooms = await db.collection("rooms")
+        .find({ status: "finished" })
+        .sort({ updatedAt: -1 })
+        .limit(5)
+        .toArray();
+        
+      completedRooms.forEach(room => {
+        activities.push({
+          id: `room-${room._id}`,
+          type: "room",
+          message: `Room ${room.code} completed successfully`,
+          timestamp: room.updatedAt || new Date().toISOString(),
+          color: "#6BCB77"
+        });
+      });
+      
+      // Sort all by timestamp descending
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      res.json(activities.slice(0, 15));
+    } catch (error) {
+      console.error("Error fetching activity:", error);
+      res.status(500).json({ error: "Failed to fetch activity" });
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", async (req: Request, res: Response) => {
     try {

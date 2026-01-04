@@ -191,6 +191,30 @@ export default function AdminDashboardScreen() {
     totalAttempts: 0,
   });
 
+  const [activities, setActivities] = useState<any[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+
+  const fetchActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const response = await fetch("/api/admin/activity");
+      if (response.ok) {
+        const data = await response.json();
+        setActivities(data);
+      }
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOwnerLoggedIn) {
+      fetchActivities();
+    }
+  }, [isOwnerLoggedIn]);
+
   // Update stats when data is fetched
   useEffect(() => {
     if (statsData) {
@@ -596,42 +620,37 @@ export default function AdminDashboardScreen() {
 
         {/* Recent Activity */}
         <View style={[styles.section, { marginBottom: Spacing.xl }]}>
-          <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>
-            Recent Activity
-          </ThemedText>
-          <View
-            style={[
-              styles.activityItem,
-              { backgroundColor: theme.backgroundSecondary, borderLeftColor: "#4ECDC4" },
-            ]}
-          >
-            <ThemedText type="body">5 new users joined</ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
-              2 hours ago
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.md }}>
+            <ThemedText type="h2">
+              Recent Activity
             </ThemedText>
+            <Pressable onPress={fetchActivities}>
+              <Feather name="refresh-cw" size={16} color={theme.primary} />
+            </Pressable>
           </View>
-          <View
-            style={[
-              styles.activityItem,
-              { backgroundColor: theme.backgroundSecondary, borderLeftColor: "#FFD93D" },
-            ]}
-          >
-            <ThemedText type="body">12 quizzes created</ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
-              5 hours ago
+          
+          {activitiesLoading ? (
+            <ActivityIndicator size="small" color={theme.primary} />
+          ) : activities.length === 0 ? (
+            <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: 'center', padding: Spacing.md }}>
+              No recent activity found
             </ThemedText>
-          </View>
-          <View
-            style={[
-              styles.activityItem,
-              { backgroundColor: theme.backgroundSecondary, borderLeftColor: "#6BCB77" },
-            ]}
-          >
-            <ThemedText type="body">3 rooms completed successfully</ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
-              1 day ago
-            </ThemedText>
-          </View>
+          ) : (
+            activities.map((activity) => (
+              <View
+                key={activity.id}
+                style={[
+                  styles.activityItem,
+                  { backgroundColor: theme.backgroundSecondary, borderLeftColor: activity.color || theme.primary },
+                ]}
+              >
+                <ThemedText type="body">{activity.message}</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: Spacing.xs }}>
+                  {new Date(activity.timestamp).toLocaleString()}
+                </ThemedText>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
 
