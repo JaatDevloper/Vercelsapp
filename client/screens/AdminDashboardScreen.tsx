@@ -583,6 +583,13 @@ export default function AdminDashboardScreen() {
           />
           <ActionButton
             icon="radio"
+            label="Manage Broadcasts"
+            onPress={() => navigation.navigate("ManageBroadcastRooms" as any)}
+            theme={theme}
+            color="#8B5CF6"
+          />
+          <ActionButton
+            icon="radio"
             label="Broadcast"
             onPress={() => setBroadcastModalVisible(true)}
             theme={theme}

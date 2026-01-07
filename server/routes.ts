@@ -1790,7 +1790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quizCollection = db.collection("quizzes");
 
       // Fetch quiz details to get title
-      let quiz = null;
+      let quiz: any = null;
       try {
         console.log("Creating room for quizId:", quizId);
         
@@ -1804,7 +1804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Try by quiz_id field
         if (!quiz) {
-          quiz = await quizCollection.findOne({ quiz_id: quizId });
+          quiz = await quizCollection.findOne({ quiz_id: quizId as any });
         }
         
         console.log("Found quiz for room:", quiz ? quiz.title : "Not found");
@@ -1866,7 +1866,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all broadcast rooms
   app.get("/api/rooms/broadcasts", async (req: Request, res: Response) => {
     try {
       const client = await getMongoClient();
@@ -1878,6 +1877,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(rooms);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch broadcast rooms" });
+    }
+  });
+
+  // Get single broadcast room by code
+  app.get("/api/rooms/:roomCode", async (req: Request, res: Response) => {
+    try {
+      const { roomCode } = req.params;
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const room = await db.collection("approom").findOne({ roomCode: roomCode.toUpperCase() });
+      if (!room) return res.status(404).json({ error: "Room not found" });
+      res.json(room);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch room" });
     }
   });
 
@@ -2033,7 +2046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Submit quiz result
+  // Submit quiz results (Mark as finished if last player)
   app.post("/api/rooms/:roomCode/submit", async (req: Request, res: Response) => {
     try {
       const { roomCode } = req.params;
@@ -2044,9 +2057,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const roomsCollection = db.collection("approom");
 
       const room = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
+      if (!room) return res.status(404).json({ error: "Room not found" });
 
-      if (!room) {
-        return res.status(404).json({ error: "Room not found" });
+      const updatedParticipants = room.participants.map((p: any) => 
+        p.odId === odId ? { ...p, score, correctAnswers, finished: true } : p
+      );
+
+      const allFinished = updatedParticipants.every((p: any) => p.finished);
+      
+      // If all finished, we delete the room from the active list (auto-cleanup)
+      if (allFinished) {
+        await roomsCollection.deleteOne({ roomCode: roomCode.toUpperCase() });
+        broadcastToRoom(roomCode.toUpperCase(), { type: "player_finished", odId, name: "Player", allFinished: true });
+        return res.json({ message: "Results submitted and room cleared", allFinished: true });
       }
 
       // Update participant's score
@@ -2067,14 +2090,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       const updatedRoom = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
-      const allFinished = updatedRoom?.participants?.every((p: any) => p.finished);
+      const reallyAllFinished = updatedRoom?.participants?.every((p: any) => p.finished);
 
       // Check if all participants finished
-      if (allFinished) {
-        await roomsCollection.updateOne(
-          { roomCode: roomCode.toUpperCase() },
-          { $set: { status: "completed", completedAt: new Date().toISOString() } }
-        );
+      if (reallyAllFinished) {
+        await roomsCollection.deleteOne({ roomCode: roomCode.toUpperCase() });
       }
 
       // Broadcast player finished
@@ -2083,14 +2103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         odId,
         score,
         correctAnswers,
-        allFinished,
+        allFinished: !!reallyAllFinished,
         participants: updatedRoom?.participants || [],
       });
 
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.json({ 
         success: true, 
-        allFinished,
+        allFinished: !!reallyAllFinished,
         participants: updatedRoom?.participants || [],
       });
     } catch (error) {

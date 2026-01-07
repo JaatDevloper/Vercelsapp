@@ -33,12 +33,15 @@ import QuizResultSummaryScreen from "@/screens/QuizResultSummaryScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
+import ManageBroadcastRoomsScreen from "@/screens/ManageBroadcastRoomsScreen";
+
 export type RootStackParamList = {
   Main: undefined;
   Notifications: undefined;
   AdminDashboard: undefined;
   ManageQuizzes: undefined;
   ManageLiveQuizzes: undefined;
+  ManageBroadcastRooms: undefined;
   ManageBatches: undefined;
   EditBatch: { batch: any };
   BatchDetails: { batchId: string };
@@ -244,6 +247,14 @@ export default function RootStackNavigator() {
         options={{
           presentation: "modal",
           headerTitle: "Manage Live Quizzes",
+        }}
+      />
+      <Stack.Screen
+        name="ManageBroadcastRooms"
+        component={ManageBroadcastRoomsScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
         }}
       />
       <Stack.Screen
