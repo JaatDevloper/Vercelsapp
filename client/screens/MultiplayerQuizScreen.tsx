@@ -349,21 +349,6 @@ export default function MultiplayerQuizScreen() {
             Question {currentQuestionIndex + 1}/{totalQuestions}
           </ThemedText>
 
-          <Pressable
-            onPress={submitResults}
-            style={({ pressed }) => [
-              styles.headerSubmitButton,
-              { 
-                backgroundColor: isDark ? Colors.dark.success : Colors.light.success,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "700" }}>
-              Submit
-            </ThemedText>
-          </Pressable>
-
           <View style={styles.timerContainer}>
             <Feather name="clock" size={16} color={timeLeft <= 5 ? theme.error : theme.textSecondary} />
             <ThemedText 

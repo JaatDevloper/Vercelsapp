@@ -61,11 +61,13 @@ export default function MultiplayerResultsScreen() {
       const response = await fetch(`${API_BASE}/api/rooms/${roomCode}`);
       if (response.ok) {
         const data = await response.json();
-        const sorted = [...(data.participants || [])].sort((a, b) => b.score - a.score);
+        // Extract and format participants from the server data
+        const players = data.participants || [];
+        const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
         setParticipants(sorted);
 
-        const myRank = sorted.findIndex(p => p.odId === odId);
-        if (myRank === 0) {
+        const myIndex = sorted.findIndex(p => p.odId === odId);
+        if (myIndex === 0) {
           setShowConfetti(true);
         }
       }
@@ -142,22 +144,22 @@ export default function MultiplayerResultsScreen() {
         
         <View style={[styles.avatar, { backgroundColor: isMe ? primaryColor : theme.border }]}>
           <ThemedText type="h4" style={{ color: "#FFFFFF" }}>
-            {item.name.charAt(0).toUpperCase()}
+            {(item.name || "P").charAt(0).toUpperCase()}
           </ThemedText>
         </View>
         
         <View style={styles.participantInfo}>
           <ThemedText type="body" style={{ fontWeight: "600" }}>
-            {item.name} {isMe && "(You)"}
+            {item.name || "Anonymous Player"} {isMe && "(You)"}
           </ThemedText>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {item.correctAnswers}/{item.totalQuestions || totalQuestions} correct
+            {item.correctAnswers || 0}/{item.totalQuestions || totalQuestions} correct
           </ThemedText>
         </View>
         
         <View style={styles.scoreContainer}>
           <ThemedText type="h3" style={{ color: primaryColor }}>
-            {item.score}
+            {item.score || 0}
           </ThemedText>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
             pts
