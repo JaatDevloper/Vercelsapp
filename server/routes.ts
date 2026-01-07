@@ -2118,7 +2118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedRoom = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
       const reallyAllFinished = updatedRoom?.participants?.every((p: any) => p.finished);
 
-      // If all finished, we mark room as completed and set a cleanup timer
+      // If all finished, we mark room as completed
       if (reallyAllFinished) {
         await roomsCollection.updateOne(
           { roomCode: roomCode.toUpperCase() },
@@ -2129,26 +2129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } 
           }
         );
-
-        // Schedule deletion after 5 minutes (300,000 ms)
-        setTimeout(async () => {
-          try {
-            const client = await getMongoClient();
-            const db = client.db("quizbot");
-            // Check if it's a live broadcast room
-            const roomCodeUpper = roomCode.toUpperCase();
-            
-            // Delete from approom (the active rooms table)
-            await db.collection("approom").deleteOne({ roomCode: roomCodeUpper });
-            
-            // Delete from livequiz (the public feed) - this addresses the "Live Broadcast" requirement
-            await db.collection("livequiz").deleteOne({ roomCode: roomCodeUpper });
-            
-            console.log(`Auto-deleted completed room and live broadcast entry: ${roomCodeUpper}`);
-          } catch (e) {
-            console.error(`Error in auto-deletion for room ${roomCode}:`, e);
-          }
-        }, 300000);
+        console.log(`Room ${roomCode} marked as completed`);
       }
 
       // Broadcast player finished

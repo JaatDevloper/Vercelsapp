@@ -63,13 +63,25 @@ export default function MultiplayerResultsScreen() {
         const data = await response.json();
         // Extract and format participants from the server data
         const players = data.participants || [];
-        const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
+        
+        // Ensure all players have necessary fields for display
+        const formattedPlayers = players.map((p: any) => ({
+          ...p,
+          name: p.name || "Anonymous Player",
+          score: typeof p.score === 'number' ? p.score : 0,
+          correctAnswers: typeof p.correctAnswers === 'number' ? p.correctAnswers : 0,
+          totalQuestions: typeof p.totalQuestions === 'number' ? p.totalQuestions : (data.totalQuestions || totalQuestions || 0)
+        }));
+
+        const sorted = [...formattedPlayers].sort((a, b) => (b.score || 0) - (a.score || 0));
         setParticipants(sorted);
 
         const myIndex = sorted.findIndex(p => p.odId === odId);
         if (myIndex === 0 && sorted.length > 0) {
           setShowConfetti(true);
         }
+      } else {
+        console.error("Failed to fetch room results:", response.status);
       }
     } catch (error) {
       console.error("Error fetching results:", error);
