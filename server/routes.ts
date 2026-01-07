@@ -1910,6 +1910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "This room has been closed by an administrator."
       });
 
+      console.log(`Room ${roomCode} successfully deleted from approom`);
       res.json({ message: "Room deleted successfully" });
     } catch (error) {
       console.error("Error deleting room:", error);
