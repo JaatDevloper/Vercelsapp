@@ -82,50 +82,44 @@ export default function DiscoverScreen() {
   useSilentAutoRefresh(["/api/rooms/broadcasts"], 5000, { enabled: !isOfferTab });
 
   const handleJoinBroadcast = (room: any) => {
-    Alert.prompt(
-      "Join Room",
-      "Enter your name to join the quiz",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Join",
-          onPress: async (name) => {
-            if (!name || name.trim().length === 0) {
-              Alert.alert("Name Required", "Please enter your name");
-              return;
-            }
+    // React Native Web does not support Alert.prompt
+    // We'll use a standard prompt for web compatibility
+    const name = window.prompt("Enter your name to join the quiz");
+    
+    if (name === null) return; // User cancelled
 
-            try {
-              const response = await fetch(`/api/rooms/${room.roomCode.toUpperCase()}/join`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ playerName: name.trim() }),
-              });
+    if (name.trim().length === 0) {
+      alert("Please enter your name");
+      return;
+    }
 
-              if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || "Failed to join room");
-              }
+    const joinRoom = async (playerName: string) => {
+      try {
+        const response = await fetch(`/api/rooms/${room.roomCode.toUpperCase()}/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerName: playerName.trim() }),
+        });
 
-              const data = await response.json();
-              navigation.navigate("Lobby", {
-                roomCode: data.roomCode,
-                odId: data.odId,
-                quizId: data.quizId,
-                isHost: false,
-                playerName: name.trim(),
-              });
-            } catch (error) {
-              Alert.alert("Error", error instanceof Error ? error.message : "Failed to join room");
-            }
-          },
-        },
-      ],
-      "plain-text"
-    );
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to join room");
+        }
+
+        const data = await response.json();
+        navigation.navigate("Lobby", {
+          roomCode: data.roomCode,
+          odId: data.odId,
+          quizId: data.quizId,
+          isHost: false,
+          playerName: playerName.trim(),
+        });
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Failed to join room");
+      }
+    };
+
+    joinRoom(name);
   };
 
   // Fetch notifications to count unread
@@ -370,6 +364,7 @@ export default function DiscoverScreen() {
                     key={room._id || idx}
                     onPress={() => handleJoinBroadcast(room)}
                     style={[styles.broadcastCard, { backgroundColor: theme.backgroundSecondary }]}
+                    hitSlop={10}
                   >
                     <View style={styles.broadcastCardHeader}>
                       <View style={[styles.liveBadge, { backgroundColor: "#FF6B6B" }]}>
@@ -386,8 +381,13 @@ export default function DiscoverScreen() {
                         <ThemedText type="small" style={{ color: theme.textSecondary }}>{room.hostName}</ThemedText>
                       </View>
                       <Pressable 
-                        onPress={() => handleJoinBroadcast(room)}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          console.log("Join button explicitly pressed for room:", room.roomCode);
+                          handleJoinBroadcast(room);
+                        }}
                         style={[styles.joinNowButton, { backgroundColor: theme.primary }]}
+                        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
                       >
                         <ThemedText style={styles.joinNowText}>Join</ThemedText>
                       </Pressable>

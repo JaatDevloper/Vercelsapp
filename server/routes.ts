@@ -1888,30 +1888,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Room code is required" });
       }
 
+      console.log(`[Admin] CRITICAL: Attempting to delete room: "${roomCode}"`);
+
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const roomsCollection = db.collection("approom");
 
-      // We use roomCode because that's what's passed from the frontend
-      const result = await roomsCollection.deleteOne({ 
+      // 1. Log what we found before deleting
+      const existing = await roomsCollection.find({ 
         $or: [
           { roomCode: roomCode.toUpperCase() },
+          { roomCode: roomCode },
+          { roomCode: roomCode.toLowerCase() },
+          { _id: roomCode }
+        ]
+      }).toArray();
+      console.log(`[Admin] Found ${existing.length} matching rooms in approom before deletion`);
+
+      // 2. Perform deletion
+      const result = await roomsCollection.deleteMany({ 
+        $or: [
+          { roomCode: roomCode.toUpperCase() },
+          { roomCode: roomCode },
+          { roomCode: roomCode.toLowerCase() },
           { _id: roomCode }
         ]
       });
 
+      console.log(`[Admin] Deletion result: ${result.deletedCount} rooms deleted`);
+
       if (result.deletedCount === 0) {
-        return res.status(404).json({ error: "Room not found" });
+        // Final fallback with case-insensitive regex
+        const regexResult = await roomsCollection.deleteMany({ 
+          roomCode: { $regex: new RegExp(`^${roomCode}$`, 'i') } 
+        });
+        
+        if (regexResult.deletedCount === 0) {
+          console.log(`[Admin] Room not found in approom even with regex: "${roomCode}"`);
+          return res.status(404).json({ error: "Room not found" });
+        }
+        console.log(`[Admin] Regex deletion successful: ${regexResult.deletedCount} rooms deleted`);
       }
 
-      // Cleanup WebSocket connection if any
+      // Cleanup WebSocket connection
       broadcastToRoom(roomCode.toUpperCase(), {
         type: "room_deleted",
         message: "This room has been closed by an administrator."
       });
 
-      console.log(`Room ${roomCode} successfully deleted from approom`);
-      res.json({ message: "Room deleted successfully" });
+      res.json({ message: "Room deleted successfully", count: result.deletedCount });
     } catch (error) {
       console.error("Error deleting room:", error);
       res.status(500).json({ 

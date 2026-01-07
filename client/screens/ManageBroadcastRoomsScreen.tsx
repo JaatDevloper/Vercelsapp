@@ -43,31 +43,25 @@ export default function ManageBroadcastRoomsScreen() {
   }, []);
 
   const handleDeleteRoom = (roomCode: string) => {
-    Alert.alert(
-      "Delete Room",
-      "Are you sure you want to delete this broadcast room?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const response = await fetch(`/api/admin/rooms/${roomCode}`, {
-                method: "DELETE",
-              });
-              if (response.ok) {
-                setRooms(rooms.filter((r) => r.roomCode !== roomCode));
-              } else {
-                Alert.alert("Error", "Failed to delete room");
-              }
-            } catch (error) {
-              Alert.alert("Error", "Something went wrong");
-            }
-          },
-        },
-      ]
-    );
+    const confirmed = window.confirm("Are you sure you want to delete this broadcast room?");
+    if (!confirmed) return;
+
+    const performDelete = async () => {
+      try {
+        const response = await fetch(`/api/admin/rooms/${roomCode}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          setRooms(rooms.filter((r) => r.roomCode !== roomCode));
+        } else {
+          alert("Failed to delete room");
+        }
+      } catch (error) {
+        alert("Something went wrong");
+      }
+    };
+
+    performDelete();
   };
 
   const renderItem = ({ item }: { item: any }) => (
@@ -79,7 +73,10 @@ export default function ManageBroadcastRoomsScreen() {
             <ThemedText style={styles.liveText}>LIVE</ThemedText>
           </View>
         </View>
-        <Pressable onPress={() => handleDeleteRoom(item.roomCode)}>
+        <Pressable 
+          onPress={() => handleDeleteRoom(item.roomCode)}
+          hitSlop={20}
+        >
           <Feather name="trash-2" size={20} color="#FF6B6B" />
         </Pressable>
       </View>
