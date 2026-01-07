@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -12,7 +11,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -22,7 +21,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
-import type { Quiz, Question } from "@/types/quiz";
+import type { Quiz } from "@/types/quiz";
 import type { WebSocketMessage } from "@/types/room";
 
 type MultiplayerQuizRouteProp = RouteProp<RootStackParamList, "MultiplayerQuiz">;
@@ -32,7 +31,7 @@ const getApiBase = () => {
     return window.location.origin;
   }
   if (process.env.EXPO_PUBLIC_DOMAIN) {
-    return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+    return \`https://\${process.env.EXPO_PUBLIC_DOMAIN}\`;
   }
   return "http://localhost:5000";
 };
@@ -40,10 +39,10 @@ const getApiBase = () => {
 const getWsBase = () => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${window.location.host}`;
+    return \`\${protocol}//\${window.location.host}\`;
   }
   if (process.env.EXPO_PUBLIC_DOMAIN) {
-    return `wss://${process.env.EXPO_PUBLIC_DOMAIN}`;
+    return \`wss://\${process.env.EXPO_PUBLIC_DOMAIN}\`;
   }
   return "ws://localhost:5000";
 };
@@ -74,7 +73,6 @@ export default function MultiplayerQuizScreen() {
   const wsRef = useRef<WebSocket | null>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
-  // Refs to store latest values for WebSocket callback (fixes closure issue)
   const scoreRef = useRef(0);
   const correctCountRef = useRef(0);
   const totalQuestionsRef = useRef(0);
@@ -92,7 +90,6 @@ export default function MultiplayerQuizScreen() {
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
 
-  // Keep refs in sync with state (for WebSocket callback)
   useEffect(() => {
     scoreRef.current = score;
   }, [score]);
@@ -113,44 +110,8 @@ export default function MultiplayerQuizScreen() {
     answersRef.current = answers;
   }, [answers]);
 
-  useEffect(() => {
-    connectWebSocket();
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (currentQuestion && !isAnswerLocked) {
-      setTimeLeft(TIME_PER_QUESTION);
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-      };
-    }
-  }, [currentQuestionIndex, isAnswerLocked]);
-
-  const connectWebSocket = () => {
-    const ws = new WebSocket(`${WS_BASE}/ws`);
+  const connectWebSocket = useCallback(() => {
+    const ws = new WebSocket(\`\${WS_BASE}/ws\`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -178,7 +139,93 @@ export default function MultiplayerQuizScreen() {
         console.error("WebSocket message error:", e);
       }
     };
-  };
+  }, [roomCode, odId, playerName, navigation]);
+
+  useEffect(() => {
+    connectWebSocket();
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [connectWebSocket]);
+
+  const moveToNextQuestion = useCallback(() => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setIsAnswerLocked(false);
+    } else {
+      submitResults();
+    }
+  }, [currentQuestionIndex, totalQuestions]);
+
+  const submitResults = useCallback(async () => {
+    if (hasSubmittedRef.current) return;
+    setHasSubmitted(true);
+
+    try {
+      const response = await fetch(\`\${API_BASE}/api/rooms/\${roomCode}/submit\`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          odId,
+          score: scoreRef.current,
+          correctAnswers: correctCountRef.current,
+          totalQuestions: totalQuestionsRef.current,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.allFinished) {
+        navigation.replace("MultiplayerResults", {
+          roomCode,
+          odId,
+          playerName,
+          score: scoreRef.current,
+          correctAnswers: correctCountRef.current,
+          totalQuestions: totalQuestionsRef.current,
+          answers: answersRef.current,
+        });
+      } else {
+        pollIntervalRef.current = setInterval(async () => {
+          try {
+            const roomResponse = await fetch(\`\${API_BASE}/api/rooms/\${roomCode}\`);
+            if (roomResponse.ok) {
+              const roomData = await roomResponse.json();
+              const allFinished = roomData.participants?.every((p: any) => p.finished);
+              
+              if (allFinished || roomData.status === "completed") {
+                if (pollIntervalRef.current) {
+                  clearInterval(pollIntervalRef.current);
+                }
+                navigation.replace("MultiplayerResults", {
+                  roomCode,
+                  odId,
+                  playerName,
+                  score: scoreRef.current,
+                  correctAnswers: correctCountRef.current,
+                  totalQuestions: totalQuestionsRef.current,
+                  answers: answersRef.current,
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Polling error:", error);
+          }
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error submitting results:", error);
+    }
+  }, [roomCode, odId, playerName, navigation]);
 
   const handleTimeUp = useCallback(() => {
     if (timerRef.current) {
@@ -189,7 +236,7 @@ export default function MultiplayerQuizScreen() {
     setAnswers((prev) => [
       ...prev,
       {
-        questionId: currentQuestion?._id || `q-${currentQuestionIndex}`,
+        questionId: currentQuestion?._id || \`q-\${currentQuestionIndex}\`,
         selectedAnswer: -1,
         correctAnswer: currentQuestion?.correctAnswer ?? 0,
         isCorrect: false,
@@ -201,7 +248,28 @@ export default function MultiplayerQuizScreen() {
     setTimeout(() => {
       moveToNextQuestion();
     }, 1500);
-  }, [currentQuestionIndex, currentQuestion]);
+  }, [currentQuestionIndex, currentQuestion, moveToNextQuestion]);
+
+  useEffect(() => {
+    if (currentQuestion && !isAnswerLocked) {
+      setTimeLeft(TIME_PER_QUESTION);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleTimeUp();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      };
+    }
+  }, [currentQuestionIndex, isAnswerLocked, currentQuestion, handleTimeUp]);
 
   const handleSelectAnswer = (index: number) => {
     if (isAnswerLocked) return;
@@ -223,7 +291,7 @@ export default function MultiplayerQuizScreen() {
     setAnswers((prev) => [
       ...prev,
       {
-        questionId: currentQuestion?._id || `q-${currentQuestionIndex}`,
+        questionId: currentQuestion?._id || \`q-\${currentQuestionIndex}\`,
         selectedAnswer: index,
         correctAnswer: currentQuestion?.correctAnswer ?? 0,
         isCorrect,
@@ -235,79 +303,6 @@ export default function MultiplayerQuizScreen() {
     setTimeout(() => {
       moveToNextQuestion();
     }, 1500);
-  };
-
-  const moveToNextQuestion = () => {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setIsAnswerLocked(false);
-    } else {
-      submitResults();
-    }
-  };
-
-  const submitResults = async () => {
-    if (hasSubmitted) return;
-    setHasSubmitted(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/api/rooms/${roomCode}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          odId,
-          score,
-          correctAnswers: correctCount,
-          totalQuestions,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.allFinished) {
-        navigation.replace("MultiplayerResults", {
-          roomCode,
-          odId,
-          playerName,
-          score,
-          correctAnswers: correctCount,
-          totalQuestions,
-          answers,
-        });
-      } else {
-        // Start polling for room completion status
-        // This is needed because Vercel serverless functions can't broadcast WebSocket messages
-        pollIntervalRef.current = setInterval(async () => {
-          try {
-            const roomResponse = await fetch(`${API_BASE}/api/rooms/${roomCode}`);
-            if (roomResponse.ok) {
-              const roomData = await roomResponse.json();
-              const allFinished = roomData.participants?.every((p: any) => p.finished);
-              
-              if (allFinished || roomData.status === "completed") {
-                if (pollIntervalRef.current) {
-                  clearInterval(pollIntervalRef.current);
-                }
-                navigation.replace("MultiplayerResults", {
-                  roomCode,
-                  odId,
-                  playerName,
-                  score,
-                  correctAnswers: correctCount,
-                  totalQuestions,
-                  answers,
-                });
-              }
-            }
-          } catch (error) {
-            console.error("Polling error:", error);
-          }
-        }, 2000);
-      }
-    } catch (error) {
-      console.error("Error submitting results:", error);
-    }
   };
 
   const primaryColor = isDark ? Colors.dark.primary : Colors.light.primary;
@@ -461,11 +456,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerSubmitButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.lg,
     justifyContent: "center",
     alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   content: {
     flex: 1,
@@ -492,10 +492,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     gap: Spacing.xs,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   scoreContainer: {
     alignItems: "center",

@@ -153,7 +153,7 @@ export default function QuizScreen() {
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
-  }, [currentQuestionIndex, currentQuestion]);
+  }, [currentQuestionIndex, currentQuestion, hasAnsweredCurrentQuestion]);
 
   const handleNext = useCallback(() => {
     if (currentQuestionIndex < totalQuestions - 1) {
@@ -181,7 +181,7 @@ export default function QuizScreen() {
       const selected = selectedAnswers[index] ?? -1;
       const isCorrect = selected === q.correctAnswer;
       return {
-        questionId: q._id || `q-${index}`,
+        questionId: q._id || \`q-\${index}\`,
         selectedAnswer: selected,
         correctAnswer: q.correctAnswer,
         isCorrect,
@@ -243,7 +243,7 @@ export default function QuizScreen() {
       timeTaken,
       duration: (quiz as any).duration || 0,
     } as any);
-  }, [quiz, questions, selectedAnswers, totalQuestions, startTime, navigation, addHistory, negativeMarking, profile]);
+  }, [quiz, questions, selectedAnswers, totalQuestions, startTime, navigation, addHistory, negativeMarking, profile, actualQuizId]);
 
   const handleClose = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -289,7 +289,6 @@ export default function QuizScreen() {
   const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
   const hasSelectedAnswer = selectedAnswers[currentQuestionIndex] !== undefined;
   const answeredCount = Object.keys(selectedAnswers).length;
-  const allQuestionsAnswered = answeredCount === totalQuestions;
 
   return (
     <ThemedView style={styles.container}>
@@ -330,7 +329,7 @@ export default function QuizScreen() {
           </ThemedText>
         </Pressable>
 
-        <View style={[styles.timerContainer, { backgroundColor: `${getTimerColor()}15` }]}>
+        <View style={[styles.timerContainer, { backgroundColor: \`\${getTimerColor()}15\` }]}>
           <Feather name="clock" size={16} color={getTimerColor()} />
           <ThemedText type="body" style={[styles.timerText, { color: getTimerColor() }]}>
             {timeLeft}s
@@ -401,22 +400,20 @@ export default function QuizScreen() {
           <Feather name="skip-forward" size={20} color={theme.textSecondary} />
         </Pressable>
 
-        {!isLastQuestion && (
-          <Pressable
-            onPress={handleNext}
-            disabled={!hasSelectedAnswer}
-            style={({ pressed }) => [
-              styles.navButton,
-              { 
-                backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
-                opacity: !hasSelectedAnswer ? 0.5 : pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <ThemedText type="body" style={{ color: "#FFFFFF" }}>Next</ThemedText>
-            <Feather name="chevron-right" size={20} color="#FFFFFF" />
-          </Pressable>
-        )}
+        <Pressable
+          onPress={handleNext}
+          disabled={!hasSelectedAnswer}
+          style={({ pressed }) => [
+            styles.navButton,
+            { 
+              backgroundColor: isDark ? Colors.dark.primary : Colors.light.primary,
+              opacity: !hasSelectedAnswer ? 0.5 : pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>Next</ThemedText>
+          <Feather name="chevron-right" size={20} color="#FFFFFF" />
+        </Pressable>
       </View>
     </ThemedView>
   );
@@ -462,12 +459,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   headerSubmitButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.lg,
     marginRight: Spacing.sm,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: Colors.light.success,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   content: {
     flex: 1,
@@ -501,24 +504,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     gap: Spacing.xs,
-  },
-  submitButton: {
-    flex: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   skipButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     gap: Spacing.xs,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   closeButton: {
     marginTop: Spacing.xl,
