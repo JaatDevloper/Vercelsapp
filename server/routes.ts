@@ -2092,9 +2092,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedRoom = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
       const reallyAllFinished = updatedRoom?.participants?.every((p: any) => p.finished);
 
-      // Check if all participants finished
+      // If all finished, we mark room as completed but don't delete yet to allow clients to fetch final results
       if (reallyAllFinished) {
-        await roomsCollection.deleteOne({ roomCode: roomCode.toUpperCase() });
+        await roomsCollection.updateOne(
+          { roomCode: roomCode.toUpperCase() },
+          { $set: { status: "completed", completedAt: new Date().toISOString() } }
+        );
       }
 
       // Broadcast player finished

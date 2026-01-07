@@ -67,7 +67,7 @@ export default function MultiplayerResultsScreen() {
         setParticipants(sorted);
 
         const myIndex = sorted.findIndex(p => p.odId === odId);
-        if (myIndex === 0) {
+        if (myIndex === 0 && sorted.length > 0) {
           setShowConfetti(true);
         }
       }
@@ -102,7 +102,7 @@ export default function MultiplayerResultsScreen() {
     ? ["#1e3a5f", "#0d1b2a"] as const
     : ["#4facfe", "#00f2fe"] as const;
 
-  const myRank = participants.findIndex(p => p.odId === odId) + 1;
+  const myRank = participants.length > 0 ? participants.findIndex(p => p.odId === odId) + 1 : 0;
   const isWinner = myRank === 1;
 
   const renderParticipant = ({ item, index }: { item: Participant; index: number }) => {
