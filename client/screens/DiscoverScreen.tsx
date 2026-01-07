@@ -24,6 +24,7 @@ import QuizCard, { getQuizCreatedTime } from "@/components/QuizCard";
 import CategoryChip from "@/components/CategoryChip";
 import SkeletonCard from "@/components/SkeletonCard";
 import PremiumModal from "@/components/PremiumModal";
+import NamePromptModal from "@/components/NamePromptModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useSilentAutoRefresh } from "@/hooks/useSilentAutoRefresh";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
@@ -57,6 +58,8 @@ export default function DiscoverScreen() {
   const [deviceId, setDeviceId] = useState<string>("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [broadcastRooms, setBroadcastRooms] = useState<any[]>([]);
+  const [nameModalVisible, setNameModalVisible] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<any>(null);
 
   useEffect(() => {
     getDeviceId().then(setDeviceId);
@@ -82,44 +85,40 @@ export default function DiscoverScreen() {
   useSilentAutoRefresh(["/api/rooms/broadcasts"], 5000, { enabled: !isOfferTab });
 
   const handleJoinBroadcast = (room: any) => {
-    // React Native Web does not support Alert.prompt
-    // We'll use a standard prompt for web compatibility
-    const name = window.prompt("Enter your name to join the quiz");
+    setSelectedRoom(room);
+    setNameModalVisible(true);
+  };
+
+  const handleNameSubmit = async (playerName: string) => {
+    if (!selectedRoom) return;
     
-    if (name === null) return; // User cancelled
+    setNameModalVisible(false);
+    
+    try {
+      const response = await fetch(`/api/rooms/${selectedRoom.roomCode.toUpperCase()}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerName: playerName.trim() }),
+      });
 
-    if (name.trim().length === 0) {
-      alert("Please enter your name");
-      return;
-    }
-
-    const joinRoom = async (playerName: string) => {
-      try {
-        const response = await fetch(`/api/rooms/${room.roomCode.toUpperCase()}/join`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ playerName: playerName.trim() }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Failed to join room");
-        }
-
-        const data = await response.json();
-        navigation.navigate("Lobby", {
-          roomCode: data.roomCode,
-          odId: data.odId,
-          quizId: data.quizId,
-          isHost: false,
-          playerName: playerName.trim(),
-        });
-      } catch (error) {
-        alert(error instanceof Error ? error.message : "Failed to join room");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to join room");
       }
-    };
 
-    joinRoom(name);
+      const data = await response.json();
+      navigation.navigate("Lobby", {
+        roomCode: data.roomCode,
+        odId: data.odId,
+        quizId: data.quizId,
+        isHost: false,
+        playerName: playerName.trim(),
+      });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to join room");
+    } finally {
+      setSelectedRoom(null);
+    }
   };
 
   // Fetch notifications to count unread
@@ -498,6 +497,11 @@ export default function DiscoverScreen() {
       />
 
       <PremiumModal visible={premiumModalVisible} onClose={() => setPremiumModalVisible(false)} onSubscribe={() => setPremiumModalVisible(false)} />
+      <NamePromptModal 
+        visible={nameModalVisible} 
+        onClose={() => setNameModalVisible(false)} 
+        onSubmit={handleNameSubmit} 
+      />
     </ThemedView>
   );
 }
@@ -585,12 +589,14 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   emptyContainer: {
+    justifyContent: "center",
     alignItems: "center",
     paddingVertical: Spacing["5xl"],
     gap: Spacing.md,
   },
   emptyTitle: {
     marginTop: Spacing.md,
+    textAlign: "center",
   },
   batchCard: {
     borderRadius: 12,
