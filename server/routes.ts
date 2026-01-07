@@ -2135,8 +2135,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const client = await getMongoClient();
             const db = client.db("quizbot");
-            await db.collection("approom").deleteOne({ roomCode: roomCode.toUpperCase() });
-            console.log(`Auto-deleted completed room: ${roomCode}`);
+            // Check if it's a live broadcast room
+            const roomCodeUpper = roomCode.toUpperCase();
+            
+            // Delete from approom (the active rooms table)
+            await db.collection("approom").deleteOne({ roomCode: roomCodeUpper });
+            
+            // Delete from livequiz (the public feed) - this addresses the "Live Broadcast" requirement
+            await db.collection("livequiz").deleteOne({ roomCode: roomCodeUpper });
+            
+            console.log(`Auto-deleted completed room and live broadcast entry: ${roomCodeUpper}`);
           } catch (e) {
             console.error(`Error in auto-deletion for room ${roomCode}:`, e);
           }
