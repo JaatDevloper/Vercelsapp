@@ -176,12 +176,12 @@ export default function QuizScreen() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+        const timeTaken = Math.floor((Date.now() - startTime) / 1000);
     const answersArray = questions.map((q, index) => {
       const selected = selectedAnswers[index] ?? -1;
       const isCorrect = selected === q.correctAnswer;
       return {
-        questionId: q._id || \`q-\${index}\`,
+        questionId: q._id || `q-${index}`,
         selectedAnswer: selected,
         correctAnswer: q.correctAnswer,
         isCorrect,
@@ -329,7 +329,7 @@ export default function QuizScreen() {
           </ThemedText>
         </Pressable>
 
-        <View style={[styles.timerContainer, { backgroundColor: \`\${getTimerColor()}15\` }]}>
+        <View style={[styles.timerContainer, { backgroundColor: `${getTimerColor()}15` }]}>
           <Feather name="clock" size={16} color={getTimerColor()} />
           <ThemedText type="body" style={[styles.timerText, { color: getTimerColor() }]}>
             {timeLeft}s

@@ -31,7 +31,7 @@ const getApiBase = () => {
     return window.location.origin;
   }
   if (process.env.EXPO_PUBLIC_DOMAIN) {
-    return \`https://\${process.env.EXPO_PUBLIC_DOMAIN}\`;
+    return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
   }
   return "http://localhost:5000";
 };
@@ -39,10 +39,10 @@ const getApiBase = () => {
 const getWsBase = () => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return \`\${protocol}//\${window.location.host}\`;
+    return `${protocol}//${window.location.host}`;
   }
   if (process.env.EXPO_PUBLIC_DOMAIN) {
-    return \`wss://\${process.env.EXPO_PUBLIC_DOMAIN}\`;
+    return `wss://${process.env.EXPO_PUBLIC_DOMAIN}`;
   }
   return "ws://localhost:5000";
 };
@@ -111,7 +111,7 @@ export default function MultiplayerQuizScreen() {
   }, [answers]);
 
   const connectWebSocket = useCallback(() => {
-    const ws = new WebSocket(\`\${WS_BASE}/ws\`);
+    const ws = new WebSocket(`${WS_BASE}/ws`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -171,7 +171,7 @@ export default function MultiplayerQuizScreen() {
     setHasSubmitted(true);
 
     try {
-      const response = await fetch(\`\${API_BASE}/api/rooms/\${roomCode}/submit\`, {
+      const response = await fetch(`${API_BASE}/api/rooms/${roomCode}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -197,7 +197,7 @@ export default function MultiplayerQuizScreen() {
       } else {
         pollIntervalRef.current = setInterval(async () => {
           try {
-            const roomResponse = await fetch(\`\${API_BASE}/api/rooms/\${roomCode}\`);
+            const roomResponse = await fetch(`${API_BASE}/api/rooms/${roomCode}`);
             if (roomResponse.ok) {
               const roomData = await roomResponse.json();
               const allFinished = roomData.participants?.every((p: any) => p.finished);
@@ -236,7 +236,7 @@ export default function MultiplayerQuizScreen() {
     setAnswers((prev) => [
       ...prev,
       {
-        questionId: currentQuestion?._id || \`q-\${currentQuestionIndex}\`,
+        questionId: currentQuestion?._id || `q-${currentQuestionIndex}`,
         selectedAnswer: -1,
         correctAnswer: currentQuestion?.correctAnswer ?? 0,
         isCorrect: false,
@@ -291,7 +291,7 @@ export default function MultiplayerQuizScreen() {
     setAnswers((prev) => [
       ...prev,
       {
-        questionId: currentQuestion?._id || \`q-\${currentQuestionIndex}\`,
+        questionId: currentQuestion?._id || `q-${currentQuestionIndex}`,
         selectedAnswer: index,
         correctAnswer: currentQuestion?.correctAnswer ?? 0,
         isCorrect,
