@@ -82,7 +82,50 @@ export default function DiscoverScreen() {
   useSilentAutoRefresh(["/api/rooms/broadcasts"], 5000, { enabled: !isOfferTab });
 
   const handleJoinBroadcast = (room: any) => {
-    navigation.navigate("JoinRoom", { roomCode: room.code });
+    Alert.prompt(
+      "Join Room",
+      "Enter your name to join the quiz",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Join",
+          onPress: async (name) => {
+            if (!name || name.trim().length === 0) {
+              Alert.alert("Name Required", "Please enter your name");
+              return;
+            }
+
+            try {
+              const response = await fetch(`/api/rooms/${room.roomCode.toUpperCase()}/join`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ playerName: name.trim() }),
+              });
+
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to join room");
+              }
+
+              const data = await response.json();
+              navigation.navigate("Lobby", {
+                roomCode: data.roomCode,
+                odId: data.odId,
+                quizId: data.quizId,
+                isHost: false,
+                playerName: name.trim(),
+              });
+            } catch (error) {
+              Alert.alert("Error", error instanceof Error ? error.message : "Failed to join room");
+            }
+          },
+        },
+      ],
+      "plain-text"
+    );
   };
 
   // Fetch notifications to count unread

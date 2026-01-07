@@ -41,6 +41,13 @@ export default function JoinRoomScreen() {
   const [name, setName] = useState("");
   const [isJoining, setIsJoining] = useState(false);
 
+  React.useEffect(() => {
+    const routeParams = navigation.getState().routes.find(r => r.name === 'JoinRoom')?.params as any;
+    if (routeParams?.roomCode) {
+      setRoomCode(routeParams.roomCode);
+    }
+  }, [navigation]);
+
   const handleBack = () => {
     navigation.goBack();
   };
