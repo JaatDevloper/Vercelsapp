@@ -137,6 +137,8 @@ export default function QuizScreen() {
   }, [timeLeft, totalQuestions, currentQuestionIndex]);
 
   const handleSelectAnswer = useCallback((answerIndex: number) => {
+    if (hasAnsweredCurrentQuestion) return;
+    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAnswers((prev) => ({
       ...prev,
@@ -346,6 +348,7 @@ export default function QuizScreen() {
                 showResult={hasAnsweredCurrentQuestion}
                 isCorrect={hasAnsweredCurrentQuestion && index === currentQuestion.correctAnswer}
                 isWrongSelection={hasAnsweredCurrentQuestion && selectedAnswers[currentQuestionIndex] === index && index !== currentQuestion.correctAnswer}
+                disabled={hasAnsweredCurrentQuestion}
               />
             ))}
           </View>
