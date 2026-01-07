@@ -1792,17 +1792,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch quiz details to get title
       let quiz = null;
       try {
-        quiz = await quizCollection.findOne({ 
-          $or: [
-            { _id: quizId as any },
-            { _id: ObjectId.isValid(quizId) ? new ObjectId(quizId) : null },
-            { quiz_id: quizId }
-          ]
-        });
+        console.log("Creating room for quizId:", quizId);
+        
+        // Try finding by string _id
+        quiz = await quizCollection.findOne({ _id: quizId as any });
+
+        // Try ObjectId if string didn't work
+        if (!quiz && ObjectId.isValid(quizId)) {
+          quiz = await quizCollection.findOne({ _id: new ObjectId(quizId) });
+        }
+
+        // Try by quiz_id field
+        if (!quiz) {
+          quiz = await quizCollection.findOne({ quiz_id: quizId });
+        }
+        
+        console.log("Found quiz for room:", quiz ? quiz.title : "Not found");
       } catch (e) {
-        // Ignore errors
+        console.error("Error finding quiz for room:", e);
       }
-      const quizTitle = quiz ? (quiz.title || quiz.quiz_name || "Untitled Quiz") : "Untitled Quiz";
+      const quizTitle = quiz ? (quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz") : "Untitled Quiz";
 
       // Generate unique room code
       let roomCode = generateRoomCode();

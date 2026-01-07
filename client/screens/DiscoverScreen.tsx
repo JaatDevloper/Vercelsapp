@@ -332,7 +332,7 @@ export default function DiscoverScreen() {
                       <View style={[styles.liveBadge, { backgroundColor: "#FF6B6B" }]}>
                         <ThemedText style={styles.liveBadgeText}>LIVE</ThemedText>
                       </View>
-                      <ThemedText type="small" style={{ color: theme.textSecondary }}>#{room.code}</ThemedText>
+                      <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "700" }}>#{room.roomCode}</ThemedText>
                     </View>
                     <ThemedText type="body" style={styles.broadcastQuizTitle} numberOfLines={1}>
                       {room.quizTitle || "Multiplayer Quiz"}
