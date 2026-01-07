@@ -1880,6 +1880,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Delete a room (including broadcast rooms)
+  app.delete("/api/admin/rooms/:roomCode", async (req: Request, res: Response) => {
+    try {
+      const { roomCode } = req.params;
+      if (!roomCode) {
+        return res.status(400).json({ error: "Room code is required" });
+      }
+
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const roomsCollection = db.collection("approom");
+
+      // We use roomCode because that's what's passed from the frontend
+      const result = await roomsCollection.deleteOne({ 
+        roomCode: roomCode.toUpperCase() 
+      });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+
+      // Cleanup WebSocket connection if any
+      broadcastToRoom(roomCode.toUpperCase(), {
+        type: "room_deleted",
+        message: "This room has been closed by an administrator."
+      });
+
+      res.json({ message: "Room deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      res.status(500).json({ 
+        error: "Failed to delete room",
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
   // Get single broadcast room by code
   app.get("/api/rooms/:roomCode", async (req: Request, res: Response) => {
     try {
