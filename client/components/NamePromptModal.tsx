@@ -13,8 +13,8 @@ import { BlurView } from "expo-blur";
 import Animated, { 
   FadeIn, 
   FadeOut, 
-  ScaleInCenter, 
-  ScaleOutCenter 
+  ZoomIn,
+  ZoomOut
 } from "react-native-reanimated";
 import { ThemedText } from "./ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -76,8 +76,8 @@ export default function NamePromptModal({
           style={styles.keyboardView}
         >
           <Animated.View
-            entering={ScaleInCenter.duration(300).springify()}
-            exiting={ScaleOutCenter.duration(200)}
+            entering={ZoomIn.duration(300).springify()}
+            exiting={ZoomOut.duration(200)}
             style={[
               styles.modalCard,
               {
