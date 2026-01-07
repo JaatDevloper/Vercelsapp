@@ -353,6 +353,22 @@ export default function MultiplayerQuizScreen() {
           <ThemedText type="body" style={{ color: theme.textSecondary }}>
             Question {currentQuestionIndex + 1}/{totalQuestions}
           </ThemedText>
+
+          <Pressable
+            onPress={submitResults}
+            style={({ pressed }) => [
+              styles.headerSubmitButton,
+              { 
+                backgroundColor: isDark ? Colors.dark.success : Colors.light.success,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "700" }}>
+              Submit
+            </ThemedText>
+          </Pressable>
+
           <View style={styles.timerContainer}>
             <Feather name="clock" size={16} color={timeLeft <= 5 ? theme.error : theme.textSecondary} />
             <ThemedText 
@@ -442,6 +458,13 @@ const styles = StyleSheet.create({
   },
   timerContainer: {
     flexDirection: "row",
+    alignItems: "center",
+  },
+  headerSubmitButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    justifyContent: "center",
     alignItems: "center",
   },
   content: {

@@ -315,6 +315,21 @@ export default function QuizScreen() {
           <ProgressBar progress={progress} />
         </View>
 
+        <Pressable
+          onPress={handleSubmit}
+          style={({ pressed }) => [
+            styles.headerSubmitButton,
+            { 
+              backgroundColor: isDark ? Colors.dark.success : Colors.light.success,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <ThemedText type="small" style={{ color: "#FFFFFF", fontWeight: "700" }}>
+            Submit
+          </ThemedText>
+        </Pressable>
+
         <View style={[styles.timerContainer, { backgroundColor: `${getTimerColor()}15` }]}>
           <Feather name="clock" size={16} color={getTimerColor()} />
           <ThemedText type="body" style={[styles.timerText, { color: getTimerColor() }]}>
@@ -386,21 +401,6 @@ export default function QuizScreen() {
           <Feather name="skip-forward" size={20} color={theme.textSecondary} />
         </Pressable>
 
-        <Pressable
-          onPress={handleSubmit}
-          style={({ pressed }) => [
-            styles.submitButton,
-            { 
-              backgroundColor: isDark ? Colors.dark.success : Colors.light.success,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-        >
-          <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
-            Submit ({answeredCount}/{totalQuestions})
-          </ThemedText>
-        </Pressable>
-
         {!isLastQuestion && (
           <Pressable
             onPress={handleNext}
@@ -460,6 +460,14 @@ const styles = StyleSheet.create({
   timerText: {
     fontWeight: "700",
     fontSize: 16,
+  },
+  headerSubmitButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    marginRight: Spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
   content: {
     flex: 1,
