@@ -399,6 +399,21 @@ export default function MultiplayerQuizScreen() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
+        <Pressable
+          onPress={moveToNextQuestion}
+          disabled={isAnswerLocked}
+          style={({ pressed }) => [
+            styles.skipButton,
+            { 
+              backgroundColor: theme.backgroundSecondary,
+              opacity: isAnswerLocked ? 0.4 : pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <ThemedText type="body" style={{ color: theme.textSecondary }}>Skip</ThemedText>
+          <Feather name="skip-forward" size={20} color={theme.textSecondary} />
+        </Pressable>
+
         <View style={styles.scoreContainer}>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>Score</ThemedText>
           <ThemedText type="h4" style={{ color: primaryColor }}>{score}</ThemedText>
@@ -446,7 +461,18 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacing.lg,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+  },
+  skipButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
   },
   scoreContainer: {
     alignItems: "center",

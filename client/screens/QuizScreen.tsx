@@ -372,6 +372,21 @@ export default function QuizScreen() {
         </Pressable>
 
         <Pressable
+          onPress={handleNext}
+          disabled={isLastQuestion}
+          style={({ pressed }) => [
+            styles.skipButton,
+            { 
+              backgroundColor: theme.backgroundSecondary,
+              opacity: isLastQuestion ? 0.4 : pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <ThemedText type="body" style={{ color: theme.textSecondary }}>Skip</ThemedText>
+          <Feather name="skip-forward" size={20} color={theme.textSecondary} />
+        </Pressable>
+
+        <Pressable
           onPress={handleSubmit}
           style={({ pressed }) => [
             styles.submitButton,
@@ -482,11 +497,20 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   submitButton: {
-    flex: 1,
+    flex: 1.5,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.md,
+  },
+  skipButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
   },
   closeButton: {
     marginTop: Spacing.xl,
