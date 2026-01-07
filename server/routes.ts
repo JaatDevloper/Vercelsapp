@@ -1894,7 +1894,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // We use roomCode because that's what's passed from the frontend
       const result = await roomsCollection.deleteOne({ 
-        roomCode: roomCode.toUpperCase() 
+        $or: [
+          { roomCode: roomCode.toUpperCase() },
+          { _id: roomCode }
+        ]
       });
 
       if (result.deletedCount === 0) {
