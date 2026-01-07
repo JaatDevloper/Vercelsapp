@@ -46,6 +46,7 @@ export default function CreateRoomScreen() {
   const { quizId, quizTitle } = route.params;
 
   const [name, setName] = useState("");
+  const [isBroadcast, setIsBroadcast] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [odId, setOdId] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function CreateRoomScreen() {
       const response = await fetch(`${API_BASE}/api/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quizId, hostName: name.trim() }),
+        body: JSON.stringify({ quizId, hostName: name.trim(), isBroadcast }),
       });
 
       if (!response.ok) {
@@ -166,6 +167,25 @@ export default function CreateRoomScreen() {
               maxLength={20}
               autoFocus
             />
+
+            <Pressable
+              onPress={() => setIsBroadcast(!isBroadcast)}
+              style={styles.broadcastToggle}
+            >
+              <View style={[
+                styles.checkbox, 
+                { borderColor: primaryColor },
+                isBroadcast && { backgroundColor: primaryColor }
+              ]}>
+                {isBroadcast && <Feather name="check" size={14} color="#FFFFFF" />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="body" style={{ fontWeight: "600" }}>Broadcast Room</ThemedText>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  Make this room visible to everyone on the Home Screen
+                </ThemedText>
+              </View>
+            </Pressable>
 
             <Pressable
               onPress={handleCreateRoom}
@@ -274,7 +294,25 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     padding: Spacing.lg,
     fontSize: 16,
+    marginBottom: Spacing.lg,
+  },
+  broadcastToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
     marginBottom: Spacing.xl,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
   },
   createButton: {
     paddingVertical: Spacing.lg,

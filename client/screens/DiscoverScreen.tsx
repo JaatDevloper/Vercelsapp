@@ -56,10 +56,34 @@ export default function DiscoverScreen() {
   const [premiumModalVisible, setPremiumModalVisible] = useState(false);
   const [deviceId, setDeviceId] = useState<string>("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [broadcastRooms, setBroadcastRooms] = useState<any[]>([]);
 
   useEffect(() => {
     getDeviceId().then(setDeviceId);
   }, []);
+
+  // Fetch broadcast rooms
+  const { data: broadcastData, refetch: refetchBroadcasts } = useQuery<any[]>({
+    queryKey: ["/api/rooms/broadcasts"],
+    queryFn: async () => {
+      const response = await fetch("/api/rooms/broadcasts");
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !isOfferTab
+  });
+
+  useEffect(() => {
+    if (broadcastData) {
+      setBroadcastRooms(broadcastData);
+    }
+  }, [broadcastData]);
+
+  useSilentAutoRefresh(["/api/rooms/broadcasts"], 5000, { enabled: !isOfferTab });
+
+  const handleJoinBroadcast = (room: any) => {
+    navigation.navigate("JoinRoom", { roomCode: room.code });
+  };
 
   // Fetch notifications to count unread
   const { data: notifications } = useQuery<any[]>({
@@ -284,6 +308,53 @@ export default function DiscoverScreen() {
           <Animated.View entering={PinwheelIn.duration(1000)}>
             <LiveTestCard onStart={handleLiveQuizStart} />
           </Animated.View>
+
+          {broadcastRooms.length > 0 && (
+            <View style={styles.broadcastSection}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.broadcastIconContainer}>
+                  <Feather name="radio" size={20} color="#FF6B6B" />
+                </View>
+                <ThemedText type="h3">Live Broadcasts</ThemedText>
+              </View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={styles.broadcastScroll}
+              >
+                {broadcastRooms.map((room, idx) => (
+                  <Pressable 
+                    key={room._id || idx}
+                    onPress={() => handleJoinBroadcast(room)}
+                    style={[styles.broadcastCard, { backgroundColor: theme.backgroundSecondary }]}
+                  >
+                    <View style={styles.broadcastCardHeader}>
+                      <View style={[styles.liveBadge, { backgroundColor: "#FF6B6B" }]}>
+                        <ThemedText style={styles.liveBadgeText}>LIVE</ThemedText>
+                      </View>
+                      <ThemedText type="small" style={{ color: theme.textSecondary }}>#{room.code}</ThemedText>
+                    </View>
+                    <ThemedText type="body" style={styles.broadcastQuizTitle} numberOfLines={1}>
+                      {room.quizTitle || "Multiplayer Quiz"}
+                    </ThemedText>
+                    <View style={styles.broadcastCardFooter}>
+                      <View style={styles.hostInfo}>
+                        <Feather name="user" size={12} color={theme.textSecondary} />
+                        <ThemedText type="small" style={{ color: theme.textSecondary }}>{room.hostName}</ThemedText>
+                      </View>
+                      <Pressable 
+                        onPress={() => handleJoinBroadcast(room)}
+                        style={[styles.joinNowButton, { backgroundColor: theme.primary }]}
+                      >
+                        <ThemedText style={styles.joinNowText}>Join</ThemedText>
+                      </Pressable>
+                    </View>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           <ThemedText type="h2" style={{ marginBottom: Spacing.md }}>Featured Batches</ThemedText>
           <ScrollView 
             horizontal 
@@ -506,6 +577,79 @@ const styles = StyleSheet.create({
   batchInfo: {
     padding: Spacing.sm,
     gap: Spacing.xs,
+  },
+  broadcastSection: {
+    marginBottom: Spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  broadcastIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 107, 107, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  broadcastScroll: {
+    gap: Spacing.md,
+    paddingBottom: Spacing.xs,
+  },
+  broadcastCard: {
+    width: 220,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+  },
+  broadcastCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  liveBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  liveBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  broadcastQuizTitle: {
+    fontWeight: "700",
+    marginBottom: Spacing.md,
+  },
+  broadcastCardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  hostInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  joinNowButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.sm,
+  },
+  joinNowText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
   enrollButton: {
     flexDirection: "row",

@@ -1774,7 +1774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new multiplayer room
   app.post("/api/rooms", async (req: Request, res: Response) => {
     try {
-      const { quizId, hostName } = req.body;
+      const { quizId, hostName, isBroadcast } = req.body;
 
       if (!quizId) {
         return res.status(400).json({ error: "Quiz ID is required" });
@@ -1787,6 +1787,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const roomsCollection = db.collection("approom");
+      const quizCollection = db.collection("quizzes");
+
+      // Fetch quiz details to get title
+      let quiz = null;
+      try {
+        quiz = await quizCollection.findOne({ 
+          $or: [
+            { _id: quizId as any },
+            { _id: ObjectId.isValid(quizId) ? new ObjectId(quizId) : null },
+            { quiz_id: quizId }
+          ]
+        });
+      } catch (e) {
+        // Ignore errors
+      }
+      const quizTitle = quiz ? (quiz.title || quiz.quiz_name || "Untitled Quiz") : "Untitled Quiz";
 
       // Generate unique room code
       let roomCode = generateRoomCode();
@@ -1803,7 +1819,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const room = {
         roomCode,
         quizId,
-        hostId,
+        quizTitle,
+        hostName: hostName.trim(),
+        isBroadcast: !!isBroadcast,
         status: "waiting", // waiting, active, completed
         participants: [{
           odId: hostId,
@@ -1836,6 +1854,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to create room",
         message: error instanceof Error ? error.message : "Unknown error",
       });
+    }
+  });
+
+  // Get all broadcast rooms
+  app.get("/api/rooms/broadcasts", async (req: Request, res: Response) => {
+    try {
+      const client = await getMongoClient();
+      const db = client.db("quizbot");
+      const rooms = await db.collection("approom")
+        .find({ isBroadcast: true, status: "waiting" })
+        .sort({ createdAt: -1 })
+        .toArray();
+      res.json(rooms);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch broadcast rooms" });
     }
   });
 
