@@ -61,21 +61,11 @@ export default function MultiplayerResultsScreen() {
       const response = await fetch(`${API_BASE}/api/rooms/${roomCode}`);
       if (response.ok) {
         const data = await response.json();
-        const players = data.participants || [];
-        
-        const formattedPlayers = players.map((p: any) => ({
-          ...p,
-          name: p.name || "Anonymous Player",
-          score: typeof p.score === 'number' ? p.score : 0,
-          correctAnswers: typeof p.correctAnswers === 'number' ? p.correctAnswers : 0,
-          totalQuestions: typeof p.totalQuestions === 'number' ? p.totalQuestions : (data.totalQuestions || totalQuestions || 0)
-        }));
-
-        const sorted = [...formattedPlayers].sort((a, b) => b.score - a.score);
+        const sorted = [...(data.participants || [])].sort((a, b) => b.score - a.score);
         setParticipants(sorted);
 
         const myRank = sorted.findIndex(p => p.odId === odId);
-        if (myRank === 0 && sorted.length > 0) {
+        if (myRank === 0) {
           setShowConfetti(true);
         }
       }
@@ -110,7 +100,7 @@ export default function MultiplayerResultsScreen() {
     ? ["#1e3a5f", "#0d1b2a"] as const
     : ["#4facfe", "#00f2fe"] as const;
 
-  const myRank = participants.length > 0 ? participants.findIndex(p => p.odId === odId) + 1 : 0;
+  const myRank = participants.findIndex(p => p.odId === odId) + 1;
   const isWinner = myRank === 1;
 
   const renderParticipant = ({ item, index }: { item: Participant; index: number }) => {
@@ -152,22 +142,22 @@ export default function MultiplayerResultsScreen() {
         
         <View style={[styles.avatar, { backgroundColor: isMe ? primaryColor : theme.border }]}>
           <ThemedText type="h4" style={{ color: "#FFFFFF" }}>
-            {(item.name || "P").charAt(0).toUpperCase()}
+            {item.name.charAt(0).toUpperCase()}
           </ThemedText>
         </View>
         
         <View style={styles.participantInfo}>
           <ThemedText type="body" style={{ fontWeight: "600" }}>
-            {item.name || "Anonymous Player"} {isMe && "(You)"}
+            {item.name} {isMe && "(You)"}
           </ThemedText>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {item.correctAnswers || 0}/{item.totalQuestions || totalQuestions} correct
+            {item.correctAnswers}/{item.totalQuestions || totalQuestions} correct
           </ThemedText>
         </View>
         
         <View style={styles.scoreContainer}>
           <ThemedText type="h3" style={{ color: primaryColor }}>
-            {item.score || 0}
+            {item.score}
           </ThemedText>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
             pts

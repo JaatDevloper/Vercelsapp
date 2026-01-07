@@ -1774,7 +1774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new multiplayer room
   app.post("/api/rooms", async (req: Request, res: Response) => {
     try {
-      const { quizId, hostName, isBroadcast } = req.body;
+      const { quizId, hostName } = req.body;
 
       if (!quizId) {
         return res.status(400).json({ error: "Quiz ID is required" });
@@ -1787,31 +1787,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await getMongoClient();
       const db = client.db("quizbot");
       const roomsCollection = db.collection("approom");
-      const quizCollection = db.collection("quizzes");
-
-      // Fetch quiz details to get title
-      let quiz: any = null;
-      try {
-        console.log("Creating room for quizId:", quizId);
-        
-        // Try finding by string _id
-        quiz = await quizCollection.findOne({ _id: quizId as any });
-
-        // Try ObjectId if string didn't work
-        if (!quiz && ObjectId.isValid(quizId)) {
-          quiz = await quizCollection.findOne({ _id: new ObjectId(quizId) });
-        }
-
-        // Try by quiz_id field
-        if (!quiz) {
-          quiz = await quizCollection.findOne({ quiz_id: quizId as any });
-        }
-        
-        console.log("Found quiz for room:", quiz ? quiz.title : "Not found");
-      } catch (e) {
-        console.error("Error finding quiz for room:", e);
-      }
-      const quizTitle = quiz ? (quiz.title || quiz.quiz_name || quiz.name || "Untitled Quiz") : "Untitled Quiz";
 
       // Generate unique room code
       let roomCode = generateRoomCode();
@@ -1828,9 +1803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const room = {
         roomCode,
         quizId,
-        quizTitle,
-        hostName: hostName.trim(),
-        isBroadcast: !!isBroadcast,
+        hostId,
         status: "waiting", // waiting, active, completed
         participants: [{
           odId: hostId,
@@ -1863,34 +1836,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to create room",
         message: error instanceof Error ? error.message : "Unknown error",
       });
-    }
-  });
-
-  app.get("/api/rooms/broadcasts", async (req: Request, res: Response) => {
-    try {
-      const client = await getMongoClient();
-      const db = client.db("quizbot");
-      const rooms = await db.collection("approom")
-        .find({ isBroadcast: true, status: "waiting" })
-        .sort({ createdAt: -1 })
-        .toArray();
-      res.json(rooms);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch broadcast rooms" });
-    }
-  });
-
-  // Get single broadcast room by code
-  app.get("/api/rooms/:roomCode", async (req: Request, res: Response) => {
-    try {
-      const { roomCode } = req.params;
-      const client = await getMongoClient();
-      const db = client.db("quizbot");
-      const room = await db.collection("approom").findOne({ roomCode: roomCode.toUpperCase() });
-      if (!room) return res.status(404).json({ error: "Room not found" });
-      res.json(room);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch room" });
     }
   });
 
@@ -2046,7 +1991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Submit quiz results (Mark as finished if last player)
+  // Submit quiz result
   app.post("/api/rooms/:roomCode/submit", async (req: Request, res: Response) => {
     try {
       const { roomCode } = req.params;
@@ -2057,15 +2002,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const roomsCollection = db.collection("approom");
 
       const room = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
-      if (!room) return res.status(404).json({ error: "Room not found" });
 
-      const updatedParticipants = room.participants.map((p: any) => 
-        p.odId === odId ? { ...p, score, correctAnswers, totalQuestions, finished: true, finishedAt: new Date().toISOString() } : p
-      );
+      if (!room) {
+        return res.status(404).json({ error: "Room not found" });
+      }
 
-      const allFinished = updatedParticipants.every((p: any) => p.finished);
-      
-      // Update participant's score in DB
+      // Update participant's score
       await roomsCollection.updateOne(
         { 
           roomCode: roomCode.toUpperCase(),
@@ -2082,64 +2024,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
-      // Fetch the latest room state to get all participants with names
-      const updatedRoomAfterScore = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
-      const reallyAllFinished = updatedRoomAfterScore?.participants?.every((p: any) => p.finished);
+      const updatedRoom = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
+      const allFinished = updatedRoom?.participants?.every((p: any) => p.finished);
 
-      // If all finished, mark room as completed
-      if (reallyAllFinished) {
+      // Check if all participants finished
+      if (allFinished) {
         await roomsCollection.updateOne(
           { roomCode: roomCode.toUpperCase() },
-          { 
-            $set: { 
-              status: "completed", 
-              completedAt: new Date().toISOString() 
-            } 
-          }
+          { $set: { status: "completed", completedAt: new Date().toISOString() } }
         );
       }
 
-      // SAVE TO DATABASE: Also save to history for persistent records
-      try {
-        const historyCollection = db.collection("apphistory");
-        const profileCollection = db.collection("appprofile");
-        const profile = await profileCollection.findOne({ deviceId: odId });
-        
-        const historyItem = {
-          deviceId: odId,
-          quizId: room.quizId,
-          quizTitle: room.quizTitle || "Multiplayer Quiz",
-          score: typeof score === "number" ? score : 0,
-          totalQuestions: typeof totalQuestions === "number" ? totalQuestions : 0,
-          correctAnswers: typeof correctAnswers === "number" ? correctAnswers : 0,
-          completedAt: new Date().toISOString(),
-          userName: profile?.name || "Player",
-          userEmail: profile?.email || "",
-          profileId: profile?._id?.toString() || "",
-          userAvatarUrl: profile?.avatarUrl || "",
-          isMultiplayer: true,
-          roomCode: roomCode.toUpperCase()
-        };
-        await historyCollection.insertOne(historyItem);
-      } catch (historyErr) {
-        console.error("Error saving multiplayer result to history:", historyErr);
-      }
-
-      // Broadcast player finished with latest participants
+      // Broadcast player finished
       broadcastToRoom(roomCode.toUpperCase(), {
         type: "player_finished",
         odId,
         score,
         correctAnswers,
-        allFinished: !!reallyAllFinished,
-        participants: updatedRoomAfterScore?.participants || [],
+        allFinished,
+        participants: updatedRoom?.participants || [],
       });
 
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.json({ 
         success: true, 
-        allFinished: !!reallyAllFinished,
-        participants: updatedRoomAfterScore?.participants || [],
+        allFinished,
+        participants: updatedRoom?.participants || [],
       });
     } catch (error) {
       console.error("Error submitting result:", error);
