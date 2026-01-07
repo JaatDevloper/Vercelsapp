@@ -2089,15 +2089,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       );
 
+      // SAVE TO DATABASE: Also save to history for persistent records
+      try {
+        const historyCollection = db.collection("apphistory");
+        const profileCollection = db.collection("appprofile");
+        const profile = await profileCollection.findOne({ deviceId: odId });
+        
+        const historyItem = {
+          deviceId: odId,
+          quizId: room.quizId,
+          quizTitle: room.quizTitle || "Multiplayer Quiz",
+          score: typeof score === "number" ? score : 0,
+          totalQuestions: typeof totalQuestions === "number" ? totalQuestions : 0,
+          correctAnswers: typeof correctAnswers === "number" ? correctAnswers : 0,
+          completedAt: new Date().toISOString(),
+          userName: profile?.name || "Player",
+          userEmail: profile?.email || "",
+          profileId: profile?._id?.toString() || "",
+          userAvatarUrl: profile?.avatarUrl || "",
+          isMultiplayer: true,
+          roomCode: roomCode.toUpperCase()
+        };
+        await historyCollection.insertOne(historyItem);
+      } catch (historyErr) {
+        console.error("Error saving multiplayer result to history:", historyErr);
+      }
+
       const updatedRoom = await roomsCollection.findOne({ roomCode: roomCode.toUpperCase() });
       const reallyAllFinished = updatedRoom?.participants?.every((p: any) => p.finished);
 
-      // If all finished, we mark room as completed but don't delete yet to allow clients to fetch final results
+      // If all finished, we mark room as completed and set a cleanup timer
       if (reallyAllFinished) {
         await roomsCollection.updateOne(
           { roomCode: roomCode.toUpperCase() },
-          { $set: { status: "completed", completedAt: new Date().toISOString() } }
+          { 
+            $set: { 
+              status: "completed", 
+              completedAt: new Date().toISOString() 
+            } 
+          }
         );
+
+        // Schedule deletion after 5 minutes (300,000 ms)
+        setTimeout(async () => {
+          try {
+            const client = await getMongoClient();
+            const db = client.db("quizbot");
+            await db.collection("approom").deleteOne({ roomCode: roomCode.toUpperCase() });
+            console.log(`Auto-deleted completed room: ${roomCode}`);
+          } catch (e) {
+            console.error(`Error in auto-deletion for room ${roomCode}:`, e);
+          }
+        }, 300000);
       }
 
       // Broadcast player finished
