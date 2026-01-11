@@ -35,10 +35,10 @@ export class MemStorage implements IStorage {
     // Save to Firebase if available
     if (firebaseDb) {
       try {
-        await firebaseDb.collection("users").doc(id).set(user);
-        console.log(`User ${id} saved to Firebase`);
+        await firebaseDb.collection("appprofile").doc(id).set(user);
+        console.log(`Profile ${id} saved to Firebase collection 'appprofile'`);
       } catch (error) {
-        console.error("Error saving user to Firebase:", error);
+        console.error("Error saving profile to Firebase:", error);
       }
     }
 
