@@ -1,5 +1,6 @@
 import { type User, type InsertUser } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db as firebaseDb } from "./firebase";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -30,6 +31,17 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { ...insertUser, id };
+    
+    // Save to Firebase if available
+    if (firebaseDb) {
+      try {
+        await firebaseDb.collection("users").doc(id).set(user);
+        console.log(`User ${id} saved to Firebase`);
+      } catch (error) {
+        console.error("Error saving user to Firebase:", error);
+      }
+    }
+
     this.users.set(id, user);
     return user;
   }
