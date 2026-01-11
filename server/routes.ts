@@ -1125,7 +1125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to create profile" });
       }
 
-      // SAVE TO FIREBASE (Added)
+      // SAVE TO FIREBASE (Sync)
       try {
         const { storage } = await import("./storage");
         await storage.createUser({
@@ -1134,7 +1134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: profile.email,
           avatarUrl: profile.avatarUrl,
         });
-        console.log("Profile successfully synced to Firebase");
+        console.log("Profile successfully synced to Firebase collection 'appprofile'");
       } catch (firebaseError) {
         console.error("Failed to sync profile to Firebase:", firebaseError);
       }
@@ -1473,7 +1473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save to MongoDB
       const result = await historyCollection.insertOne(historyItem);
 
-      // SAVE TO FIREBASE (Added)
+      // SAVE TO FIREBASE (Sync)
       try {
         const { storage } = await import("./storage");
         await storage.saveQuizResult({
@@ -1483,7 +1483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalQuestions: historyItem.totalQuestions,
           completedAt: historyItem.completedAt,
         });
-        console.log("Quiz history successfully synced to Firebase");
+        console.log("Quiz history successfully synced to Firebase collection 'apphistory'");
       } catch (firebaseError) {
         console.error("Failed to sync history to Firebase:", firebaseError);
       }
