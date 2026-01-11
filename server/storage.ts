@@ -80,7 +80,8 @@ export class FirebaseStorage implements IStorage {
     const result: QuizResult = { ...data, id };
     
     if (firebaseDb) {
-      await firebaseDb.collection("quiz_results").doc(id).set(result);
+      await firebaseDb.collection("apphistory").doc(id).set(result);
+      console.log(`Quiz history ${id} saved to Firebase collection 'apphistory'`);
     }
     this.results.set(id, result);
     return result;
@@ -88,7 +89,7 @@ export class FirebaseStorage implements IStorage {
 
   async getQuizResults(userId: string): Promise<QuizResult[]> {
     if (firebaseDb) {
-      const snapshot = await firebaseDb.collection("quiz_results")
+      const snapshot = await firebaseDb.collection("apphistory")
         .where("userId", "==", userId)
         .get();
       return snapshot.docs.map(doc => doc.data() as QuizResult);
