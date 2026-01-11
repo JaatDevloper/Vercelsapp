@@ -1125,6 +1125,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to create profile" });
       }
 
+      // SAVE TO FIREBASE (Added)
+      try {
+        const { storage } = await import("./storage");
+        await storage.createUser({
+          username: profile.name,
+          deviceId: profile.deviceId,
+          email: profile.email,
+          avatarUrl: profile.avatarUrl,
+        });
+        console.log("Profile successfully synced to Firebase");
+      } catch (firebaseError) {
+        console.error("Failed to sync profile to Firebase:", firebaseError);
+      }
+
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.status(201).json({
         _id: profile?._id?.toString() || "",
@@ -1456,7 +1470,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userAvatarUrl,
       };
 
+      // Save to MongoDB
       const result = await historyCollection.insertOne(historyItem);
+
+      // SAVE TO FIREBASE (Added)
+      try {
+        const { storage } = await import("./storage");
+        await storage.saveQuizResult({
+          userId: deviceId, // Using deviceId as the primary identifier for history
+          quizId: quizId,
+          score: historyItem.score,
+          totalQuestions: historyItem.totalQuestions,
+          completedAt: historyItem.completedAt,
+        });
+        console.log("Quiz history successfully synced to Firebase");
+      } catch (firebaseError) {
+        console.error("Failed to sync history to Firebase:", firebaseError);
+      }
 
       res.set("Cache-Control", "no-cache, no-store, must-revalidate");
       res.status(201).json({
